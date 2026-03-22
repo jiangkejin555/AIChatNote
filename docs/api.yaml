@@ -1,0 +1,2034 @@
+# AI Chat Notes - API 定义
+# OpenAPI 3.0 风格
+
+openapi: 3.0.0
+info:
+  title: AI Chat Notes API
+  version: 1.0.0
+  description: AI 聊天聚合 + 知识库管理 API
+
+servers:
+  - url: /api
+    description: API 路径前缀
+
+# ============================================
+# 通用定义
+# ============================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ---------- 通用响应 ----------
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误类型
+        message:
+          type: string
+          description: 错误详情
+      required:
+        - error
+        - message
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: 成功信息
+      required:
+        - message
+
+    ApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: 响应数据
+      required:
+        - data
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+          description: 数据列表
+        total:
+          type: integer
+          description: 总数量
+        page:
+          type: integer
+          description: 当前页码
+        page_size:
+          type: integer
+          description: 每页数量
+      required:
+        - data
+        - total
+        - page
+        - page_size
+
+    # ---------- 用户相关 ----------
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 用户 ID（自增）
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ---------- 模型相关（已废弃） ----------
+    Model:
+      type: object
+      deprecated: true
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        name:
+          type: string
+          description: 显示名称
+        api_base:
+          type: string
+          description: API 地址
+        api_key:
+          type: string
+          description: API Key（仅创建/更新时传入，返回时隐藏）
+        model_name:
+          type: string
+          description: 实际模型名
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ---------- 提供商相关 ----------
+    ProviderType:
+      type: string
+      enum:
+        - openai
+        - volcengine
+        - deepseek
+        - anthropic
+        - google
+        - moonshot
+        - zhipu
+        - custom
+      description: |
+        提供商类型：
+        - openai: OpenAI GPT 系列
+        - volcengine: 火山引擎 Doubao
+        - deepseek: 深度求索
+        - anthropic: Anthropic Claude
+        - google: Google Gemini
+        - moonshot: 月之暗面 Kimi
+        - zhipu: 智谱 GLM
+        - custom: 自定义 OpenAI 兼容接口
+
+    Provider:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: 用户自定义显示名称（如 "OpenAI (个人)"）
+        type:
+          $ref: '#/components/schemas/ProviderType'
+        api_base:
+          type: string
+          description: API 基础地址
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderModel'
+          description: 关联的模型列表
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProviderModel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        model_id:
+          type: string
+          description: API 返回的模型标识（如 gpt-4o）
+        display_name:
+          type: string
+          description: 用户友好的显示名称
+        is_default:
+          type: boolean
+          description: 是否为该提供商的默认模型
+        enabled:
+          type: boolean
+          description: 是否启用
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AvailableModel:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 模型标识（如 gpt-4o）
+        name:
+          type: string
+          description: 模型名称（如 GPT-4o）
+        owned_by:
+          type: string
+          description: 模型所有者
+
+    PredefinedModel:
+      type: object
+      properties:
+        model_id:
+          type: string
+          description: 模型标识
+        display_name:
+          type: string
+          description: 显示名称
+
+    ConnectionTestResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 是否连接成功
+        message:
+          type: string
+          description: 测试结果信息
+        latency:
+          type: integer
+          description: 响应延迟（毫秒）
+
+    # ---------- 对话相关 ----------
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 对话 ID（自增）
+        user_id:
+          type: integer
+          description: 所属用户 ID
+        provider_model_id:
+          type: string
+          format: uuid
+          description: 使用的提供商模型 ID
+        model_id:
+          type: integer
+          description: 使用的模型 ID（已废弃）
+          deprecated: true
+        title:
+          type: string
+          description: 对话标题
+        is_saved:
+          type: boolean
+          description: 是否已保存为笔记
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 消息 ID（自增）
+        conversation_id:
+          type: integer
+          description: 所属对话 ID
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+          description: 消息内容
+        created_at:
+          type: string
+          format: date-time
+
+    StreamChunk:
+      type: object
+      description: SSE 流式响应数据块
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              delta:
+                type: object
+                properties:
+                  content:
+                    type: string
+                  role:
+                    type: string
+              finish_reason:
+                type: string
+                nullable: true
+
+    # ---------- 笔记相关 ----------
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 笔记 ID（自增）
+        user_id:
+          type: integer
+          description: 所属用户 ID
+        folder_id:
+          type: integer
+          nullable: true
+          description: 所属文件夹 ID
+        title:
+          type: string
+          description: 笔记标题
+        content:
+          type: string
+          description: 笔记内容（HTML 格式）
+        tags:
+          type: array
+          items:
+            type: string
+          description: 标签列表
+        source_conversation_id:
+          type: integer
+          nullable: true
+          description: 来源对话 ID
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    NoteSummary:
+      type: object
+      description: 笔记列表项（不含完整内容）
+      properties:
+        id:
+          type: integer
+        folder_id:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    GenerateNoteResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          description: AI 生成的标题
+        content:
+          type: string
+          description: AI 生成的 Markdown 内容
+        tags:
+          type: array
+          description: AI 建议的标签
+          items:
+            type: string
+
+    # ---------- 文件夹相关 ----------
+    Folder:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 文件夹 ID（自增）
+        user_id:
+          type: integer
+          description: 所属用户 ID
+        name:
+          type: string
+          description: 文件夹名称
+        parent_id:
+          type: integer
+          nullable: true
+          description: 父文件夹 ID（支持嵌套）
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    FolderWithChildren:
+      allOf:
+        - $ref: '#/components/schemas/Folder'
+        - type: object
+          properties:
+            children:
+              type: array
+              items:
+                $ref: '#/components/schemas/FolderWithChildren'
+              description: 子文件夹（递归结构）
+
+    # ---------- 标签相关 ----------
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 标签名称
+        count:
+          type: integer
+          description: 使用该标签的笔记数量
+
+# ============================================
+# API 路径定义
+# ============================================
+paths:
+  # ==========================================
+  # 认证相关
+  # ==========================================
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: 用户注册
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: password123
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT Token
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 邮箱已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: 用户登录
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT Token
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: 邮箱或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: 用户登出
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: 获取当前用户信息
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ==========================================
+  # 提供商管理
+  # ==========================================
+  /providers:
+    get:
+      tags:
+        - Providers
+      summary: 获取提供商列表
+      operationId: listProviders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  providers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Provider'
+
+    post:
+      tags:
+        - Providers
+      summary: 创建提供商
+      operationId: createProvider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+                - api_base
+                - api_key
+              properties:
+                name:
+                  type: string
+                  description: 显示名称
+                  example: OpenAI (个人)
+                type:
+                  $ref: '#/components/schemas/ProviderType'
+                api_base:
+                  type: string
+                  description: API 地址
+                  example: https://api.openai.com/v1
+                api_key:
+                  type: string
+                  description: API Key
+                  example: sk-xxx
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    $ref: '#/components/schemas/Provider'
+
+  /providers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Providers
+      summary: 获取提供商详情
+      operationId: getProvider
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Provider'
+
+    put:
+      tags:
+        - Providers
+      summary: 更新提供商
+      operationId: updateProvider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: OpenAI (工作)
+                api_base:
+                  type: string
+                  example: https://api.openai.com/v1
+                api_key:
+                  type: string
+                  description: 留空保持不变
+                  example: sk-xxx
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    $ref: '#/components/schemas/Provider'
+
+    delete:
+      tags:
+        - Providers
+      summary: 删除提供商
+      operationId: deleteProvider
+      description: 删除提供商及其所有关联模型
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /providers/{id}/available-models:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Providers
+      summary: 获取可用模型列表
+      operationId: getAvailableModels
+      description: 动态从提供商 API 获取可用模型列表
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailableModel'
+                  is_predefined:
+                    type: boolean
+                    description: 是否为预定义列表（非动态获取）
+        '400':
+          description: API 连接失败或认证错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /providers/{id}/predefined-models:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Providers
+      summary: 获取预定义模型列表
+      operationId: getPredefinedModels
+      description: 获取该提供商类型的预定义模型列表（用于不支持动态获取的提供商，如 Anthropic）
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PredefinedModel'
+
+  /providers/{id}/test-connection:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags:
+        - Providers
+      summary: 测试连接
+      operationId: testProviderConnection
+      description: 测试提供商 API 连接是否正常
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model_id:
+                  type: string
+                  description: 指定测试使用的模型 ID（可选）
+      responses:
+        '200':
+          description: 测试完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionTestResult'
+
+  /providers/{providerId}/models:
+    parameters:
+      - name: providerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - ProviderModels
+      summary: 获取提供商的模型列表
+      operationId: listProviderModels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderModel'
+
+    post:
+      tags:
+        - ProviderModels
+      summary: 添加模型到提供商
+      operationId: addProviderModel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model_id
+              properties:
+                model_id:
+                  type: string
+                  description: 模型标识
+                  example: gpt-4o
+                display_name:
+                  type: string
+                  description: 显示名称（可选）
+                  example: GPT-4o
+                is_default:
+                  type: boolean
+                  description: 是否设为默认
+                  default: false
+      responses:
+        '201':
+          description: 添加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    $ref: '#/components/schemas/ProviderModel'
+
+  /providers/{providerId}/models/{modelId}:
+    parameters:
+      - name: providerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: modelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    put:
+      tags:
+        - ProviderModels
+      summary: 更新模型配置
+      operationId: updateProviderModel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                  example: GPT-4o
+                is_default:
+                  type: boolean
+                  description: 设为默认模型
+                enabled:
+                  type: boolean
+                  description: 启用/禁用模型
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    $ref: '#/components/schemas/ProviderModel'
+
+    delete:
+      tags:
+        - ProviderModels
+      summary: 删除模型
+      operationId: deleteProviderModel
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /providers/{providerId}/models/batch:
+    parameters:
+      - name: providerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags:
+        - ProviderModels
+      summary: 批量添加模型
+      operationId: batchAddProviderModels
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - models
+              properties:
+                models:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - model_id
+                    properties:
+                      model_id:
+                        type: string
+                        example: gpt-4o
+                      display_name:
+                        type: string
+                        example: GPT-4o
+                default_model_id:
+                  type: string
+                  description: 默认模型的 ID
+                  example: gpt-4o
+      responses:
+        '201':
+          description: 添加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderModel'
+
+  # ==========================================
+  # 模型管理 (已废弃)
+  # ==========================================
+  /models:
+    deprecated: true
+    x-deprecated-message: 请使用 /providers API
+    get:
+      tags:
+        - Models
+      summary: 获取模型列表
+      operationId: listModels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Model'
+
+    post:
+      tags:
+        - Models
+      summary: 添加模型配置
+      operationId: createModel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - api_base
+                - api_key
+                - model_name
+              properties:
+                name:
+                  type: string
+                  description: 显示名称
+                  example: Claude 3.5 Sonnet
+                api_base:
+                  type: string
+                  description: API 地址
+                  example: https://api.anthropic.com
+                api_key:
+                  type: string
+                  description: API Key
+                  example: sk-ant-xxx
+                model_name:
+                  type: string
+                  description: 实际模型名
+                  example: claude-3-5-sonnet-20241022
+                is_default:
+                  type: boolean
+                  description: 是否设为默认
+                  default: false
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Model'
+
+  /models/{id}:
+    deprecated: true
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags:
+        - Models
+      summary: 获取模型详情
+      operationId: getModel
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Model'
+
+    put:
+      tags:
+        - Models
+      summary: 更新模型配置
+      operationId: updateModel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Claude 3.5 Sonnet
+                api_base:
+                  type: string
+                  example: https://api.anthropic.com
+                api_key:
+                  type: string
+                  example: sk-ant-xxx
+                model_name:
+                  type: string
+                  example: claude-3-5-sonnet-20241022
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Model'
+
+    delete:
+      tags:
+        - Models
+      summary: 删除模型配置
+      operationId: deleteModel
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /models/{id}/default:
+    deprecated: true
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    put:
+      tags:
+        - Models
+      summary: 设置默认模型
+      operationId: setDefaultModel
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 设置成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Model'
+
+  # ==========================================
+  # 对话管理
+  # ==========================================
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      summary: 获取对话列表
+      operationId: listConversations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+
+    post:
+      tags:
+        - Conversations
+      summary: 创建对话
+      operationId: createConversation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider_model_id:
+                  type: string
+                  format: uuid
+                  description: 使用的提供商模型 ID（推荐）
+                model_id:
+                  type: integer
+                  description: 使用的模型 ID（已废弃，请使用 provider_model_id）
+                  deprecated: true
+                title:
+                  type: string
+                  description: 对话标题（可选，默认自动生成）
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Conversation'
+
+  /conversations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags:
+        - Conversations
+      summary: 获取对话详情
+      operationId: getConversation
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/Conversation'
+                      - type: object
+                        properties:
+                          messages:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Message'
+
+    put:
+      tags:
+        - Conversations
+      summary: 更新对话（重命名）
+      operationId: updateConversation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Golang Protobuf 学习笔记
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Conversation'
+
+    delete:
+      tags:
+        - Conversations
+      summary: 删除对话
+      operationId: deleteConversation
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 删除成功
+
+  /conversations/{id}/saved:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    put:
+      tags:
+        - Conversations
+      summary: 标记对话为已保存
+      operationId: markConversationSaved
+      description: 将对话标记为已保存为笔记
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Conversation'
+
+  /conversations/{id}/messages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags:
+        - Conversations
+      summary: 获取对话消息列表
+      operationId: getConversationMessages
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: 消息数量限制
+          schema:
+            type: integer
+            default: 50
+        - name: before_id
+          in: query
+          description: 加载此消息 ID 之前的消息（用于向上滚动加载更多）
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+
+    post:
+      tags:
+        - Conversations
+      summary: 发送消息
+      operationId: sendMessage
+      description: |
+        发送消息并获取 AI 回复。
+
+        - 如果 stream=true，返回 SSE 流式数据
+        - 如果 stream=false，返回完整响应
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  description: 用户消息内容
+                  example: Golang protobuf 怎么使用？
+                stream:
+                  type: boolean
+                  description: 是否流式返回
+                  default: true
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Message'
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE 流式数据
+
+  /conversations/{id}/messages/{messageId}/regenerate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    post:
+      tags:
+        - Conversations
+      summary: 重新生成 AI 回复
+      operationId: regenerateMessage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stream:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Message'
+            text/event-stream:
+              schema:
+                type: string
+
+  # ==========================================
+  # 笔记管理
+  # ==========================================
+  /notes:
+    get:
+      tags:
+        - Notes
+      summary: 获取笔记列表
+      operationId: listNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: folder_id
+          in: query
+          description: 按文件夹筛选
+          schema:
+            type: integer
+        - name: tag
+          in: query
+          description: 按标签筛选
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: 关键词搜索
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+
+    post:
+      tags:
+        - Notes
+      summary: 创建笔记
+      operationId: createNote
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  description: 笔记标题
+                content:
+                  type: string
+                  description: 笔记内容（HTML 格式）
+                tags:
+                  type: array
+                  description: 标签列表
+                  items:
+                    type: string
+                  example: ["编程", "golang", "protobuf"]
+                folder_id:
+                  type: integer
+                  description: 所属文件夹 ID
+                source_conversation_id:
+                  type: integer
+                  description: 来源对话 ID
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+
+  /notes/generate:
+    post:
+      tags:
+        - Notes
+      summary: 生成笔记预览（AI 总结）
+      operationId: generateNotePreview
+      description: 预览 AI 生成的笔记内容，不保存
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - conversation_id
+              properties:
+                conversation_id:
+                  type: integer
+                  description: 来源对话 ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GenerateNoteResponse'
+
+  /notes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags:
+        - Notes
+      summary: 获取笔记详情
+      operationId: getNote
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+
+    put:
+      tags:
+        - Notes
+      summary: 更新笔记
+      operationId: updateNote
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Golang Protobuf 使用方法（更新版）
+                content:
+                  type: string
+                  description: 笔记内容（HTML 格式）
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["编程", "golang", "protobuf", "rpc"]
+                folder_id:
+                  type: integer
+                  description: 移动到其他文件夹
+                  nullable: true
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+
+    delete:
+      tags:
+        - Notes
+      summary: 删除笔记
+      operationId: deleteNote
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 删除成功
+
+  /notes/{id}/export:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags:
+        - Notes
+      summary: 导出单篇笔记
+      operationId: exportNote
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            text/markdown:
+              schema:
+                type: string
+                description: Markdown 文件内容
+
+  /notes/{id}/copy:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    post:
+      tags:
+        - Notes
+      summary: 复制笔记
+      operationId: copyNote
+      description: 复制一篇笔记到同一文件夹
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 复制成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+
+  /notes/export:
+    post:
+      tags:
+        - Notes
+      summary: 批量导出笔记
+      operationId: exportNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  description: 要导出的笔记 ID 列表（可选，不传则导出全部）
+                  items:
+                    type: integer
+                folder_id:
+                  type: integer
+                  description: 导出指定文件夹的笔记（可选）
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+                description: ZIP 压缩包
+
+  /notes/import:
+    post:
+      tags:
+        - Notes
+      summary: 导入 Markdown 文件
+      operationId: importNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Markdown 文件（.md）
+                folder_id:
+                  type: integer
+                  description: 导入到的目标文件夹 ID（可选）
+      responses:
+        '201':
+          description: 导入成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+
+  /notes/batch-delete:
+    post:
+      tags:
+        - Notes
+      summary: 批量删除笔记
+      operationId: batchDeleteNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 2, 3]
+      responses:
+        '200':
+          description: 删除成功
+
+  /notes/batch-move:
+    post:
+      tags:
+        - Notes
+      summary: 批量移动笔记
+      operationId: batchMoveNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+                - target_folder_id
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 2, 3]
+                target_folder_id:
+                  type: integer
+                  nullable: true
+                  description: 目标文件夹 ID（null 表示移动到根目录）
+      responses:
+        '200':
+          description: 移动成功
+
+  # ==========================================
+  # 文件夹管理
+  # ==========================================
+  /folders:
+    get:
+      tags:
+        - Folders
+      summary: 获取文件夹树
+      operationId: listFolders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FolderWithChildren'
+
+    post:
+      tags:
+        - Folders
+      summary: 创建文件夹
+      operationId: createFolder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: 编程
+                parent_id:
+                  type: integer
+                  description: 父文件夹 ID（可选）
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Folder'
+
+  /folders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags:
+        - Folders
+      summary: 获取文件夹详情
+      operationId: getFolder
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Folder'
+
+    put:
+      tags:
+        - Folders
+      summary: 更新文件夹
+      operationId: updateFolder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 编程笔记
+                parent_id:
+                  type: integer
+                  description: 移动到其他父文件夹
+                  nullable: true
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Folder'
+
+    delete:
+      tags:
+        - Folders
+      summary: 删除文件夹
+      operationId: deleteFolder
+      description: 删除文件夹，文件夹内的笔记的 folder_id 会被置空
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 删除成功
+
+  /folders/{id}/copy:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    post:
+      tags:
+        - Folders
+      summary: 复制文件夹
+      operationId: copyFolder
+      description: 复制文件夹及其所有内容（包括子文件夹和笔记）
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 复制成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Folder'
+
+  # ==========================================
+  # 标签
+  # ==========================================
+  /tags:
+    get:
+      tags:
+        - Tags
+      summary: 获取标签列表
+      operationId: listTags
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
