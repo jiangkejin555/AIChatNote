@@ -1,0 +1,258 @@
+// User types
+export interface User {
+  id: number
+  email: string
+  created_at: string
+  updated_at: string
+}
+
+// Auth types
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface RegisterRequest {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
+}
+
+// Provider types
+export type ProviderType =
+  | 'openai'
+  | 'volcengine'
+  | 'deepseek'
+  | 'anthropic'
+  | 'google'
+  | 'moonshot'
+  | 'zhipu'
+  | 'custom'
+
+export interface Provider {
+  id: string
+  name: string
+  type: ProviderType
+  api_base: string
+  models: ProviderModel[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ProviderModel {
+  id: string
+  provider_id: string
+  model_id: string
+  display_name: string
+  is_default: boolean
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateProviderRequest {
+  name: string
+  type: ProviderType
+  api_base: string
+  api_key: string
+}
+
+export interface UpdateProviderRequest {
+  name?: string
+  api_base?: string
+  api_key?: string
+}
+
+export interface CreateProviderModelRequest {
+  model_id: string
+  display_name?: string
+  is_default?: boolean
+}
+
+export interface UpdateProviderModelRequest {
+  display_name?: string
+  is_default?: boolean
+  enabled?: boolean
+}
+
+export interface BatchAddProviderModelsRequest {
+  models: {
+    model_id: string
+    display_name?: string
+  }[]
+  default_model_id?: string
+}
+
+export interface AvailableModel {
+  id: string
+  name: string
+  owned_by: string
+}
+
+export interface PredefinedModel {
+  model_id: string
+  display_name: string
+}
+
+// Model types (deprecated - use Provider/ProviderModel instead)
+/** @deprecated Use ProviderModel instead */
+export interface Model {
+  id: number
+  user_id: number
+  name: string
+  api_base: string
+  api_key: string
+  model_name: string
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+
+/** @deprecated Use CreateProviderRequest instead */
+export interface CreateModelRequest {
+  name: string
+  api_base: string
+  api_key: string
+  model_name: string
+  is_default?: boolean
+}
+
+/** @deprecated Use UpdateProviderRequest instead */
+export interface UpdateModelRequest {
+  name?: string
+  api_base?: string
+  api_key?: string
+  model_name?: string
+  is_default?: boolean
+}
+
+// Conversation types
+export interface Conversation {
+  id: number
+  user_id: number
+  provider_model_id: string
+  model_id: number // deprecated
+  title: string
+  is_saved: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Message {
+  id: number
+  conversation_id: number
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+export interface CreateConversationRequest {
+  provider_model_id?: string
+  model_id?: number // deprecated
+  title?: string
+}
+
+export interface SendMessageRequest {
+  content: string
+  stream?: boolean
+}
+
+export interface StreamChunk {
+  id: string
+  object: string
+  created: number
+  model: string
+  choices: {
+    index: number
+    delta: {
+      content?: string
+      role?: string
+    }
+    finish_reason: string | null
+  }[]
+}
+
+// Note types
+export interface Note {
+  id: number
+  user_id: number
+  folder_id: number | null
+  title: string
+  content: string
+  tags: string[]
+  source_conversation_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateNoteRequest {
+  title: string
+  content: string
+  tags?: string[]
+  folder_id?: number
+  source_conversation_id?: number
+}
+
+export interface UpdateNoteRequest {
+  title?: string
+  content?: string
+  tags?: string[]
+  folder_id?: number
+}
+
+export interface GenerateNoteRequest {
+  conversation_id: number
+}
+
+export interface GenerateNoteResponse {
+  title: string
+  content: string
+  tags: string[]
+}
+
+// Folder types
+export interface Folder {
+  id: number
+  user_id: number
+  name: string
+  parent_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateFolderRequest {
+  name: string
+  parent_id?: number
+}
+
+export interface UpdateFolderRequest {
+  name?: string
+  parent_id?: number
+}
+
+// Tag types
+export interface Tag {
+  name: string
+  count: number
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  data: T
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface ApiError {
+  error: string
+  message: string
+}
