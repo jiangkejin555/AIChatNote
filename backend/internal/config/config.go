@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -16,6 +17,7 @@ type Config struct {
 	Encryption EncryptionConfig `yaml:"encryption"`
 	NoteLLM    NoteLLMConfig    `yaml:"llm"`
 	CORS       CORSConfig       `yaml:"cors"`
+	Mock       MockConfig       `yaml:"mock"`
 }
 
 type ServerConfig struct {
@@ -49,6 +51,10 @@ type NoteLLMConfig struct {
 
 type CORSConfig struct {
 	FrontendURL string `yaml:"frontend_url"`
+}
+
+type MockConfig struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 // Load reads configuration from config.yaml file.
@@ -121,5 +127,8 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("FRONTEND_URL"); v != "" {
 		cfg.CORS.FrontendURL = v
+	}
+	if v := os.Getenv("MOCK_ENABLED"); v != "" {
+		cfg.Mock.Enabled = strings.ToLower(v) == "true"
 	}
 }

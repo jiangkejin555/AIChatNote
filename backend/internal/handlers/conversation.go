@@ -19,20 +19,24 @@ import (
 )
 
 type ConversationHandler struct {
-	convRepo    *repository.ConversationRepository
-	msgRepo     *repository.MessageRepository
+	convRepo     *repository.ConversationRepository
+	msgRepo      *repository.MessageRepository
 	providerRepo *repository.ProviderRepository
-	modelRepo   *repository.ProviderModelRepository
-	aesCrypto   *crypto.AESCrypto
+	modelRepo    *repository.ProviderModelRepository
+	aesCrypto    *crypto.AESCrypto
+	mockEnabled  bool
 }
 
-func NewConversationHandler(aesCrypto *crypto.AESCrypto) *ConversationHandler {
+const mockResponse = "这是 Mock AI 的回复。如果你需要测试真实 AI 功能，请配置相应的 API Key。\n\n你可以继续与我对话，我会一直返回这个 Mock 响应。"
+
+func NewConversationHandler(aesCrypto *crypto.AESCrypto, mockEnabled bool) *ConversationHandler {
 	return &ConversationHandler{
-		convRepo:    repository.NewConversationRepository(),
-		msgRepo:     repository.NewMessageRepository(),
+		convRepo:     repository.NewConversationRepository(),
+		msgRepo:      repository.NewMessageRepository(),
 		providerRepo: repository.NewProviderRepository(),
-		modelRepo:   repository.NewProviderModelRepository(),
-		aesCrypto:   aesCrypto,
+		modelRepo:    repository.NewProviderModelRepository(),
+		aesCrypto:    aesCrypto,
+		mockEnabled:  mockEnabled,
 	}
 }
 
@@ -252,6 +256,16 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
+	// Handle mock mode
+	if h.mockEnabled {
+		if req.Stream {
+			h.handleMockStreamResponse(c, conv)
+		} else {
+			h.handleMockNonStreamResponse(c, conv)
+		}
+		return
+	}
+
 	// Get provider model and provider info
 	if conv.ProviderModelID == nil {
 		utils.SendError(c, http.StatusBadRequest, "no_model", "No model configured for this conversation")
@@ -416,6 +430,68 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
 }
 
+// handleMockStreamResponse handles mock streaming response
+func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *models.Conversation) {
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	// Stream response character by character
+	for i, char := range mockResponse {
+		chunk := map[string]interface{}{
+			"id":      fmt.Sprintf("mock-%d", i),
+			"object":  "chat.completion.chunk",
+			"created": time.Now().Unix(),
+			"model":   "mock-model",
+			"choices": []map[string]interface{}{
+				{
+					"index": 0,
+					"delta": map[string]string{
+						"content": string(char),
+					},
+					"finish_reason": nil,
+				},
+			},
+		}
+		data, _ := json.Marshal(chunk)
+		fmt.Fprintf(c.Writer, "data: %s\n\n", string(data))
+		c.Writer.Flush()
+	}
+
+	// Save assistant message
+	assistantMsg := &models.Message{
+		ConversationID: conv.ID,
+		Role:           models.RoleAssistant,
+		Content:        mockResponse,
+	}
+	h.msgRepo.Create(assistantMsg)
+
+	// Update conversation timestamp
+	h.convRepo.Update(conv)
+
+	fmt.Fprintf(c.Writer, "data: [DONE]\n\n")
+	c.Writer.Flush()
+}
+
+// handleMockNonStreamResponse handles mock non-streaming response
+func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *models.Conversation) {
+	assistantMsg := &models.Message{
+		ConversationID: conv.ID,
+		Role:           models.RoleAssistant,
+		Content:        mockResponse,
+		CreatedAt:      time.Now(),
+	}
+	if err := h.msgRepo.Create(assistantMsg); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save response")
+		return
+	}
+
+	// Update conversation timestamp
+	h.convRepo.Update(conv)
+
+	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
+}
+
 // Regenerate regenerates the last assistant response
 func (h *ConversationHandler) Regenerate(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -447,6 +523,21 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 	messages, err := h.msgRepo.FindByConversationID(conv.ID)
 	if err != nil {
 		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages")
+		return
+	}
+
+	// Handle mock mode
+	if h.mockEnabled {
+		assistantMsg := &models.Message{
+			ConversationID: conv.ID,
+			Role:           models.RoleAssistant,
+			Content:        mockResponse,
+		}
+		if err := h.msgRepo.Create(assistantMsg); err != nil {
+			utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save response")
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
 		return
 	}
 

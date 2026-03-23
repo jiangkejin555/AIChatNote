@@ -12,17 +12,23 @@ import (
 )
 
 type AIService struct {
-	client   *openai.Client
-	convRepo *repository.ConversationRepository
+	client      *openai.Client
+	convRepo    *repository.ConversationRepository
+	mockEnabled bool
 }
 
-func NewAIService(cfg *config.NoteLLMConfig) *AIService {
-	clientConfig := openai.DefaultConfig(cfg.DeepSeekAPIKey)
-	clientConfig.BaseURL = cfg.DeepSeekAPIBase
+func NewAIService(cfg *config.NoteLLMConfig, mockEnabled bool) *AIService {
+	var client *openai.Client
+	if !mockEnabled && cfg.DeepSeekAPIKey != "" {
+		clientConfig := openai.DefaultConfig(cfg.DeepSeekAPIKey)
+		clientConfig.BaseURL = cfg.DeepSeekAPIBase
+		client = openai.NewClientWithConfig(clientConfig)
+	}
 
 	return &AIService{
-		client:   openai.NewClientWithConfig(clientConfig),
-		convRepo: repository.NewConversationRepository(),
+		client:      client,
+		convRepo:    repository.NewConversationRepository(),
+		mockEnabled: mockEnabled,
 	}
 }
 
@@ -34,6 +40,27 @@ type GeneratedNote struct {
 
 // GenerateNoteFromConversation generates a note summary from a conversation
 func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, userID uint) (*GeneratedNote, error) {
+	// Return mock data if mock mode is enabled
+	if s.mockEnabled {
+		return &GeneratedNote{
+			Title: "AI 对话总结 (Mock)",
+			Content: `## 概要
+
+这是 Mock 生成的笔记内容，用于测试目的。
+
+## 主要内容
+
+- 讨论了 AI 相关话题
+- 探索了技术实现方案
+- 确定了下一步计划
+
+## 总结
+
+这是一次富有成效的对话。如果你需要真实 AI 功能，请配置相应的 API Key。`,
+			Tags: []string{"mock", "测试", "AI生成"},
+		}, nil
+	}
+
 	// Get conversation with messages
 	conv, err := s.convRepo.FindByIDWithMessages(convID)
 	if err != nil {

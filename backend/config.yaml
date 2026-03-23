@@ -22,3 +22,6 @@ llm:
 
 cors:
   frontend_url: "http://localhost:3000"
+
+mock:
+  enabled: false  # Set to true to enable mock mode for testing without LLM API keys

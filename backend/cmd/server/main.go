@@ -43,10 +43,13 @@ func main() {
 		log.Fatalf("Failed to initialize crypto: %v", err)
 	}
 
-	// Initialize AI service if DeepSeek API key is configured
+	// Initialize AI service
 	var aiService *services.AIService
-	if cfg.NoteLLM.DeepSeekAPIKey != "" {
-		aiService = services.NewAIService(&cfg.NoteLLM)
+	if cfg.Mock.Enabled {
+		aiService = services.NewAIService(&cfg.NoteLLM, true)
+		log.Println("⚠️  AI service running in MOCK mode - no real API calls will be made")
+	} else if cfg.NoteLLM.DeepSeekAPIKey != "" {
+		aiService = services.NewAIService(&cfg.NoteLLM, false)
 		log.Println("AI service initialized with DeepSeek")
 	} else {
 		log.Println("Warning: DeepSeek API key not configured, AI features will be unavailable")
@@ -56,7 +59,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(jwtService)
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
-	conversationHandler := handlers.NewConversationHandler(aesCrypto)
+	conversationHandler := handlers.NewConversationHandler(aesCrypto, cfg.Mock.Enabled)
 	noteHandler := handlers.NewNoteHandler(aiService)
 	folderHandler := handlers.NewFolderHandler()
 	tagHandler := handlers.NewTagHandler()
