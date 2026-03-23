@@ -1,0 +1,322 @@
+package handlers
+
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
+
+	"github.com/ai-chat-notes/backend/internal/config"
+	"github.com/ai-chat-notes/backend/internal/crypto"
+	"github.com/ai-chat-notes/backend/internal/middleware"
+	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/ai-chat-notes/backend/internal/testutil"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func setupConversationTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
+	gin.SetMode(gin.TestMode)
+	cleanup := testutil.SetupTestDB(t)
+
+	cfg := testutil.TestConfig()
+	jwtService := crypto.NewJWTService(cfg)
+	aesCrypto, _ := crypto.NewAESCrypto(cfg.Encryption.Key)
+
+	authHandler := NewAuthHandler(jwtService)
+	convHandler := NewConversationHandler(aesCrypto, true) // Mock mode enabled
+
+	router := gin.New()
+
+	// Auth routes
+	router.POST("/api/auth/register", authHandler.Register)
+	router.POST("/api/auth/login", authHandler.Login)
+
+	// Protected routes
+	protected := router.Group("/api")
+	protected.Use(middleware.Auth(jwtService))
+	{
+		protected.GET("/conversations", convHandler.List)
+		protected.POST("/conversations", convHandler.Create)
+		protected.GET("/conversations/:id", convHandler.Get)
+		protected.PUT("/conversations/:id", convHandler.Update)
+		protected.DELETE("/conversations/:id", convHandler.Delete)
+		protected.POST("/conversations/:id/mark-saved", convHandler.MarkSaved)
+		protected.GET("/conversations/:id/messages", convHandler.GetMessages)
+		protected.POST("/conversations/:id/messages", convHandler.SendMessage)
+		protected.POST("/conversations/:id/messages/:messageId/regenerate", convHandler.Regenerate)
+	}
+
+	return router, cfg, cleanup
+}
+
+func TestConversationHandler_List(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_list@example.com", "hash")
+
+	t.Run("should return empty list when no conversations", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.Empty(t, data)
+	})
+
+	t.Run("should return conversations for user", func(t *testing.T) {
+		testutil.CreateTestConversation(t, user.ID, "Conv 1")
+		testutil.CreateTestConversation(t, user.ID, "Conv 2")
+
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.GreaterOrEqual(t, len(data), 2)
+	})
+}
+
+func TestConversationHandler_Create(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_create@example.com", "hash")
+
+	t.Run("should create conversation successfully", func(t *testing.T) {
+		body := `{"title": "New Conversation"}`
+		w := testutil.MakeAuthenticatedRequest(router, "POST", "/api/conversations", body, user.ID, cfg)
+
+		require.Equal(t, 201, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, "New Conversation", data["title"])
+		assert.NotZero(t, data["id"])
+	})
+
+	t.Run("should create conversation with default title", func(t *testing.T) {
+		body := `{}`
+		w := testutil.MakeAuthenticatedRequest(router, "POST", "/api/conversations", body, user.ID, cfg)
+
+		require.Equal(t, 201, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, "新对话", data["title"])
+	})
+}
+
+func TestConversationHandler_Get(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_get@example.com", "hash")
+	conv := testutil.CreateTestConversation(t, user.ID, "Get Test")
+
+	t.Run("should return conversation by ID", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", fmt.Sprintf("/api/conversations/%d", conv.ID), nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, "Get Test", data["title"])
+	})
+
+	t.Run("should return error for non-existent conversation", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/99999", nil, user.ID, cfg)
+
+		assert.Equal(t, 404, w.Code)
+	})
+
+	t.Run("should return error for other user's conversation", func(t *testing.T) {
+		otherUser := testutil.CreateTestUser(t, "other_conv@example.com", "hash")
+		otherConv := testutil.CreateTestConversation(t, otherUser.ID, "Other Conv")
+
+		w := testutil.MakeAuthenticatedRequest(router, "GET", fmt.Sprintf("/api/conversations/%d", otherConv.ID), nil, user.ID, cfg)
+
+		assert.Equal(t, 403, w.Code)
+	})
+
+	t.Run("should return error for invalid ID", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/invalid", nil, user.ID, cfg)
+
+		assert.Equal(t, 400, w.Code)
+	})
+}
+
+func TestConversationHandler_Update(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_update@example.com", "hash")
+	conv := testutil.CreateTestConversation(t, user.ID, "Original Title")
+
+	t.Run("should update conversation title", func(t *testing.T) {
+		body := `{"title": "Updated Title"}`
+		w := testutil.MakeAuthenticatedRequest(router, "PUT", fmt.Sprintf("/api/conversations/%d", conv.ID), body, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, "Updated Title", data["title"])
+	})
+
+	t.Run("should return error for non-existent conversation", func(t *testing.T) {
+		body := `{"title": "Test"}`
+		w := testutil.MakeAuthenticatedRequest(router, "PUT", "/api/conversations/99999", body, user.ID, cfg)
+
+		assert.Equal(t, 404, w.Code)
+	})
+}
+
+func TestConversationHandler_Delete(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_delete@example.com", "hash")
+
+	t.Run("should delete conversation", func(t *testing.T) {
+		conv := testutil.CreateTestConversation(t, user.ID, "To Delete")
+
+		w := testutil.MakeAuthenticatedRequest(router, "DELETE", fmt.Sprintf("/api/conversations/%d", conv.ID), nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+	})
+
+	t.Run("should return error for invalid ID", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "DELETE", "/api/conversations/invalid", nil, user.ID, cfg)
+
+		assert.Equal(t, 400, w.Code)
+	})
+}
+
+func TestConversationHandler_MarkSaved(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_saved@example.com", "hash")
+	conv := testutil.CreateTestConversation(t, user.ID, "To Save")
+
+	t.Run("should mark conversation as saved", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "POST", fmt.Sprintf("/api/conversations/%d/mark-saved", conv.ID), nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.True(t, data["is_saved"].(bool))
+	})
+
+	t.Run("should return error for non-existent conversation", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "POST", "/api/conversations/99999/mark-saved", nil, user.ID, cfg)
+
+		assert.Equal(t, 404, w.Code)
+	})
+}
+
+func TestConversationHandler_GetMessages(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_msgs@example.com", "hash")
+	conv := testutil.CreateTestConversation(t, user.ID, "Messages Test")
+
+	// Create some messages
+	testutil.CreateTestMessage(t, conv.ID, models.RoleUser, "Hello")
+	testutil.CreateTestMessage(t, conv.ID, models.RoleAssistant, "Hi there!")
+
+	t.Run("should return messages for conversation", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", fmt.Sprintf("/api/conversations/%d/messages", conv.ID), nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.GreaterOrEqual(t, len(data), 2)
+	})
+
+	t.Run("should return error for non-existent conversation", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/99999/messages", nil, user.ID, cfg)
+
+		assert.Equal(t, 404, w.Code)
+	})
+}
+
+func TestConversationHandler_SendMessage(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_send@example.com", "hash")
+	conv := testutil.CreateTestConversation(t, user.ID, "Send Test")
+
+	t.Run("should send message and get mock response", func(t *testing.T) {
+		body := `{"content": "Hello AI", "stream": false}`
+		w := testutil.MakeAuthenticatedRequest(router, "POST", fmt.Sprintf("/api/conversations/%d/messages", conv.ID), body, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.NotEmpty(t, data["content"])
+	})
+
+	t.Run("should return error when content is missing", func(t *testing.T) {
+		body := `{}`
+		w := testutil.MakeAuthenticatedRequest(router, "POST", fmt.Sprintf("/api/conversations/%d/messages", conv.ID), body, user.ID, cfg)
+
+		assert.Equal(t, 400, w.Code)
+	})
+
+	t.Run("should return error for non-existent conversation", func(t *testing.T) {
+		body := `{"content": "Test"}`
+		w := testutil.MakeAuthenticatedRequest(router, "POST", "/api/conversations/99999/messages", body, user.ID, cfg)
+
+		assert.Equal(t, 404, w.Code)
+	})
+}
+
+func TestConversationHandler_Regenerate(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "conv_regen@example.com", "hash")
+	conv := testutil.CreateTestConversation(t, user.ID, "Regen Test")
+
+	// Create messages
+	testutil.CreateTestMessage(t, conv.ID, models.RoleUser, "Hello")
+	assistantMsg := testutil.CreateTestMessage(t, conv.ID, models.RoleAssistant, "Original response")
+
+	t.Run("should regenerate response in mock mode", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/conversations/%d/messages/%d/regenerate", conv.ID, assistantMsg.ID),
+			nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].(map[string]interface{})
+		assert.NotEmpty(t, data["content"])
+	})
+
+	t.Run("should return error for invalid conversation ID", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			"/api/conversations/invalid/messages/1/regenerate",
+			nil, user.ID, cfg)
+
+		assert.Equal(t, 400, w.Code)
+	})
+
+	t.Run("should return error for non-existent conversation", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			"/api/conversations/99999/messages/1/regenerate",
+			nil, user.ID, cfg)
+
+		assert.Equal(t, 404, w.Code)
+	})
+}
