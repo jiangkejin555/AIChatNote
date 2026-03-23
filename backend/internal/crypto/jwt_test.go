@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ai-chat-notes/backend/internal/config"
-	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -13,10 +13,10 @@ import (
 func testJWTConfig() *config.Config {
 	return &config.Config{
 		JWT: config.JWTConfig{
-			Secret:           "test-secret-key-for-unit-testing",
-			RefreshSecret:    "test-refresh-secret-key",
-			Expiry:           time.Hour,
-			RefreshExpiry:    24 * time.Hour,
+			Secret:        "test-secret-key-for-unit-testing",
+			RefreshSecret: "test-refresh-secret-key",
+			Expiry:        time.Hour,
+			RefreshExpiry: 24 * time.Hour,
 		},
 	}
 }
@@ -77,10 +77,10 @@ func TestJWTService_ValidateToken(t *testing.T) {
 	service := NewJWTService(cfg)
 
 	tests := []struct {
-		name      string
+		name       string
 		setupToken func() string
-		wantErr   bool
-		checkUser func(t *testing.T, claims *Claims)
+		wantErr    bool
+		checkUser  func(t *testing.T, claims *Claims)
 	}{
 		{
 			name: "valid token",

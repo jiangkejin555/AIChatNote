@@ -104,7 +104,7 @@
 package database
 
 import (
-    "github.com/ai-chat-notes/backend/internal/models"
+    "github.com/chat-note/backend/internal/models"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
     "gorm.io/gorm/logger"
@@ -152,7 +152,7 @@ import (
     "os"
     "testing"
 
-    "github.com/ai-chat-notes/backend/internal/database"
+    "github.com/chat-note/backend/internal/database"
 )
 
 func TestMain(m *testing.M) {
@@ -501,10 +501,10 @@ import (
     "net/http/httptest"
     "testing"
 
-    "github.com/ai-chat-notes/backend/internal/config"
-    "github.com/ai-chat-notes/backend/internal/crypto"
-    "github.com/ai-chat-notes/backend/internal/database"
-    "github.com/ai-chat-notes/backend/internal/middleware"
+    "github.com/chat-note/backend/internal/config"
+    "github.com/chat-note/backend/internal/crypto"
+    "github.com/chat-note/backend/internal/database"
+    "github.com/chat-note/backend/internal/middleware"
     "github.com/gin-gonic/gin"
     "github.com/stretchr/testify/require"
 )
@@ -598,7 +598,7 @@ func AssertJSONResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStat
 package testutil
 
 import (
-    "github.com/ai-chat-notes/backend/internal/models"
+    "github.com/chat-note/backend/internal/models"
     "github.com/google/uuid"
 )
 

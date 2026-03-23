@@ -3,6 +3,10 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
+# 设置 Go 代理加速
+ENV GOPROXY=https://goproxy.cn,direct
+
+
 # Install dependencies
 RUN apk add --no-cache git
 
@@ -17,7 +21,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
 
 # Runtime stage
-FROM alpine:3.19
+FROM alpine:latest
 
 WORKDIR /app
 

@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ai-chat-notes/backend/internal/crypto"
-	"github.com/ai-chat-notes/backend/internal/middleware"
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/repository"
-	"github.com/ai-chat-notes/backend/internal/utils"
+	"github.com/chat-note/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/middleware"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -29,10 +29,10 @@ func NewProviderHandler(aesCrypto *crypto.AESCrypto) *ProviderHandler {
 }
 
 type CreateProviderRequest struct {
-	Name    string            `json:"name" binding:"required"`
+	Name    string              `json:"name" binding:"required"`
 	Type    models.ProviderType `json:"type" binding:"required"`
-	APIBase string            `json:"api_base" binding:"required"`
-	APIKey  string            `json:"api_key" binding:"required"`
+	APIBase string              `json:"api_base" binding:"required"`
+	APIKey  string              `json:"api_key" binding:"required"`
 }
 
 type UpdateProviderRequest struct {
@@ -232,9 +232,9 @@ func testLLMConnection(apiBase, apiKey string) (bool, string, int) {
 
 // AvailableModel represents a model from the provider's API
 type AvailableModel struct {
-	ID     string `json:"id"`
-	Object string `json:"object"`
-	Created int64 `json:"created"`
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	Created int64  `json:"created"`
 	OwnedBy string `json:"owned_by"`
 }
 

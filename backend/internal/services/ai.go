@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ai-chat-notes/backend/internal/config"
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/repository"
+	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/repository"
 	"github.com/sashabaranov/go-openai"
 )
 

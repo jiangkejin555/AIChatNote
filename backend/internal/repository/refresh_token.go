@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"github.com/ai-chat-notes/backend/internal/database"
-	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/chat-note/backend/internal/database"
+	"github.com/chat-note/backend/internal/models"
 )
 
 type RefreshTokenRepository struct{}

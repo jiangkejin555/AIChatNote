@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ai-chat-notes/backend/internal/config"
-	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

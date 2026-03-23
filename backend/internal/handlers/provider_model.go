@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ai-chat-notes/backend/internal/middleware"
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/repository"
-	"github.com/ai-chat-notes/backend/internal/utils"
+	"github.com/chat-note/backend/internal/middleware"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -31,7 +31,7 @@ type AddModelRequest struct {
 }
 
 type BatchAddModelsRequest struct {
-	Models          []AddModelRequest `json:"models" binding:"required"`
+	Models         []AddModelRequest `json:"models" binding:"required"`
 	DefaultModelID string            `json:"default_model_id"`
 }
 
@@ -44,7 +44,7 @@ type UpdateModelRequest struct {
 // List returns all models for a provider
 func (h *ProviderModelHandler) List(c *gin.Context) {
 	userID := middleware.GetUserID(c)
-	providerID, err := uuid.Parse(c.Param("providerId"))
+	providerID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
 		return
@@ -69,7 +69,7 @@ func (h *ProviderModelHandler) List(c *gin.Context) {
 // Add adds a new model to a provider
 func (h *ProviderModelHandler) Add(c *gin.Context) {
 	userID := middleware.GetUserID(c)
-	providerID, err := uuid.Parse(c.Param("providerId"))
+	providerID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
 		return
@@ -111,7 +111,7 @@ func (h *ProviderModelHandler) Add(c *gin.Context) {
 // Update updates a model
 func (h *ProviderModelHandler) Update(c *gin.Context) {
 	userID := middleware.GetUserID(c)
-	providerID, err := uuid.Parse(c.Param("providerId"))
+	providerID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
 		return
@@ -159,7 +159,7 @@ func (h *ProviderModelHandler) Update(c *gin.Context) {
 // Delete deletes a model
 func (h *ProviderModelHandler) Delete(c *gin.Context) {
 	userID := middleware.GetUserID(c)
-	providerID, err := uuid.Parse(c.Param("providerId"))
+	providerID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
 		return
@@ -188,7 +188,7 @@ func (h *ProviderModelHandler) Delete(c *gin.Context) {
 // BatchAdd adds multiple models to a provider
 func (h *ProviderModelHandler) BatchAdd(c *gin.Context) {
 	userID := middleware.GetUserID(c)
-	providerID, err := uuid.Parse(c.Param("providerId"))
+	providerID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
 		return
@@ -233,7 +233,7 @@ func (h *ProviderModelHandler) BatchAdd(c *gin.Context) {
 // SetDefault sets a model as the default
 func (h *ProviderModelHandler) SetDefault(c *gin.Context) {
 	userID := middleware.GetUserID(c)
-	providerID, err := uuid.Parse(c.Param("providerId"))
+	providerID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
 		return

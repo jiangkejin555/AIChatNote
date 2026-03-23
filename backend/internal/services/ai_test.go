@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ai-chat-notes/backend/internal/config"
-	"github.com/ai-chat-notes/backend/internal/testutil"
+	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -3,8 +3,8 @@ package repository
 import (
 	"testing"
 
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/testutil"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/testutil"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

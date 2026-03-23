@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/ai-chat-notes/backend/internal/database"
-	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/chat-note/backend/internal/database"
+	"github.com/chat-note/backend/internal/models"
 	"github.com/google/uuid"
 )
 

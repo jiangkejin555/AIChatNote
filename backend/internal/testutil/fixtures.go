@@ -3,7 +3,7 @@ package testutil
 import (
 	"time"
 
-	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/chat-note/backend/internal/models"
 )
 
 // Test password hashes (bcrypt hash of "password123")
@@ -116,9 +116,9 @@ func FixtureMessage(conversationID uint, role models.MessageRole, content string
 
 // Common test constants
 const (
-	TestEmail       = "test@example.com"
-	TestPassword    = "password123"
+	TestEmail         = "test@example.com"
+	TestPassword      = "password123"
 	TestWrongPassword = "wrongpassword"
-	TestTitle       = "Test Title"
-	TestContent     = "Test Content"
+	TestTitle         = "Test Title"
+	TestContent       = "Test Content"
 )

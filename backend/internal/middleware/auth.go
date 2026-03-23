@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ai-chat-notes/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/crypto"
 	"github.com/gin-gonic/gin"
 )
 

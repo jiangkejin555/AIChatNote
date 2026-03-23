@@ -4,9 +4,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ai-chat-notes/backend/internal/crypto"
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/testutil"
+	"github.com/chat-note/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/testutil"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

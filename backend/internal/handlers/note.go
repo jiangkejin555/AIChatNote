@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ai-chat-notes/backend/internal/middleware"
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/repository"
-	"github.com/ai-chat-notes/backend/internal/services"
-	"github.com/ai-chat-notes/backend/internal/utils"
+	"github.com/chat-note/backend/internal/middleware"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/services"
+	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 

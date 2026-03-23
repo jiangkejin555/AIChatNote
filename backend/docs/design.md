@@ -712,7 +712,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: ai-chat-notes-db
+    container_name: chat-note-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

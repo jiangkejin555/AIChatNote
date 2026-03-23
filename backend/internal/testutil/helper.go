@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ai-chat-notes/backend/internal/config"
-	"github.com/ai-chat-notes/backend/internal/crypto"
-	"github.com/ai-chat-notes/backend/internal/database"
-	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/database"
+	"github.com/chat-note/backend/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
 	"github.com/google/uuid"
@@ -26,7 +26,7 @@ func SetupTestDB(t *testing.T) func() {
 	t.Helper()
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger:                                   logger.Default.LogMode(logger.Silent),
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
@@ -142,12 +142,12 @@ func SetupTestRouter() *gin.Engine {
 func TestConfig() *config.Config {
 	return &config.Config{
 		JWT: config.JWTConfig{
-			Secret:           "test-secret-key-for-unit-testing",
-			RefreshSecret:    "test-refresh-secret-key",
-			ExpiryHours:      1,
+			Secret:             "test-secret-key-for-unit-testing",
+			RefreshSecret:      "test-refresh-secret-key",
+			ExpiryHours:        1,
 			RefreshExpiryHours: 24,
-			Expiry:           time.Hour,
-			RefreshExpiry:    24 * time.Hour,
+			Expiry:             time.Hour,
+			RefreshExpiry:      24 * time.Hour,
 		},
 		Encryption: config.EncryptionConfig{
 			Key: "test-encryption-key-32-bytes!!",

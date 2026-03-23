@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: ai-chat-notes-db
+    container_name: chat-note-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -21,10 +19,11 @@ services:
 
   # Backend API Server
   backend:
+    image: chat-note-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ai-chat-notes-api
+    container_name: chat-note-api
     ports:
       - "8080:8080"
     environment:

@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ai-chat-notes/backend/internal/crypto"
-	"github.com/ai-chat-notes/backend/internal/middleware"
-	"github.com/ai-chat-notes/backend/internal/models"
-	"github.com/ai-chat-notes/backend/internal/repository"
-	"github.com/ai-chat-notes/backend/internal/utils"
+	"github.com/chat-note/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/middleware"
+	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,8 +40,8 @@ type RefreshRequest struct {
 }
 
 type AuthResponse struct {
-	Token        string      `json:"token"`
-	RefreshToken string      `json:"refresh_token"`
+	Token        string       `json:"token"`
+	RefreshToken string       `json:"refresh_token"`
 	User         *models.User `json:"user"`
 }
 

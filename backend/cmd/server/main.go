@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/ai-chat-notes/backend/internal/config"
-	"github.com/ai-chat-notes/backend/internal/crypto"
-	"github.com/ai-chat-notes/backend/internal/database"
-	"github.com/ai-chat-notes/backend/internal/handlers"
-	"github.com/ai-chat-notes/backend/internal/middleware"
-	"github.com/ai-chat-notes/backend/internal/services"
+	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/database"
+	"github.com/chat-note/backend/internal/handlers"
+	"github.com/chat-note/backend/internal/middleware"
+	"github.com/chat-note/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -111,11 +111,11 @@ func main() {
 			providers.POST("/:id/test-connection", providerHandler.TestConnection)
 
 			// Provider model routes
-			providers.GET("/:providerId/models", providerModelHandler.List)
-			providers.POST("/:providerId/models", providerModelHandler.Add)
-			providers.PUT("/:providerId/models/:modelId", providerModelHandler.Update)
-			providers.DELETE("/:providerId/models/:modelId", providerModelHandler.Delete)
-			providers.POST("/:providerId/models/batch", providerModelHandler.BatchAdd)
+			providers.GET("/:id/models", providerModelHandler.List)
+			providers.POST("/:id/models", providerModelHandler.Add)
+			providers.PUT("/:id/models/:modelId", providerModelHandler.Update)
+			providers.DELETE("/:id/models/:modelId", providerModelHandler.Delete)
+			providers.POST("/:id/models/batch", providerModelHandler.BatchAdd)
 		}
 
 		// Conversation routes

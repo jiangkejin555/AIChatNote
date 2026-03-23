@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ai-chat-notes/backend/internal/config"
+	"github.com/chat-note/backend/internal/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

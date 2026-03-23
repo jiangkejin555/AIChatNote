@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/ai-chat-notes/backend/internal/config"
+	"github.com/chat-note/backend/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
