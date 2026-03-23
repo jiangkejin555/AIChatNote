@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test files
+*_test.go
+testdata/
+
+# Development files
+.env
+.env.*
+*.local.yaml
+*.local.yml
+
+# Binary (will be built fresh)
+main
+backend
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker (don't copy these into image)
+Dockerfile
+docker-compose*.yml
+.dockerignore

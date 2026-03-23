@@ -1,0 +1,679 @@
+package handlers
+
+import (
+	"archive/zip"
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/ai-chat-notes/backend/internal/middleware"
+	"github.com/ai-chat-notes/backend/internal/models"
+	"github.com/ai-chat-notes/backend/internal/repository"
+	"github.com/ai-chat-notes/backend/internal/services"
+	"github.com/ai-chat-notes/backend/internal/utils"
+	"github.com/gin-gonic/gin"
+)
+
+type NoteHandler struct {
+	noteRepo   *repository.NoteRepository
+	folderRepo *repository.FolderRepository
+	tagRepo    *repository.TagRepository
+	convRepo   *repository.ConversationRepository
+	aiService  *services.AIService
+}
+
+func NewNoteHandler(aiService *services.AIService) *NoteHandler {
+	return &NoteHandler{
+		noteRepo:   repository.NewNoteRepository(),
+		folderRepo: repository.NewFolderRepository(),
+		tagRepo:    repository.NewTagRepository(),
+		convRepo:   repository.NewConversationRepository(),
+		aiService:  aiService,
+	}
+}
+
+type CreateNoteRequest struct {
+	Title                string   `json:"title" binding:"required"`
+	Content              string   `json:"content" binding:"required"`
+	Tags                 []string `json:"tags"`
+	FolderID             *uint    `json:"folder_id"`
+	SourceConversationID *uint    `json:"source_conversation_id"`
+}
+
+type UpdateNoteRequest struct {
+	Title    string   `json:"title"`
+	Content  string   `json:"content"`
+	Tags     []string `json:"tags"`
+	FolderID *uint    `json:"folder_id"`
+}
+
+type BatchDeleteRequest struct {
+	IDs []uint `json:"ids" binding:"required"`
+}
+
+type BatchMoveRequest struct {
+	IDs            []uint `json:"ids" binding:"required"`
+	TargetFolderID *uint  `json:"target_folder_id"`
+}
+
+// List returns notes with optional filters
+func (h *NoteHandler) List(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	filters := make(map[string]interface{})
+	if folderID := c.Query("folder_id"); folderID != "" {
+		if id, err := strconv.ParseUint(folderID, 10, 32); err == nil {
+			filters["folder_id"] = uint(id)
+		}
+	}
+	if tag := c.Query("tag"); tag != "" {
+		filters["tag"] = tag
+	}
+	if search := c.Query("search"); search != "" {
+		filters["search"] = search
+	}
+
+	notes, err := h.noteRepo.FindByUserID(userID, filters)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch notes")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": notes})
+}
+
+// Create creates a new note
+func (h *NoteHandler) Create(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req CreateNoteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	note := &models.Note{
+		UserID:               userID,
+		Title:                req.Title,
+		Content:              req.Content,
+		FolderID:             req.FolderID,
+		SourceConversationID: req.SourceConversationID,
+	}
+
+	if err := h.noteRepo.Create(note); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create note")
+		return
+	}
+
+	// Add tags
+	if len(req.Tags) > 0 {
+		tags := make([]models.NoteTag, len(req.Tags))
+		for i, tag := range req.Tags {
+			tags[i] = models.NoteTag{NoteID: note.ID, Tag: tag}
+		}
+		h.noteRepo.CreateTags(tags)
+		note.Tags = tags
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": note})
+}
+
+// Get returns a specific note
+func (h *NoteHandler) Get(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid note ID")
+		return
+	}
+
+	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": note})
+}
+
+// Update updates a note
+func (h *NoteHandler) Update(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid note ID")
+		return
+	}
+
+	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		return
+	}
+
+	var req UpdateNoteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	if req.Title != "" {
+		note.Title = req.Title
+	}
+	if req.Content != "" {
+		note.Content = req.Content
+	}
+	if req.FolderID != nil {
+		note.FolderID = req.FolderID
+	}
+
+	if err := h.noteRepo.Update(note); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update note")
+		return
+	}
+
+	// Update tags if provided
+	if req.Tags != nil {
+		h.noteRepo.DeleteTags(note.ID)
+		if len(req.Tags) > 0 {
+			tags := make([]models.NoteTag, len(req.Tags))
+			for i, tag := range req.Tags {
+				tags[i] = models.NoteTag{NoteID: note.ID, Tag: tag}
+			}
+			h.noteRepo.CreateTags(tags)
+			note.Tags = tags
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": note})
+}
+
+// Delete deletes a note
+func (h *NoteHandler) Delete(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid note ID")
+		return
+	}
+
+	if err := h.noteRepo.Delete(uint(noteID), userID); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete note")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
+}
+
+// Copy copies a note
+func (h *NoteHandler) Copy(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid note ID")
+		return
+	}
+
+	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		return
+	}
+
+	newNote := &models.Note{
+		UserID:               userID,
+		Title:                note.Title + " - Copy",
+		Content:              note.Content,
+		FolderID:             note.FolderID,
+		SourceConversationID: note.SourceConversationID,
+	}
+
+	if err := h.noteRepo.Create(newNote); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to copy note")
+		return
+	}
+
+	// Copy tags
+	if len(note.Tags) > 0 {
+		tags := make([]models.NoteTag, len(note.Tags))
+		for i, tag := range note.Tags {
+			tags[i] = models.NoteTag{NoteID: newNote.ID, Tag: tag.Tag}
+		}
+		h.noteRepo.CreateTags(tags)
+		newNote.Tags = tags
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": newNote})
+}
+
+// Export exports a single note as Markdown
+func (h *NoteHandler) Export(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid note ID")
+		return
+	}
+
+	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		return
+	}
+
+	// Build markdown content
+	var tagsStr string
+	for _, tag := range note.Tags {
+		tagsStr += "#" + tag.Tag + " "
+	}
+
+	markdown := fmt.Sprintf("# %s\n\n%s", note.Title, note.Content)
+	if tagsStr != "" {
+		markdown = fmt.Sprintf("# %s\n\n%s\n\n%s", note.Title, note.Content, tagsStr)
+	}
+
+	filename := sanitizeFilename(note.Title) + ".md"
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Data(http.StatusOK, "text/markdown", []byte(markdown))
+}
+
+// ExportBatch exports multiple notes as ZIP
+func (h *NoteHandler) ExportBatch(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req struct {
+		IDs []uint `json:"ids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	notes, err := h.noteRepo.FindByUserID(userID, nil)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch notes")
+		return
+	}
+
+	// Filter notes if IDs provided
+	if len(req.IDs) > 0 {
+		idSet := make(map[uint]bool)
+		for _, id := range req.IDs {
+			idSet[id] = true
+		}
+		var filtered []models.Note
+		for _, note := range notes {
+			if idSet[note.ID] {
+				filtered = append(filtered, note)
+			}
+		}
+		notes = filtered
+	}
+
+	// Create ZIP
+	buf := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(buf)
+
+	for _, note := range notes {
+		filename := sanitizeFilename(note.Title) + ".md"
+		markdown := fmt.Sprintf("# %s\n\n%s", note.Title, note.Content)
+
+		w, _ := zipWriter.Create(filename)
+		w.Write([]byte(markdown))
+	}
+
+	zipWriter.Close()
+
+	c.Header("Content-Disposition", "attachment; filename=notes_export.zip")
+	c.Data(http.StatusOK, "application/zip", buf.Bytes())
+}
+
+// Import imports a Markdown file
+func (h *NoteHandler) Import(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "no_file", "No file uploaded")
+		return
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "read_error", "Failed to read file")
+		return
+	}
+
+	// Parse markdown
+	title := strings.TrimSuffix(header.Filename, ".md")
+	body := string(content)
+
+	// Try to extract title from first H1
+	re := regexp.MustCompile(`(?m)^#\s+(.+)$`)
+	if matches := re.FindStringSubmatch(body); len(matches) > 1 {
+		title = matches[1]
+		body = re.ReplaceAllString(body, "")
+		body = strings.TrimSpace(body)
+	}
+
+	folderIDStr := c.PostForm("folder_id")
+	var folderID *uint
+	if folderIDStr != "" {
+		if id, err := strconv.ParseUint(folderIDStr, 10, 32); err == nil {
+			fid := uint(id)
+			folderID = &fid
+		}
+	}
+
+	note := &models.Note{
+		UserID:   userID,
+		Title:    title,
+		Content:  body,
+		FolderID: folderID,
+	}
+
+	if err := h.noteRepo.Create(note); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create note")
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": note})
+}
+
+// BatchDelete deletes multiple notes
+func (h *NoteHandler) BatchDelete(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req BatchDeleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	if err := h.noteRepo.BatchDelete(req.IDs, userID); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete notes")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Notes deleted"})
+}
+
+// BatchMove moves multiple notes to a folder
+func (h *NoteHandler) BatchMove(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req BatchMoveRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	if err := h.noteRepo.BatchMove(req.IDs, userID, req.TargetFolderID); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "move_error", "Failed to move notes")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Notes moved"})
+}
+
+// Generate generates note preview from conversation using AI
+func (h *NoteHandler) Generate(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req struct {
+		ConversationID uint `json:"conversation_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	// Check if AI service is configured
+	if h.aiService == nil {
+		utils.SendError(c, http.StatusServiceUnavailable, "ai_not_configured", "AI service is not configured")
+		return
+	}
+
+	// Generate note using AI service
+	note, err := h.aiService.GenerateNoteFromConversation(context.Background(), req.ConversationID, userID)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "generation_error", "Failed to generate note: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": gin.H{
+			"title":   note.Title,
+			"content": note.Content,
+			"tags":    note.Tags,
+		},
+	})
+}
+
+func sanitizeFilename(name string) string {
+	// Remove invalid characters
+	re := regexp.MustCompile(`[<>:"/\\|?*]`)
+	name = re.ReplaceAllString(name, "")
+	if name == "" {
+		name = "untitled"
+	}
+	return name
+}
+
+// FolderHandler handles folder operations
+type FolderHandler struct {
+	folderRepo *repository.FolderRepository
+	noteRepo   *repository.NoteRepository
+}
+
+func NewFolderHandler() *FolderHandler {
+	return &FolderHandler{
+		folderRepo: repository.NewFolderRepository(),
+		noteRepo:   repository.NewNoteRepository(),
+	}
+}
+
+// List returns all folders in tree structure
+func (h *FolderHandler) List(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	folders, err := h.folderRepo.FindByUserID(userID)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch folders")
+		return
+	}
+
+	// Build tree structure
+	tree := buildFolderTree(folders, nil)
+	c.JSON(http.StatusOK, gin.H{"data": tree})
+}
+
+// Create creates a new folder
+func (h *FolderHandler) Create(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req struct {
+		Name     string `json:"name" binding:"required"`
+		ParentID *uint  `json:"parent_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	folder := &models.Folder{
+		UserID:   userID,
+		Name:     req.Name,
+		ParentID: req.ParentID,
+	}
+
+	if err := h.folderRepo.Create(folder); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create folder")
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": folder})
+}
+
+// Get returns a specific folder
+func (h *FolderHandler) Get(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	folderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid folder ID")
+		return
+	}
+
+	folder, err := h.folderRepo.FindByIDAndUserID(uint(folderID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Folder not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": folder})
+}
+
+// Update updates a folder
+func (h *FolderHandler) Update(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	folderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid folder ID")
+		return
+	}
+
+	folder, err := h.folderRepo.FindByIDAndUserID(uint(folderID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Folder not found")
+		return
+	}
+
+	var req struct {
+		Name     string `json:"name"`
+		ParentID *uint  `json:"parent_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	if req.Name != "" {
+		folder.Name = req.Name
+	}
+	if req.ParentID != nil {
+		folder.ParentID = req.ParentID
+	}
+
+	if err := h.folderRepo.Update(folder); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update folder")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": folder})
+}
+
+// Delete deletes a folder
+func (h *FolderHandler) Delete(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	folderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid folder ID")
+		return
+	}
+
+	// Move notes to root
+	notes, _ := h.noteRepo.FindByUserID(userID, map[string]interface{}{"folder_id": uint(folderID)})
+	for _, note := range notes {
+		note.FolderID = nil
+		h.noteRepo.Update(&note)
+	}
+
+	if err := h.folderRepo.Delete(uint(folderID), userID); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete folder")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Folder deleted"})
+}
+
+// Copy copies a folder
+func (h *FolderHandler) Copy(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	folderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid folder ID")
+		return
+	}
+
+	folder, err := h.folderRepo.FindByIDAndUserID(uint(folderID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Folder not found")
+		return
+	}
+
+	newFolder := &models.Folder{
+		UserID:   userID,
+		Name:     folder.Name + " - Copy",
+		ParentID: folder.ParentID,
+	}
+
+	if err := h.folderRepo.Create(newFolder); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to copy folder")
+		return
+	}
+
+	// Copy notes
+	notes, _ := h.noteRepo.FindByUserID(userID, map[string]interface{}{"folder_id": folder.ID})
+	for _, note := range notes {
+		newNote := &models.Note{
+			UserID:   userID,
+			Title:    note.Title,
+			Content:  note.Content,
+			FolderID: &newFolder.ID,
+		}
+		h.noteRepo.Create(newNote)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": newFolder})
+}
+
+func buildFolderTree(folders []models.Folder, parentID *uint) []models.Folder {
+	var result []models.Folder
+	for _, folder := range folders {
+		if (parentID == nil && folder.ParentID == nil) ||
+			(parentID != nil && folder.ParentID != nil && *folder.ParentID == *parentID) {
+			children := buildFolderTree(folders, &folder.ID)
+			folder.Children = children
+			result = append(result, folder)
+		}
+	}
+	return result
+}
+
+// TagHandler handles tag operations
+type TagHandler struct {
+	tagRepo *repository.TagRepository
+}
+
+func NewTagHandler() *TagHandler {
+	return &TagHandler{tagRepo: repository.NewTagRepository()}
+}
+
+// List returns all tags with counts
+func (h *TagHandler) List(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	tags, err := h.tagRepo.FindByUserID(userID)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch tags")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": tags})
+}

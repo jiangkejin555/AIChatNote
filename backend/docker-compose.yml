@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai-chat-notes-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_chat_notes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API Server
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-chat-notes-api
+    ports:
+      - "8080:8080"
+    environment:
+      # Override config.yaml values via environment variables
+      - PORT=8080
+      - GIN_MODE=release
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ai_chat_notes?sslmode=disable
+      # Uncomment and set these for production:
+      # - JWT_SECRET=your-production-jwt-secret
+      # - JWT_REFRESH_SECRET=your-production-refresh-secret
+      # - ENCRYPTION_KEY=your-32-byte-encryption-key
+      # - DEEPSEEK_API_KEY=sk-your-deepseek-api-key
+      # - FRONTEND_URL=https://your-frontend.vercel.app
+    volumes:
+      # Mount config.yaml (required)
+      - ./config.yaml:/app/config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

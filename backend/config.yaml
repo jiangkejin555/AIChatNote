@@ -1,0 +1,24 @@
+# AI Chat Notes Backend Configuration
+
+server:
+  port: "8080"
+  gin_mode: "debug"  # debug or release
+
+database:
+  url: "postgresql://postgres:postgres@localhost:5432/ai_chat_notes?sslmode=disable"
+
+jwt:
+  secret: "your-jwt-secret-key-at-least-32-characters-long"
+  refresh_secret: "your-refresh-token-secret-key"
+  expiry_hours: 24
+  refresh_expiry_hours: 168
+
+encryption:
+  key: "your-32-byte-encryption-key-here"  # Must be exactly 32 bytes
+
+llm:
+  deepseek_api_key: ""  # Set your DeepSeek API key here or via environment variable
+  deepseek_api_base: "https://api.deepseek.com"
+
+cors:
+  frontend_url: "http://localhost:3000"
