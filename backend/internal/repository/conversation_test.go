@@ -67,14 +67,14 @@ func TestConversationRepository(t *testing.T) {
 		assert.GreaterOrEqual(t, len(conversations), 3)
 	})
 
-	t.Run("FindByID", func(t *testing.T) {
+	t.Run("FindByIDAndUserID", func(t *testing.T) {
 		conv := &models.Conversation{
 			UserID: user.ID,
 			Title:  "Find By ID Test",
 		}
 		require.NoError(t, convRepo.Create(conv))
 
-		found, err := convRepo.FindByID(conv.ID)
+		found, err := convRepo.FindByIDAndUserID(conv.ID, user.ID)
 
 		require.NoError(t, err)
 		require.NotNil(t, found)
@@ -82,8 +82,8 @@ func TestConversationRepository(t *testing.T) {
 		assert.Equal(t, "Find By ID Test", found.Title)
 	})
 
-	t.Run("FindByID_NotExists", func(t *testing.T) {
-		found, err := convRepo.FindByID(999999)
+	t.Run("FindByIDAndUserID_NotExists", func(t *testing.T) {
+		found, err := convRepo.FindByIDAndUserID(999999, user.ID)
 
 		assert.Error(t, err)
 		assert.Nil(t, found)
@@ -107,7 +107,7 @@ func TestConversationRepository(t *testing.T) {
 		assert.Nil(t, found)
 	})
 
-	t.Run("FindByIDWithMessages", func(t *testing.T) {
+	t.Run("FindByIDWithMessagesAndUserID", func(t *testing.T) {
 		// Create conversation with messages
 		conv := &models.Conversation{
 			UserID: user.ID,
@@ -129,7 +129,7 @@ func TestConversationRepository(t *testing.T) {
 		require.NoError(t, msgRepo.Create(msg1))
 		require.NoError(t, msgRepo.Create(msg2))
 
-		found, err := convRepo.FindByIDWithMessages(conv.ID)
+		found, err := convRepo.FindByIDWithMessagesAndUserID(conv.ID, user.ID)
 
 		require.NoError(t, err)
 		require.NotNil(t, found)
@@ -148,7 +148,7 @@ func TestConversationRepository(t *testing.T) {
 
 		require.NoError(t, err)
 
-		found, _ := convRepo.FindByID(conv.ID)
+		found, _ := convRepo.FindByIDAndUserID(conv.ID, user.ID)
 		assert.Equal(t, "Updated Title", found.Title)
 	})
 
@@ -163,7 +163,7 @@ func TestConversationRepository(t *testing.T) {
 
 		require.NoError(t, err)
 
-		found, err := convRepo.FindByID(conv.ID)
+		found, err := convRepo.FindByIDAndUserID(conv.ID, user.ID)
 		assert.Error(t, err)
 		assert.Nil(t, found)
 	})
@@ -181,7 +181,7 @@ func TestConversationRepository(t *testing.T) {
 		require.NoError(t, err)
 
 		// Should still exist
-		found, _ := convRepo.FindByID(conv.ID)
+		found, _ := convRepo.FindByIDAndUserID(conv.ID, user.ID)
 		require.NotNil(t, found)
 	})
 }

@@ -24,15 +24,7 @@ func (r *ConversationRepository) FindByUserID(userID uint) ([]models.Conversatio
 	return conversations, err
 }
 
-func (r *ConversationRepository) FindByID(id uint) (*models.Conversation, error) {
-	var conv models.Conversation
-	err := database.DB.First(&conv, id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &conv, nil
-}
-
+// FindByIDAndUserID 根据 ID 和 UserID 查询会话（推荐使用，确保数据隔离）
 func (r *ConversationRepository) FindByIDAndUserID(id, userID uint) (*models.Conversation, error) {
 	var conv models.Conversation
 	err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&conv).Error
@@ -42,11 +34,13 @@ func (r *ConversationRepository) FindByIDAndUserID(id, userID uint) (*models.Con
 	return &conv, nil
 }
 
-func (r *ConversationRepository) FindByIDWithMessages(id uint) (*models.Conversation, error) {
+// FindByIDWithMessagesAndUserID 根据 ID 和 UserID 查询会话及其消息（推荐使用，确保数据隔离）
+func (r *ConversationRepository) FindByIDWithMessagesAndUserID(id, userID uint) (*models.Conversation, error) {
 	var conv models.Conversation
-	err := database.DB.Preload("Messages", func(db *gorm.DB) *gorm.DB {
-		return db.Order("created_at ASC")
-	}).First(&conv, id).Error
+	err := database.DB.Where("id = ? AND user_id = ?", id, userID).
+		Preload("Messages", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at ASC")
+		}).First(&conv).Error
 	if err != nil {
 		return nil, err
 	}

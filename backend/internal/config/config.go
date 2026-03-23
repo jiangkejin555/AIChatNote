@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +27,15 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	URL string `yaml:"url"`
+	Host            string `yaml:"host"`
+	Port            int    `yaml:"port"`
+	User            string `yaml:"user"`
+	Password        string `yaml:"password"`
+	DBName          string `yaml:"dbname"`
+	SSLMode         string `yaml:"sslmode"`
+	MaxOpenConns    int    `yaml:"max_open_conns"`
+	MaxIdleConns    int    `yaml:"max_idle_conns"`
+	ConnMaxLifetime int    `yaml:"conn_max_lifetime"` // seconds
 }
 
 type JWTConfig struct {
@@ -107,8 +116,20 @@ func applyEnvOverrides(cfg *Config) {
 	if v := os.Getenv("GIN_MODE"); v != "" {
 		cfg.Server.GinMode = v
 	}
-	if v := os.Getenv("DATABASE_URL"); v != "" {
-		cfg.Database.URL = v
+	if v := os.Getenv("DB_HOST"); v != "" {
+		cfg.Database.Host = v
+	}
+	if v := os.Getenv("DB_PORT"); v != "" {
+		cfg.Database.Port = parseInt(v, cfg.Database.Port)
+	}
+	if v := os.Getenv("DB_USER"); v != "" {
+		cfg.Database.User = v
+	}
+	if v := os.Getenv("DB_PASSWORD"); v != "" {
+		cfg.Database.Password = v
+	}
+	if v := os.Getenv("DB_NAME"); v != "" {
+		cfg.Database.DBName = v
 	}
 	if v := os.Getenv("JWT_SECRET"); v != "" {
 		cfg.JWT.Secret = v
@@ -131,4 +152,11 @@ func applyEnvOverrides(cfg *Config) {
 	if v := os.Getenv("MOCK_ENABLED"); v != "" {
 		cfg.Mock.Enabled = strings.ToLower(v) == "true"
 	}
+}
+
+func parseInt(s string, defaultValue int) int {
+	if v, err := strconv.Atoi(s); err == nil {
+		return v
+	}
+	return defaultValue
 }

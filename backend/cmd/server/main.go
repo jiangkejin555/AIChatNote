@@ -36,6 +36,11 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// Run database migrations
+	if err := database.Migrate(); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+
 	// Initialize services
 	jwtService := crypto.NewJWTService(cfg)
 	aesCrypto, err := crypto.NewAESCrypto(cfg.Encryption.Key)

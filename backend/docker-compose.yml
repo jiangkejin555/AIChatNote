@@ -6,9 +6,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ai_chat_notes
+      POSTGRES_DB: chat_note
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,18 +27,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Override config.yaml values via environment variables
       - PORT=8080
       - GIN_MODE=release
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ai_chat_notes?sslmode=disable
-      # Uncomment and set these for production:
-      # - JWT_SECRET=your-production-jwt-secret
-      # - JWT_REFRESH_SECRET=your-production-refresh-secret
-      # - ENCRYPTION_KEY=your-32-byte-encryption-key
-      # - DEEPSEEK_API_KEY=sk-your-deepseek-api-key
-      # - FRONTEND_URL=https://your-frontend.vercel.app
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=chat_note
     volumes:
-      # Mount config.yaml (required)
       - ./config.yaml:/app/config.yaml:ro
     depends_on:
       postgres:

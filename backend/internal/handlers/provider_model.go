@@ -53,13 +53,13 @@ func (h *ProviderModelHandler) List(c *gin.Context) {
 	// Verify provider belongs to user
 	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
 	models, err := h.modelRepo.FindByProviderID(provider.ID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch models")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch models", err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *ProviderModelHandler) Add(c *gin.Context) {
 
 	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *ProviderModelHandler) Add(c *gin.Context) {
 	}
 
 	if err := h.modelRepo.Create(model); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to add model")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to add model", err)
 		return
 	}
 
@@ -125,13 +125,13 @@ func (h *ProviderModelHandler) Update(c *gin.Context) {
 
 	_, err = h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
 	model, err := h.modelRepo.FindByIDAndProviderID(modelID, providerID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Model not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Model not found", err)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *ProviderModelHandler) Update(c *gin.Context) {
 	model.UpdatedAt = time.Now()
 
 	if err := h.modelRepo.Update(model); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update model")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update model", err)
 		return
 	}
 
@@ -173,12 +173,12 @@ func (h *ProviderModelHandler) Delete(c *gin.Context) {
 
 	_, err = h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
 	if err := h.modelRepo.Delete(modelID, providerID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete model")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete model", err)
 		return
 	}
 
@@ -196,7 +196,7 @@ func (h *ProviderModelHandler) BatchAdd(c *gin.Context) {
 
 	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
@@ -223,7 +223,7 @@ func (h *ProviderModelHandler) BatchAdd(c *gin.Context) {
 	}
 
 	if err := h.modelRepo.BatchCreate(newModels); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to add models")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to add models", err)
 		return
 	}
 
@@ -247,12 +247,12 @@ func (h *ProviderModelHandler) SetDefault(c *gin.Context) {
 
 	_, err = h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
 	if err := h.modelRepo.SetDefault(providerID, modelID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to set default model")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to set default model", err)
 		return
 	}
 

@@ -62,7 +62,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	// Hash password
 	passwordHash, err := crypto.HashPassword(req.Password)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "hash_error", "Failed to secure password")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "hash_error", "Failed to secure password", err)
 		return
 	}
 
@@ -72,20 +72,20 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		PasswordHash: passwordHash,
 	}
 	if err := h.userRepo.Create(user); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create user")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create user", err)
 		return
 	}
 
 	// Generate tokens
 	token, err := h.jwtService.GenerateToken(user)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to generate token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate token", err)
 		return
 	}
 
 	refreshToken, expiresAt, err := h.jwtService.GenerateRefreshToken()
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token", err)
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		ExpiresAt: expiresAt,
 	}
 	if err := h.refreshTokenRepo.Create(rt); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token", err)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Find user
 	user, err := h.userRepo.FindByEmail(req.Email)
 	if err != nil {
-		utils.SendError(c, http.StatusUnauthorized, "invalid_credentials", "Invalid email or password")
+		utils.SendErrorWithErr(c, http.StatusUnauthorized, "invalid_credentials", "Invalid email or password", err)
 		return
 	}
 
@@ -131,13 +131,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Generate tokens
 	token, err := h.jwtService.GenerateToken(user)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to generate token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate token", err)
 		return
 	}
 
 	refreshToken, expiresAt, err := h.jwtService.GenerateRefreshToken()
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token", err)
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		ExpiresAt: expiresAt,
 	}
 	if err := h.refreshTokenRepo.Create(rt); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token", err)
 		return
 	}
 
@@ -170,14 +170,14 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	// Validate refresh token
 	rt, err := h.refreshTokenRepo.FindByToken(req.RefreshToken)
 	if err != nil {
-		utils.SendError(c, http.StatusUnauthorized, "invalid_token", "Invalid or expired refresh token")
+		utils.SendErrorWithErr(c, http.StatusUnauthorized, "invalid_token", "Invalid or expired refresh token", err)
 		return
 	}
 
 	// Get user
 	user, err := h.userRepo.FindByID(rt.UserID)
 	if err != nil {
-		utils.SendError(c, http.StatusUnauthorized, "user_not_found", "User not found")
+		utils.SendErrorWithErr(c, http.StatusUnauthorized, "user_not_found", "User not found", err)
 		return
 	}
 
@@ -187,13 +187,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	// Generate new tokens
 	token, err := h.jwtService.GenerateToken(user)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to generate token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate token", err)
 		return
 	}
 
 	newRefreshToken, expiresAt, err := h.jwtService.GenerateRefreshToken()
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token", err)
 		return
 	}
 
@@ -204,7 +204,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		ExpiresAt: expiresAt,
 	}
 	if err := h.refreshTokenRepo.Create(newRt); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token", err)
 		return
 	}
 
@@ -236,7 +236,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 
 	user, err := h.userRepo.FindByID(userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "user_not_found", "User not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "user_not_found", "User not found", err)
 		return
 	}
 

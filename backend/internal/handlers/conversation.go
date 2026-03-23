@@ -56,7 +56,7 @@ func (h *ConversationHandler) List(c *gin.Context) {
 
 	conversations, err := h.convRepo.FindByUserID(userID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch conversations")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch conversations", err)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.convRepo.Create(conv); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create conversation")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create conversation", err)
 		return
 	}
 
@@ -101,14 +101,9 @@ func (h *ConversationHandler) Get(c *gin.Context) {
 		return
 	}
 
-	conv, err := h.convRepo.FindByIDWithMessages(uint(convID))
+	conv, err := h.convRepo.FindByIDWithMessagesAndUserID(uint(convID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Conversation not found")
-		return
-	}
-
-	if conv.UserID != userID {
-		utils.SendError(c, http.StatusForbidden, "forbidden", "Access denied")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
 		return
 	}
 
@@ -126,7 +121,7 @@ func (h *ConversationHandler) Update(c *gin.Context) {
 
 	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Conversation not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
 		return
 	}
 
@@ -143,7 +138,7 @@ func (h *ConversationHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.convRepo.Update(conv); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update conversation")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update conversation", err)
 		return
 	}
 
@@ -160,7 +155,7 @@ func (h *ConversationHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.convRepo.Delete(uint(convID), userID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete conversation")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete conversation", err)
 		return
 	}
 
@@ -178,13 +173,13 @@ func (h *ConversationHandler) MarkSaved(c *gin.Context) {
 
 	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Conversation not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
 		return
 	}
 
 	conv.IsSaved = true
 	if err := h.convRepo.Update(conv); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to mark as saved")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to mark as saved", err)
 		return
 	}
 
@@ -202,7 +197,7 @@ func (h *ConversationHandler) GetMessages(c *gin.Context) {
 
 	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Conversation not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
 		return
 	}
 
@@ -217,7 +212,7 @@ func (h *ConversationHandler) GetMessages(c *gin.Context) {
 	}
 
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", err)
 		return
 	}
 
@@ -235,7 +230,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 
 	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Conversation not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
 		return
 	}
 
@@ -252,7 +247,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		Content:        req.Content,
 	}
 	if err := h.msgRepo.Create(userMsg); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save message")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save message", err)
 		return
 	}
 
@@ -274,27 +269,27 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 
 	providerModel, err := h.modelRepo.FindByID(*conv.ProviderModelID)
 	if err != nil {
-		utils.SendError(c, http.StatusBadRequest, "no_model", "Model not found")
+		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_model", "Model not found", err)
 		return
 	}
 
 	provider, err := h.providerRepo.FindByID(providerModel.ProviderID)
 	if err != nil {
-		utils.SendError(c, http.StatusBadRequest, "no_provider", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_provider", "Provider not found", err)
 		return
 	}
 
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "decrypt_error", "Failed to decrypt API key")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decrypt_error", "Failed to decrypt API key", err)
 		return
 	}
 
 	// Get conversation history
 	messages, err := h.msgRepo.FindByConversationID(conv.ID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", err)
 		return
 	}
 
@@ -420,7 +415,7 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 		CreatedAt:      time.Now(),
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save response")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
 		return
 	}
 
@@ -482,7 +477,7 @@ func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *
 		CreatedAt:      time.Now(),
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save response")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
 		return
 	}
 
@@ -509,20 +504,20 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 
 	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Conversation not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
 		return
 	}
 
 	// Delete the assistant message
 	if err := h.msgRepo.Delete(uint(msgID)); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete message")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete message", err)
 		return
 	}
 
 	// Get updated messages
 	messages, err := h.msgRepo.FindByConversationID(conv.ID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", err)
 		return
 	}
 
@@ -534,7 +529,7 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 			Content:        mockResponse,
 		}
 		if err := h.msgRepo.Create(assistantMsg); err != nil {
-			utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save response")
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
@@ -549,19 +544,19 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 
 	providerModel, err := h.modelRepo.FindByID(*conv.ProviderModelID)
 	if err != nil {
-		utils.SendError(c, http.StatusBadRequest, "no_model", "Model not found")
+		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_model", "Model not found", err)
 		return
 	}
 
 	provider, err := h.providerRepo.FindByID(providerModel.ProviderID)
 	if err != nil {
-		utils.SendError(c, http.StatusBadRequest, "no_provider", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_provider", "Provider not found", err)
 		return
 	}
 
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "decrypt_error", "Failed to decrypt API key")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decrypt_error", "Failed to decrypt API key", err)
 		return
 	}
 
@@ -607,7 +602,7 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 		Content:        content,
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "save_error", "Failed to save response")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
 		return
 	}
 

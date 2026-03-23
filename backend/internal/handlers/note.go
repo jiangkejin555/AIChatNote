@@ -80,7 +80,7 @@ func (h *NoteHandler) List(c *gin.Context) {
 
 	notes, err := h.noteRepo.FindByUserID(userID, filters)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch notes")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch notes", err)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *NoteHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.Create(note); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create note")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create note", err)
 		return
 	}
 
@@ -134,7 +134,7 @@ func (h *NoteHandler) Get(c *gin.Context) {
 
 	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Note not found", err)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (h *NoteHandler) Update(c *gin.Context) {
 
 	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Note not found", err)
 		return
 	}
 
@@ -173,7 +173,7 @@ func (h *NoteHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.Update(note); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update note")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update note", err)
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *NoteHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.Delete(uint(noteID), userID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete note")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete note", err)
 		return
 	}
 
@@ -221,7 +221,7 @@ func (h *NoteHandler) Copy(c *gin.Context) {
 
 	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Note not found", err)
 		return
 	}
 
@@ -234,7 +234,7 @@ func (h *NoteHandler) Copy(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.Create(newNote); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to copy note")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to copy note", err)
 		return
 	}
 
@@ -262,7 +262,7 @@ func (h *NoteHandler) Export(c *gin.Context) {
 
 	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Note not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Note not found", err)
 		return
 	}
 
@@ -296,7 +296,7 @@ func (h *NoteHandler) ExportBatch(c *gin.Context) {
 
 	notes, err := h.noteRepo.FindByUserID(userID, nil)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch notes")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch notes", err)
 		return
 	}
 
@@ -346,7 +346,7 @@ func (h *NoteHandler) Import(c *gin.Context) {
 
 	content, err := io.ReadAll(file)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "read_error", "Failed to read file")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "read_error", "Failed to read file", err)
 		return
 	}
 
@@ -379,7 +379,7 @@ func (h *NoteHandler) Import(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.Create(note); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create note")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create note", err)
 		return
 	}
 
@@ -397,7 +397,7 @@ func (h *NoteHandler) BatchDelete(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.BatchDelete(req.IDs, userID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete notes")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete notes", err)
 		return
 	}
 
@@ -415,7 +415,7 @@ func (h *NoteHandler) BatchMove(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.BatchMove(req.IDs, userID, req.TargetFolderID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "move_error", "Failed to move notes")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "move_error", "Failed to move notes", err)
 		return
 	}
 
@@ -485,7 +485,7 @@ func (h *FolderHandler) List(c *gin.Context) {
 
 	folders, err := h.folderRepo.FindByUserID(userID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch folders")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch folders", err)
 		return
 	}
 
@@ -514,7 +514,7 @@ func (h *FolderHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Create(folder); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create folder")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create folder", err)
 		return
 	}
 
@@ -532,7 +532,7 @@ func (h *FolderHandler) Get(c *gin.Context) {
 
 	folder, err := h.folderRepo.FindByIDAndUserID(uint(folderID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Folder not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Folder not found", err)
 		return
 	}
 
@@ -550,7 +550,7 @@ func (h *FolderHandler) Update(c *gin.Context) {
 
 	folder, err := h.folderRepo.FindByIDAndUserID(uint(folderID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Folder not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Folder not found", err)
 		return
 	}
 
@@ -571,7 +571,7 @@ func (h *FolderHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Update(folder); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update folder")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update folder", err)
 		return
 	}
 
@@ -595,7 +595,7 @@ func (h *FolderHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Delete(uint(folderID), userID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete folder")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete folder", err)
 		return
 	}
 
@@ -613,7 +613,7 @@ func (h *FolderHandler) Copy(c *gin.Context) {
 
 	folder, err := h.folderRepo.FindByIDAndUserID(uint(folderID), userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Folder not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Folder not found", err)
 		return
 	}
 
@@ -624,7 +624,7 @@ func (h *FolderHandler) Copy(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Create(newFolder); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to copy folder")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to copy folder", err)
 		return
 	}
 
@@ -671,7 +671,7 @@ func (h *TagHandler) List(c *gin.Context) {
 
 	tags, err := h.tagRepo.FindByUserID(userID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch tags")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch tags", err)
 		return
 	}
 

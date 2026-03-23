@@ -57,7 +57,7 @@ func (h *ProviderHandler) List(c *gin.Context) {
 
 	providers, err := h.providerRepo.FindByUserID(userID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "db_error", "Failed to fetch providers")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch providers", err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 	// Encrypt API key
 	encryptedKey, err := h.aesCrypto.Encrypt(req.APIKey)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "encryption_error", "Failed to secure API key")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "encryption_error", "Failed to secure API key", err)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.providerRepo.Create(provider); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create provider")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create provider", err)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (h *ProviderHandler) Get(c *gin.Context) {
 
 	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
@@ -142,7 +142,7 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 
 	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
@@ -161,14 +161,14 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 	if req.APIKey != "" {
 		encryptedKey, err := h.aesCrypto.Encrypt(req.APIKey)
 		if err != nil {
-			utils.SendError(c, http.StatusInternalServerError, "encryption_error", "Failed to secure API key")
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "encryption_error", "Failed to secure API key", err)
 			return
 		}
 		provider.APIKeyEncrypted = encryptedKey
 	}
 
 	if err := h.providerRepo.Update(provider); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "update_error", "Failed to update provider")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update provider", err)
 		return
 	}
 
@@ -185,7 +185,7 @@ func (h *ProviderHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.providerRepo.Delete(providerID, userID); err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "delete_error", "Failed to delete provider")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete provider", err)
 		return
 	}
 
@@ -203,14 +203,14 @@ func (h *ProviderHandler) TestConnection(c *gin.Context) {
 
 	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusNotFound, "not_found", "Provider not found")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
 		return
 	}
 
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "decryption_error", "Failed to decrypt API key")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decryption_error", "Failed to decrypt API key", err)
 		return
 	}
 
@@ -256,7 +256,7 @@ func (h *ProviderHandler) GetAvailableModels(c *gin.Context) {
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "decryption_error", "Failed to decrypt API key")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decryption_error", "Failed to decrypt API key", err)
 		return
 	}
 

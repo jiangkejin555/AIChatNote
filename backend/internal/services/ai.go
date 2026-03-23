@@ -61,15 +61,10 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		}, nil
 	}
 
-	// Get conversation with messages
-	conv, err := s.convRepo.FindByIDWithMessages(convID)
+	// Get conversation with messages (ensures user owns the conversation)
+	conv, err := s.convRepo.FindByIDWithMessagesAndUserID(convID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("conversation not found: %w", err)
-	}
-
-	// Verify user owns the conversation
-	if conv.UserID != userID {
-		return nil, fmt.Errorf("unauthorized access to conversation")
 	}
 
 	// Build conversation text
