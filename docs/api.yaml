@@ -23,6 +23,18 @@ components:
 
   schemas:
     # ---------- 通用响应 ----------
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Token
+        refresh_token:
+          type: string
+          description: 刷新令牌
+        user:
+          $ref: '#/components/schemas/User'
+
     ErrorResponse:
       type: object
       properties:
@@ -339,7 +351,7 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/NoteTag'
           description: 标签列表
         source_conversation_id:
           type: integer
@@ -349,6 +361,19 @@ components:
           type: string
           format: date-time
         updated_at:
+          type: string
+          format: date-time
+
+    NoteTag:
+      type: object
+      properties:
+        note_id:
+          type: integer
+          description: 笔记 ID
+        tag:
+          type: string
+          description: 标签名称
+        created_at:
           type: string
           format: date-time
 
@@ -472,13 +497,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    description: JWT Token
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/AuthResponse'
         '400':
           description: 请求参数错误
           content:
@@ -521,13 +540,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    description: JWT Token
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/AuthResponse'
         '401':
           description: 邮箱或密码错误
           content:
@@ -543,6 +556,16 @@ paths:
       operationId: logout
       security:
         - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: 刷新令牌（可选，传入后会使其失效）
       responses:
         '200':
           description: 登出成功
@@ -550,6 +573,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: 刷新令牌
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: 刷新令牌
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: 新的 JWT Token
+                  refresh_token:
+                    type: string
+                    description: 新的刷新令牌
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: 无效或过期的刷新令牌
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/me:
     get:

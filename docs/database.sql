@@ -15,7 +15,7 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 
 -- ============================================
--- 2. AI 提供商表 (新增)
+-- 2. AI 提供商表
 -- ============================================
 CREATE TABLE providers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -34,7 +34,7 @@ CREATE INDEX idx_providers_user_id ON providers(user_id);
 CREATE INDEX idx_providers_type ON providers(type);
 
 -- ============================================
--- 3. 提供商模型表 (新增)
+-- 3. 提供商模型表
 -- ============================================
 CREATE TABLE provider_models (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,13 +53,26 @@ CREATE INDEX idx_provider_models_provider_id ON provider_models(provider_id);
 CREATE INDEX idx_provider_models_is_default ON provider_models(provider_id, is_default) WHERE is_default = TRUE;
 
 -- ============================================
--- 4. 对话表 (修改：增加 provider_model_id)
+-- 4. 刷新令牌表
+-- ============================================
+CREATE TABLE refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+
+-- ============================================
+-- 5. 对话表
 -- ============================================
 CREATE TABLE conversations (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    provider_model_id UUID REFERENCES provider_models(id) ON DELETE SET NULL,  -- 新字段：关联提供商模型
-    model_id INTEGER REFERENCES models(id) ON DELETE SET NULL,  -- 已废弃，保留用于数据迁移
+    provider_model_id UUID REFERENCES provider_models(id) ON DELETE SET NULL,  -- 关联提供商模型
     title VARCHAR(500),                      -- 对话标题
     is_saved BOOLEAN DEFAULT FALSE,          -- 是否已转为笔记
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -70,9 +83,10 @@ CREATE INDEX idx_conversations_user_id ON conversations(user_id);
 CREATE INDEX idx_conversations_provider_model_id ON conversations(provider_model_id);
 CREATE INDEX idx_conversations_created_at ON conversations(created_at DESC);
 CREATE INDEX idx_conversations_is_saved ON conversations(is_saved);
+CREATE INDEX idx_conversations_user_id_id ON conversations(user_id, id);  -- 复合索引用于数据隔离
 
 -- ============================================
--- 5. 消息表
+-- 6. 消息表
 -- ============================================
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
@@ -86,7 +100,7 @@ CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX idx_messages_created_at ON messages(conversation_id, created_at);
 
 -- ============================================
--- 6. 文件夹表
+-- 7. 文件夹表
 -- ============================================
 CREATE TABLE folders (
     id SERIAL PRIMARY KEY,
@@ -101,7 +115,7 @@ CREATE INDEX idx_folders_user_id ON folders(user_id);
 CREATE INDEX idx_folders_parent_id ON folders(parent_id);
 
 -- ============================================
--- 7. 笔记表 (修改：字段调整)
+-- 8. 笔记表
 -- ============================================
 CREATE TABLE notes (
     id SERIAL PRIMARY KEY,
@@ -120,7 +134,7 @@ CREATE INDEX idx_notes_source_conversation_id ON notes(source_conversation_id);
 CREATE INDEX idx_notes_created_at ON notes(created_at DESC);
 
 -- ============================================
--- 8. 笔记标签表 (多对多)
+-- 9. 笔记标签表 (多对多)
 -- ============================================
 CREATE TABLE note_tags (
     note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
@@ -130,23 +144,6 @@ CREATE TABLE note_tags (
 );
 
 CREATE INDEX idx_note_tags_tag ON note_tags(tag);
-
--- ============================================
--- 9. 模型配置表 (已废弃，保留用于数据迁移)
--- ============================================
-CREATE TABLE models (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,              -- 显示名称，如 "Claude 3.5"
-    api_base VARCHAR(500) NOT NULL,          -- API 地址
-    api_key VARCHAR(500) NOT NULL,           -- API Key（加密存储）
-    model_name VARCHAR(100) NOT NULL,        -- 实际调用的模型名
-    is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_models_user_id ON models(user_id);
 
 -- ============================================
 -- 10. 全文搜索支持
@@ -215,11 +212,6 @@ CREATE TRIGGER update_notes_updated_at
 -- 文件夹表更新触发器
 CREATE TRIGGER update_folders_updated_at
     BEFORE UPDATE ON folders
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 模型表更新触发器（已废弃但保留）
-CREATE TRIGGER update_models_updated_at
-    BEFORE UPDATE ON models
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
@@ -294,51 +286,7 @@ CREATE TRIGGER enforce_single_default_model
     EXECUTE FUNCTION ensure_single_default_model();
 
 -- ============================================
--- 16. 数据迁移说明（从旧 models 表迁移到新 providers/provider_models）
--- ============================================
-
--- 迁移脚本示例（仅供参考，根据实际数据调整）：
---
--- -- 为每个旧模型创建一个 provider
--- INSERT INTO providers (user_id, name, type, api_base, api_key_encrypted)
--- SELECT
---     user_id,
---     name as name,
---     CASE
---         WHEN api_base LIKE '%anthropic%' THEN 'anthropic'
---         WHEN api_base LIKE '%openai%' THEN 'openai'
---         WHEN api_base LIKE '%deepseek%' THEN 'deepseek'
---         WHEN api_base LIKE '%volcengine%' OR api_base LIKE '%volces%' THEN 'volcengine'
---         WHEN api_base LIKE '%moonshot%' THEN 'moonshot'
---         WHEN api_base LIKE '%bigmodel%' THEN 'zhipu'
---         WHEN api_base LIKE '%google%' OR api_base LIKE '%generativelanguage%' THEN 'google'
---         ELSE 'custom'
---     END as type,
---     api_base,
---     api_key
--- FROM models;
---
--- -- 为每个 provider 创建对应的模型
--- INSERT INTO provider_models (provider_id, model_id, display_name, is_default, enabled)
--- SELECT
---     p.id,
---     m.model_name as model_id,
---     m.name as display_name,
---     m.is_default,
---     TRUE as enabled
--- FROM models m
--- JOIN providers p ON p.user_id = m.user_id AND p.name = m.name;
---
--- -- 更新 conversations 的 provider_model_id
--- UPDATE conversations c
--- SET provider_model_id = pm.id
--- FROM models m
--- JOIN providers p ON p.user_id = m.user_id AND p.name = m.name
--- JOIN provider_models pm ON pm.provider_id = p.id AND pm.model_id = m.model_name
--- WHERE c.model_id = m.id;
-
--- ============================================
--- 17. 常用查询示例
+-- 16. 常用查询示例
 -- ============================================
 
 -- 获取用户的所有提供商（含模型）
