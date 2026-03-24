@@ -98,6 +98,24 @@ export interface PredefinedModel {
   display_name: string
 }
 
+// Sync models types
+export interface SyncModelsRequest {
+  add?: {
+    model_id: string
+    display_name?: string
+    is_default?: boolean // Set this model as default (for newly added models)
+  }[]
+  delete?: string[] // provider_model IDs to delete
+  default_model_id?: string // provider_model ID to set as default
+}
+
+export interface SyncModelsResponse {
+  models: ProviderModel[]
+  added: number
+  deleted: number
+  updated: number
+}
+
 // Model types (deprecated - use Provider/ProviderModel instead)
 /** @deprecated Use ProviderModel instead */
 export interface Model {

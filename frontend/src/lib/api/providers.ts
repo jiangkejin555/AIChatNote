@@ -9,6 +9,8 @@ import type {
   BatchAddProviderModelsRequest,
   AvailableModel,
   PredefinedModel,
+  SyncModelsRequest,
+  SyncModelsResponse,
 } from '@/types'
 
 // Connection test result type
@@ -148,5 +150,14 @@ export const providerModelsApi = {
       { enabled }
     )
     return response.data.model
+  },
+
+  // Sync models (add, delete, update default in one request)
+  sync: async (providerId: string, data: SyncModelsRequest): Promise<SyncModelsResponse> => {
+    const response = await apiClient.post<SyncModelsResponse>(
+      `/providers/${providerId}/models/sync`,
+      data
+    )
+    return response.data
   },
 }

@@ -27,7 +27,7 @@ func NewProviderModelHandler() *ProviderModelHandler {
 type AddModelRequest struct {
 	ModelID     string `json:"model_id" binding:"required"`
 	DisplayName string `json:"display_name"`
-	IsDefault   bool   `json:"is_default"`
+	IsDefault   bool   `json:"is_default"` // Used in sync to set default for new models
 }
 
 type BatchAddModelsRequest struct {
@@ -37,8 +37,15 @@ type BatchAddModelsRequest struct {
 
 type UpdateModelRequest struct {
 	DisplayName string `json:"display_name"`
-	IsDefault   bool   `json:"is_default"`
-	Enabled     bool   `json:"enabled"`
+	IsDefault   *bool  `json:"is_default"`
+	Enabled     *bool  `json:"enabled"`
+}
+
+// SyncModelsRequest represents the request body for syncing provider models
+type SyncModelsRequest struct {
+	Add            []AddModelRequest `json:"add"`
+	Delete         []string          `json:"delete"`          // provider_model IDs to delete
+	DefaultModelID string            `json:"default_model_id"` // provider_model ID to set as default
 }
 
 // List returns all models for a provider
@@ -144,8 +151,12 @@ func (h *ProviderModelHandler) Update(c *gin.Context) {
 	if req.DisplayName != "" {
 		model.DisplayName = req.DisplayName
 	}
-	model.IsDefault = req.IsDefault
-	model.Enabled = req.Enabled
+	if req.IsDefault != nil {
+		model.IsDefault = *req.IsDefault
+	}
+	if req.Enabled != nil {
+		model.Enabled = *req.Enabled
+	}
 	model.UpdatedAt = time.Now()
 
 	if err := h.modelRepo.Update(model); err != nil {
@@ -258,4 +269,73 @@ func (h *ProviderModelHandler) SetDefault(c *gin.Context) {
 
 	model, _ := h.modelRepo.FindByID(modelID)
 	c.JSON(http.StatusOK, gin.H{"model": model})
+}
+
+// Sync syncs provider models (add, delete, update default in one transaction)
+func (h *ProviderModelHandler) Sync(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	providerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid provider ID")
+		return
+	}
+
+	provider, err := h.providerRepo.FindByIDAndUserID(providerID, userID)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
+		return
+	}
+
+	var req SyncModelsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	// Convert request to repository params
+	var modelsToAdd []models.ProviderModel
+	var newDefaultModelIndex int = -1
+	for i, m := range req.Add {
+		displayName := m.DisplayName
+		if displayName == "" {
+			displayName = m.ModelID
+		}
+		modelsToAdd = append(modelsToAdd, models.ProviderModel{
+			ProviderID:  provider.ID,
+			ModelID:     m.ModelID,
+			DisplayName: displayName,
+			Enabled:     true,
+		})
+		if m.IsDefault {
+			newDefaultModelIndex = i
+		}
+	}
+
+	var deleteIDs []uuid.UUID
+	for _, idStr := range req.Delete {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid model ID in delete list: "+idStr)
+			return
+		}
+		deleteIDs = append(deleteIDs, id)
+	}
+
+	var defaultModelID uuid.UUID
+	if req.DefaultModelID != "" {
+		defaultModelID, err = uuid.Parse(req.DefaultModelID)
+		if err != nil {
+			utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid default model ID")
+			return
+		}
+	}
+
+	// Execute sync in transaction
+	result, err := h.modelRepo.Sync(provider.ID, modelsToAdd, deleteIDs, defaultModelID, newDefaultModelIndex)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "sync_error", "Failed to sync models: "+err.Error(), err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }

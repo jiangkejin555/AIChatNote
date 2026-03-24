@@ -356,6 +356,57 @@ type RefreshToken struct {
 | PUT | /providers/:id/models/:modelId | 更新模型 |
 | DELETE | /providers/:id/models/:modelId | 删除模型 |
 | POST | /providers/:id/models/batch | 批量添加模型 |
+| POST | /providers/:id/models/sync | 批量同步模型 |
+
+#### Sync Models API
+
+批量同步提供商模型，支持在单个事务中完成添加、删除、更新默认模型操作。
+
+**请求**
+
+```
+POST /providers/:id/models/sync
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+```json
+{
+  "add": [
+    { "model_id": "gpt-4o", "display_name": "GPT-4o" },
+    { "model_id": "gpt-4o-mini", "display_name": "GPT-4o Mini" }
+  ],
+  "delete": ["<provider_model_uuid_1>", "<provider_model_uuid_2>"],
+  "default_model_id": "<provider_model_uuid>"
+}
+```
+
+**响应**
+
+```json
+{
+  "models": [
+    {
+      "id": "uuid",
+      "provider_id": "provider-uuid",
+      "model_id": "gpt-4o",
+      "display_name": "GPT-4o",
+      "is_default": true,
+      "enabled": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "added": 2,
+  "deleted": 2,
+  "updated": 1
+}
+```
+
+**特点**:
+- 一次请求完成多个操作，减少网络往返
+- 所有操作在数据库事务中执行，保证原子性
+- 任一操作失败则全部回滚
 
 ### 3.5 对话管理
 

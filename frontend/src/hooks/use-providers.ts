@@ -8,6 +8,7 @@ import type {
   CreateProviderModelRequest,
   UpdateProviderModelRequest,
   BatchAddProviderModelsRequest,
+  SyncModelsRequest,
 } from '@/types'
 
 // Query keys
@@ -250,6 +251,29 @@ export function useToggleModelEnabled() {
     },
     onError: (error: Error) => {
       toast.error(`${t('common.operationFailed')}: ${error.message}`)
+    },
+  })
+}
+
+export function useSyncProviderModels() {
+  const queryClient = useQueryClient()
+  const t = getT()
+
+  return useMutation({
+    mutationFn: ({
+      providerId,
+      data,
+    }: {
+      providerId: string
+      data: SyncModelsRequest
+    }) => providerModelsApi.sync(providerId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: providerKeys.models(variables.providerId) })
+      queryClient.invalidateQueries({ queryKey: providerKeys.lists() })
+      toast.success(t('provider.modelSyncSuccess'))
+    },
+    onError: (error: Error) => {
+      toast.error(`${t('provider.modelSyncFailed')}: ${error.message}`)
     },
   })
 }

@@ -121,6 +121,7 @@ func main() {
 			providers.PUT("/:id/models/:modelId", providerModelHandler.Update)
 			providers.DELETE("/:id/models/:modelId", providerModelHandler.Delete)
 			providers.POST("/:id/models/batch", providerModelHandler.BatchAdd)
+			providers.POST("/:id/models/sync", providerModelHandler.Sync)
 		}
 
 		// Conversation routes

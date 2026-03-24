@@ -14,6 +14,7 @@ export {
   useBatchAddProviderModels,
   useSetProviderDefaultModel,
   useToggleModelEnabled,
+  useSyncProviderModels,
 } from './use-providers'
 export { useConversations, useConversation, useMessages, useCreateConversation, useUpdateConversation, useDeleteConversation, useSendMessage, useRegenerateMessage, useMarkAsSaved } from './use-conversations'
 export { useNotes, useNote, useCreateNote, useUpdateNote, useDeleteNote, useGenerateNote, useExportNote, useExportNotes, useImportMarkdown, useCopyNote, useMoveNote, useBatchMoveNotes, useBatchDeleteNotes } from './use-notes'
