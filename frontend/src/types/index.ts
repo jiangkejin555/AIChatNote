@@ -105,7 +105,9 @@ export interface SyncModelsRequest {
     display_name?: string
     is_default?: boolean // Set this model as default (for newly added models)
   }[]
-  delete?: string[] // provider_model IDs to delete
+  delete?: string[] // provider_model IDs to delete (hard delete)
+  enable?: string[] // provider_model IDs to enable
+  disable?: string[] // provider_model IDs to disable
   default_model_id?: string // provider_model ID to set as default
 }
 
@@ -114,6 +116,8 @@ export interface SyncModelsResponse {
   added: number
   deleted: number
   updated: number
+  enabled: number
+  disabled: number
 }
 
 // Model types (deprecated - use Provider/ProviderModel instead)
@@ -152,8 +156,8 @@ export interface UpdateModelRequest {
 export interface Conversation {
   id: number
   user_id: number
-  provider_model_id: string
-  model_id: number // deprecated
+  provider_model_id: string | null // null when model is deleted
+  model_id: string // Snapshot of model_id (e.g., "gpt-4o"), preserved after model deletion
   title: string
   is_saved: boolean
   created_at: string
@@ -170,7 +174,7 @@ export interface Message {
 
 export interface CreateConversationRequest {
   provider_model_id?: string
-  model_id?: number // deprecated
+  model_id?: string // Model ID snapshot (e.g., "gpt-4o")
   title?: string
 }
 

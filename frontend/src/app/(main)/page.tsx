@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useChatStore, useAuthStore } from '@/stores'
 import {
   useConversations,
@@ -8,6 +8,7 @@ import {
   useMessages,
   useStreamChat,
   useMarkAsSaved,
+  useProviders,
 } from '@/hooks'
 import { ConversationList, MessageList, MessageInput, ModelSelector, SaveNoteDialog, SaveNoteButton } from '@/components/chat'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ export default function ChatPage() {
   const { currentConversationId, setCurrentConversation } = useChatStore()
   const { isAuthenticated } = useAuthStore()
   const { data: conversations } = useConversations()
+  const { data: providers } = useProviders()
   const createConversation = useCreateConversation()
   const markAsSaved = useMarkAsSaved()
   const queryClient = useQueryClient()
@@ -50,9 +52,39 @@ export default function ChatPage() {
     onError: (error) => {
       setStreamingContent('')
       setOptimisticMessages([])
-      toast.error(error.message || t('chat.sendFailed'))
+      const errorMsg = error.message || t('chat.sendFailed')
+      // Check for model deleted error (backend returns 'model_deleted' code in response)
+      const isModelDeleted = (error as any).code === 'model_deleted' ||
+        errorMsg.includes('已删除') ||
+        errorMsg.includes('deleted')
+      if (isModelDeleted) {
+        toast.error(t('provider.modelDeletedDesc'))
+      } else {
+        toast.error(errorMsg)
+      }
     },
   })
+
+  // Get current conversation and check if model is deleted
+  const currentConversation = useMemo(() => {
+    if (conversations && currentConversationId) {
+      return conversations.find((c) => c.id === currentConversationId)
+    }
+    return null
+  }, [conversations, currentConversationId])
+
+  // Check if the model used by current conversation is deleted
+  const modelStatus = useMemo(() => {
+    if (!currentConversation) {
+      return { isDeleted: false, deletedModelId: undefined }
+    }
+
+    // If provider_model_id is null but model_id exists, model is deleted
+    const isDeleted = currentConversation.provider_model_id === null && !!currentConversation.model_id
+    const deletedModelId = isDeleted ? currentConversation.model_id : undefined
+
+    return { isDeleted, deletedModelId }
+  }, [currentConversation])
 
   // Set initial conversation
   useEffect(() => {
@@ -61,26 +93,61 @@ export default function ChatPage() {
     }
   }, [conversations, currentConversationId, setCurrentConversation])
 
-  // Set initial model from default
+  // Set initial model from conversation or default
   useEffect(() => {
-    if (conversations && currentConversationId) {
-      const conv = conversations.find((c) => c.id === currentConversationId)
-      if (conv) {
-        setSelectedModelId(conv.provider_model_id || String(conv.model_id))
+    if (modelStatus.isDeleted) {
+      // Don't auto-select a model if current model is deleted
+      // User needs to manually select a new model
+      setSelectedModelId(undefined)
+    } else if (currentConversation?.provider_model_id) {
+      setSelectedModelId(currentConversation.provider_model_id)
+    } else {
+      // For new conversation, find default model from providers
+      if (providers) {
+        for (const provider of providers) {
+          const defaultModel = provider.models.find(m => m.is_default && m.enabled)
+          if (defaultModel) {
+            setSelectedModelId(defaultModel.id)
+            break
+          }
+        }
       }
     }
-  }, [conversations, currentConversationId])
+  }, [currentConversation, modelStatus.isDeleted, providers])
 
   const handleNewConversation = async () => {
-    if (!selectedModelId) {
+    // Find a valid model for new conversation
+    let modelIdToUse = selectedModelId
+    if (!modelIdToUse && providers) {
+      for (const provider of providers) {
+        const defaultModel = provider.models.find(m => m.is_default && m.enabled)
+        if (defaultModel) {
+          modelIdToUse = defaultModel.id
+          break
+        }
+        const anyEnabled = provider.models.find(m => m.enabled)
+        if (anyEnabled) {
+          modelIdToUse = anyEnabled.id
+          break
+        }
+      }
+    }
+
+    if (!modelIdToUse) {
       toast.error(t('chat.configureProviderFirst'))
       return
     }
-    createConversation.mutate({ provider_model_id: selectedModelId })
+    createConversation.mutate({ provider_model_id: modelIdToUse })
   }
 
   const handleSendMessage = useCallback(
     async (content: string) => {
+      // Check if model is deleted
+      if (modelStatus.isDeleted) {
+        toast.error(t('provider.modelDeletedDesc'))
+        return
+      }
+
       // Add optimistic user message
       const optimisticUserMessage: Message = {
         id: Date.now(),
@@ -109,7 +176,7 @@ export default function ChatPage() {
         streamMessage(content)
       }
     },
-    [currentConversationId, selectedModelId, createConversation, setCurrentConversation, streamMessage, t]
+    [currentConversationId, selectedModelId, createConversation, setCurrentConversation, streamMessage, modelStatus.isDeleted, t]
   )
 
   const handleSaveNote = () => {
@@ -142,7 +209,12 @@ export default function ChatPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Chat Header */}
         <div className="h-12 border-b flex items-center justify-between px-4 shrink-0">
-          <ModelSelector value={selectedModelId} onChange={setSelectedModelId} />
+          <ModelSelector
+            value={selectedModelId}
+            onChange={setSelectedModelId}
+            isModelDeleted={modelStatus.isDeleted}
+            deletedModelId={modelStatus.deletedModelId}
+          />
           <SaveNoteButton
             onClick={handleSaveNote}
             disabled={!currentConversationId}
@@ -159,7 +231,7 @@ export default function ChatPage() {
         <MessageInput
           onSend={handleSendMessage}
           isLoading={isStreaming}
-          disabled={!selectedModelId}
+          disabled={modelStatus.isDeleted || !selectedModelId}
         />
       </div>
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -203,7 +204,12 @@ func (h *ProviderHandler) Delete(c *gin.Context) {
 	utils.SendSuccess(c, "Provider deleted successfully")
 }
 
-// TestConnection tests the provider connection
+// TestConnectionRequest represents the request body for testing connection
+type TestConnectionRequest struct {
+	ModelID string `json:"model_id"`
+}
+
+// TestConnection tests the provider connection for a specific model
 func (h *ProviderHandler) TestConnection(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	providerID, err := uuid.Parse(c.Param("id"))
@@ -218,6 +224,19 @@ func (h *ProviderHandler) TestConnection(c *gin.Context) {
 		return
 	}
 
+	// Parse request body to get model_id
+	var req TestConnectionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// If no body, return error - model_id is required
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", "model_id is required")
+		return
+	}
+
+	if req.ModelID == "" {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", "model_id is required")
+		return
+	}
+
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
@@ -226,12 +245,12 @@ func (h *ProviderHandler) TestConnection(c *gin.Context) {
 		return
 	}
 
-	// Test connection by calling the models endpoint
+	// Test connection by sending a minimal chat completion request
 	start := time.Now()
-	success, message, latency := testLLMConnection(provider.APIBase, apiKey)
+	success, message, latency := testModelConnection(provider.APIBase, apiKey, req.ModelID)
 	totalLatency := time.Since(start)
 
-	utils.LogLatency("ProviderHandler", "TestConnection", totalLatency, "providerID", providerID, "success", success, "message", message)
+	utils.LogLatency("ProviderHandler", "TestConnection", totalLatency, "providerID", providerID, "modelID", req.ModelID, "success", success, "message", message)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": success,
@@ -240,10 +259,65 @@ func (h *ProviderHandler) TestConnection(c *gin.Context) {
 	})
 }
 
-func testLLMConnection(apiBase, apiKey string) (bool, string, int) {
-	// Simple connection test - in production, make actual API call
-	// For now, return mock success
-	return true, "Connection successful", 150
+// testModelConnection tests connection to a specific model by sending a minimal chat completion request
+func testModelConnection(apiBase, apiKey, modelID string) (bool, string, int) {
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	// Ensure the URL ends with /chat/completions
+	baseURL := apiBase
+	if len(baseURL) > 0 && baseURL[len(baseURL)-1] == '/' {
+		baseURL = baseURL[:len(baseURL)-1]
+	}
+
+	// Create a minimal chat completion request
+	requestBody := map[string]interface{}{
+		"model": modelID,
+		"messages": []map[string]string{
+			{"role": "user", "content": "Hi"},
+		},
+		"max_tokens": 1, // Minimal token limit to reduce cost
+	}
+
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return false, "Failed to create request body: " + err.Error(), 0
+	}
+
+	start := time.Now()
+	req, err := http.NewRequest("POST", baseURL+"/chat/completions", bytes.NewReader(jsonBody))
+	if err != nil {
+		return false, "Failed to create request: " + err.Error(), 0
+	}
+
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, "Connection failed: " + err.Error(), int(time.Since(start).Milliseconds())
+	}
+	defer resp.Body.Close()
+
+	latency := int(time.Since(start).Milliseconds())
+
+	// Read response body for error details
+	body, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode == http.StatusOK {
+		return true, "Connection successful", latency
+	}
+
+	// Try to parse error message from response
+	var errResp struct {
+		Error struct {
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(body, &errResp); err == nil && errResp.Error.Message != "" {
+		return false, errResp.Error.Message, latency
+	}
+
+	return false, fmt.Sprintf("API returned status %d: %s", resp.StatusCode, string(body)), latency
 }
 
 // AvailableModel represents a model from the provider's API

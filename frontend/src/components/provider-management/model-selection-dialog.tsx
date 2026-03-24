@@ -61,7 +61,9 @@ interface ModelSelectionDialogProps {
 interface LocalModelState {
   models: ProviderModel[]  // Local copy of configured models
   pendingAdd: { model_id: string; display_name: string }[]
-  pendingDelete: string[]  // ProviderModel IDs to delete
+  pendingDelete: string[]  // ProviderModel IDs to delete (hard delete)
+  pendingEnable: string[]  // ProviderModel IDs to enable
+  pendingDisable: string[]  // ProviderModel IDs to disable
   pendingDefaultId: string | null  // ProviderModel ID to set as default
 }
 
@@ -79,6 +81,8 @@ export function ModelSelectionDialog({
     models: [],
     pendingAdd: [],
     pendingDelete: [],
+    pendingEnable: [],
+    pendingDisable: [],
     pendingDefaultId: null,
   })
   const [manualModelId, setManualModelId] = useState('')
@@ -114,6 +118,8 @@ export function ModelSelectionDialog({
         models: [...models],
         pendingAdd: [],
         pendingDelete: [],
+        pendingEnable: [],
+        pendingDisable: [],
         pendingDefaultId: defaultModel?.id || null,
       })
       setManualModelId('')
@@ -129,10 +135,45 @@ export function ModelSelectionDialog({
     return (
       localState.pendingAdd.length > 0 ||
       localState.pendingDelete.length > 0 ||
+      localState.pendingEnable.length > 0 ||
+      localState.pendingDisable.length > 0 ||
       (localState.pendingDefaultId !== null &&
         localState.pendingDefaultId !== (provider?.models?.find((m) => m.is_default)?.id || null))
     )
   }, [localState, provider?.models])
+
+  // Toggle model enabled status
+  const handleToggleEnabled = (modelId: string, currentEnabled: boolean) => {
+    setLocalState((prev) => {
+      // If currently enabled, mark for disable
+      if (currentEnabled) {
+        // Remove from pendingEnable if there
+        const newPendingEnable = prev.pendingEnable.filter((id) => id !== modelId)
+        // Add to pendingDisable if not already there
+        const newPendingDisable = prev.pendingDisable.includes(modelId)
+          ? prev.pendingDisable
+          : [...prev.pendingDisable, modelId]
+        return {
+          ...prev,
+          pendingEnable: newPendingEnable,
+          pendingDisable: newPendingDisable,
+        }
+      } else {
+        // If currently disabled, mark for enable
+        // Remove from pendingDisable if there
+        const newPendingDisable = prev.pendingDisable.filter((id) => id !== modelId)
+        // Add to pendingEnable if not already there
+        const newPendingEnable = prev.pendingEnable.includes(modelId)
+          ? prev.pendingEnable
+          : [...prev.pendingEnable, modelId]
+        return {
+          ...prev,
+          pendingEnable: newPendingEnable,
+          pendingDisable: newPendingDisable,
+        }
+      }
+    })
+  }
 
   // Handle dialog close with unsaved changes check
   const handleOpenChange = (newOpen: boolean) => {
@@ -203,12 +244,14 @@ export function ModelSelectionDialog({
         pendingAdd: prev.pendingAdd.filter((m) => m.model_id !== modelId),
       }))
     } else {
-      // Mark for deletion
+      // Mark for deletion and clear any pending enable/disable
       setLocalState((prev) => ({
         ...prev,
         pendingDelete: [...prev.pendingDelete, modelId],
         models: prev.models.filter((m) => m.id !== modelId),
         pendingDefaultId: prev.pendingDefaultId === modelId ? null : prev.pendingDefaultId,
+        pendingEnable: prev.pendingEnable.filter((id) => id !== modelId),
+        pendingDisable: prev.pendingDisable.filter((id) => id !== modelId),
       }))
     }
   }
@@ -297,6 +340,8 @@ export function ModelSelectionDialog({
     const hasChanges =
       localState.pendingAdd.length > 0 ||
       localState.pendingDelete.length > 0 ||
+      localState.pendingEnable.length > 0 ||
+      localState.pendingDisable.length > 0 ||
       localState.pendingDefaultId !== null
 
     if (!hasChanges) {
@@ -329,6 +374,8 @@ export function ModelSelectionDialog({
         data: {
           add: modelsToAdd.length > 0 ? modelsToAdd : undefined,
           delete: localState.pendingDelete.length > 0 ? localState.pendingDelete : undefined,
+          enable: localState.pendingEnable.length > 0 ? localState.pendingEnable : undefined,
+          disable: localState.pendingDisable.length > 0 ? localState.pendingDisable : undefined,
           default_model_id: defaultModelId,
         },
       })
@@ -359,7 +406,8 @@ export function ModelSelectionDialog({
     displayName: string,
     id: string,
     isDefault: boolean,
-    isPending: boolean = false
+    isPending: boolean = false,
+    enabled: boolean = true
   ) => {
     // If a new default is being set, only show default for that model
     // Otherwise, show default for the original default model
@@ -368,19 +416,30 @@ export function ModelSelectionDialog({
       ? isCurrentDefault
       : isDefault
 
+    // Calculate the effective enabled state (pending changes override current state)
+    const isPendingEnable = localState.pendingEnable.includes(id)
+    const isPendingDisable = localState.pendingDisable.includes(id)
+    const effectiveEnabled = isPendingEnable ? true : isPendingDisable ? false : enabled
+
     return (
       <div
         key={id}
         className={cn(
           'flex items-center justify-between p-3 rounded-lg border transition-colors',
           'hover:bg-accent/50',
-          localState.pendingDelete.includes(id) && 'opacity-50'
+          localState.pendingDelete.includes(id) && 'opacity-50',
+          !effectiveEnabled && 'bg-muted/30'
         )}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-medium truncate">{displayName}</p>
+              <p className={cn(
+                'text-sm font-medium truncate',
+                !effectiveEnabled && 'text-muted-foreground'
+              )}>
+                {displayName}
+              </p>
               {showDefault && (
                 <Badge variant="secondary" className="text-xs shrink-0">
                   <Star className="h-3 w-3 mr-1" />
@@ -390,6 +449,21 @@ export function ModelSelectionDialog({
               {isPending && (
                 <Badge variant="outline" className="text-xs shrink-0 text-muted-foreground">
                   {t('provider.addSelectedModels')}
+                </Badge>
+              )}
+              {!enabled && !isPending && !isPendingEnable && !isPendingDisable && (
+                <Badge variant="outline" className="text-xs shrink-0 text-muted-foreground">
+                  {t('provider.disabled')}
+                </Badge>
+              )}
+              {isPendingEnable && (
+                <Badge variant="outline" className="text-xs shrink-0 text-green-600">
+                  {t('provider.willEnable')}
+                </Badge>
+              )}
+              {isPendingDisable && (
+                <Badge variant="outline" className="text-xs shrink-0 text-orange-600">
+                  {t('provider.willDisable')}
                 </Badge>
               )}
             </div>
@@ -429,8 +503,19 @@ export function ModelSelectionDialog({
               t('provider.test')
             )}
           </Button>
+          {/* Enable/Disable toggle (only for existing models) */}
+          {!isPending && (
+            <Button
+              variant={effectiveEnabled ? 'outline' : 'secondary'}
+              size="sm"
+              onClick={() => handleToggleEnabled(id, effectiveEnabled)}
+              className="h-8"
+            >
+              {effectiveEnabled ? t('provider.disable') : t('provider.enable')}
+            </Button>
+          )}
           {/* Set as default button */}
-          {!showDefault && (
+          {!showDefault && effectiveEnabled && (
             <Button
               variant="outline"
               size="sm"
@@ -501,7 +586,9 @@ export function ModelSelectionDialog({
                           model.model_id,
                           model.display_name,
                           model.id,
-                          model.is_default
+                          model.is_default,
+                          false,
+                          model.enabled
                         )
                       )}
                     {/* Pending add models */}
@@ -511,7 +598,8 @@ export function ModelSelectionDialog({
                         model.display_name,
                         `pending-${index}`,
                         false,
-                        true
+                        true,
+                        true // Pending adds are always enabled by default
                       )
                     )}
                   </div>

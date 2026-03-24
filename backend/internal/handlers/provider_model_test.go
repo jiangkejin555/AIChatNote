@@ -335,3 +335,142 @@ func TestProviderModelHandler_BatchAdd(t *testing.T) {
 		assert.GreaterOrEqual(t, len(models), 2)
 	})
 }
+
+func TestProviderModelHandler_Sync_EnableDisable(t *testing.T) {
+	router, cfg, cleanup := setupProviderModelTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "enable_disable@example.com", "hash")
+
+	t.Run("should enable models successfully", func(t *testing.T) {
+		provider := createProviderWithModels(t, user.ID, "Enable Test Provider")
+
+		// Get existing models and disable one first
+		var existingModels []models.ProviderModel
+		database.DB.Where("provider_id = ?", provider.ID).Find(&existingModels)
+		require.GreaterOrEqual(t, len(existingModels), 1)
+
+		modelToEnable := existingModels[0]
+		// First disable it
+		database.DB.Model(&modelToEnable).Update("enabled", false)
+
+		// Now enable it via sync API
+		body := fmt.Sprintf(`{
+			"enable": ["%s"]
+		}`, modelToEnable.ID.String())
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/providers/%s/models/sync", provider.ID), body, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, float64(1), response["enabled"])
+	})
+
+	t.Run("should disable models successfully", func(t *testing.T) {
+		provider := createProviderWithModels(t, user.ID, "Disable Test Provider")
+
+		// Get existing models
+		var existingModels []models.ProviderModel
+		database.DB.Where("provider_id = ?", provider.ID).Find(&existingModels)
+		require.GreaterOrEqual(t, len(existingModels), 1)
+
+		modelToDisable := existingModels[0]
+		body := fmt.Sprintf(`{
+			"disable": ["%s"]
+		}`, modelToDisable.ID.String())
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/providers/%s/models/sync", provider.ID), body, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, float64(1), response["disabled"])
+	})
+
+	t.Run("should handle combined enable and disable operations", func(t *testing.T) {
+		provider := createProviderWithModels(t, user.ID, "Combined Enable Disable Test")
+
+		// Get existing models
+		var existingModels []models.ProviderModel
+		database.DB.Where("provider_id = ?", provider.ID).Find(&existingModels)
+		require.GreaterOrEqual(t, len(existingModels), 2)
+
+		// Disable first model, enable second model
+		modelToDisable := existingModels[0]
+		modelToEnable := existingModels[1]
+
+		// First, set the second model as disabled
+		database.DB.Model(&modelToEnable).Update("enabled", false)
+
+		body := fmt.Sprintf(`{
+			"enable": ["%s"],
+			"disable": ["%s"]
+		}`, modelToEnable.ID.String(), modelToDisable.ID.String())
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/providers/%s/models/sync", provider.ID), body, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, float64(1), response["enabled"])
+		assert.Equal(t, float64(1), response["disabled"])
+	})
+
+	t.Run("should return error when model is in both enable and disable arrays", func(t *testing.T) {
+		provider := createProviderWithModels(t, user.ID, "Validation Test Provider")
+
+		// Get existing model
+		var existingModels []models.ProviderModel
+		database.DB.Where("provider_id = ?", provider.ID).Find(&existingModels)
+		require.GreaterOrEqual(t, len(existingModels), 1)
+
+		modelID := existingModels[0].ID.String()
+		body := fmt.Sprintf(`{
+			"enable": ["%s"],
+			"disable": ["%s"]
+		}`, modelID, modelID)
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/providers/%s/models/sync", provider.ID), body, user.ID, cfg)
+
+		assert.Equal(t, 400, w.Code)
+	})
+
+	t.Run("should hard delete model and preserve model_id in conversations", func(t *testing.T) {
+		provider := createProviderWithModels(t, user.ID, "Hard Delete Test Provider")
+
+		// Get existing model
+		var existingModels []models.ProviderModel
+		database.DB.Where("provider_id = ?", provider.ID).Find(&existingModels)
+		require.GreaterOrEqual(t, len(existingModels), 1)
+
+		modelToDelete := existingModels[0]
+
+		// Create a conversation with this model
+		conv := &models.Conversation{
+			UserID:          user.ID,
+			ProviderModelID: &modelToDelete.ID,
+			ModelID:         modelToDelete.ModelID,
+			Title:           "Test Conversation",
+		}
+		require.NoError(t, database.DB.Create(conv).Error)
+
+		// Delete the model
+		body := fmt.Sprintf(`{
+			"delete": ["%s"]
+		}`, modelToDelete.ID.String())
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/providers/%s/models/sync", provider.ID), body, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, float64(1), response["deleted"])
+
+		// Verify conversation still exists with model_id preserved but provider_model_id is null
+		var updatedConv models.Conversation
+		database.DB.First(&updatedConv, conv.ID)
+		assert.Nil(t, updatedConv.ProviderModelID)
+		assert.Equal(t, modelToDelete.ModelID, updatedConv.ModelID)
+	})
+}

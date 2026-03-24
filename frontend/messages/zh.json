@@ -241,7 +241,15 @@
     "selectedCount": "已选择 {count} 个模型",
     "noAvailableModelsToAdd": "没有可添加的模型",
     "confirmRemoveModel": "确认移除模型",
-    "confirmRemoveModelDesc": "确定要从配置中移除该模型吗？"
+    "confirmRemoveModelDesc": "确定要从配置中移除该模型吗？",
+    "enable": "启用",
+    "disable": "禁用",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "willEnable": "将启用",
+    "willDisable": "将禁用",
+    "modelDeleted": "模型已删除",
+    "modelDeletedDesc": "该会话使用的模型已删除，无法继续对话"
   },
   "notes": {
     "title": "我的笔记",

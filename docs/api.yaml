@@ -57,6 +57,43 @@ components:
       required:
         - message
 
+    SyncModelsResponse:
+      type: object
+      description: 模型同步响应
+      properties:
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderModel'
+          description: 同步后的所有模型列表
+        added:
+          type: integer
+          description: 新增的模型数量
+          example: 2
+        deleted:
+          type: integer
+          description: 删除的模型数量
+          example: 1
+        updated:
+          type: integer
+          description: 更新的模型数量（默认模型变更）
+          example: 1
+        enabled:
+          type: integer
+          description: 启用的模型数量
+          example: 3
+        disabled:
+          type: integer
+          description: 禁用的模型数量
+          example: 1
+      required:
+        - models
+        - added
+        - deleted
+        - updated
+        - enabled
+        - disabled
+
     ApiResponse:
       type: object
       properties:
@@ -1067,6 +1104,116 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ProviderModel'
+
+  /providers/{providerId}/models/sync:
+    parameters:
+      - name: providerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags:
+        - ProviderModels
+      summary: 同步模型配置
+      description: |
+        在单个事务中同步模型的添加、删除、启用、禁用和默认模型设置。
+
+        **注意**：
+        - 删除操作为硬删除，会同时更新关联会话的 `provider_model_id` 为 NULL
+        - 同一模型 ID 不能同时出现在 `enable` 和 `disable` 数组中
+        - 会话会保留 `model_id` 快照，即使模型被删除也能显示原始模型名称
+      operationId: syncProviderModels
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add:
+                  type: array
+                  description: 要添加的模型列表
+                  items:
+                    type: object
+                    required:
+                      - model_id
+                    properties:
+                      model_id:
+                        type: string
+                        description: 模型标识
+                        example: gpt-4o
+                      display_name:
+                        type: string
+                        description: 显示名称（可选）
+                        example: GPT-4o
+                      is_default:
+                        type: boolean
+                        description: 是否设为默认模型
+                        default: false
+                delete:
+                  type: array
+                  description: 要删除的模型 ID 列表（硬删除）
+                  items:
+                    type: string
+                    format: uuid
+                  example: ["550e8400-e29b-41d4-a716-446655440000"]
+                enable:
+                  type: array
+                  description: 要启用的模型 ID 列表
+                  items:
+                    type: string
+                    format: uuid
+                  example: ["550e8400-e29b-41d4-a716-446655440001"]
+                disable:
+                  type: array
+                  description: 要禁用的模型 ID 列表
+                  items:
+                    type: string
+                    format: uuid
+                  example: ["550e8400-e29b-41d4-a716-446655440002"]
+                default_model_id:
+                  type: string
+                  format: uuid
+                  description: 要设置为默认的模型 ID
+                  example: "550e8400-e29b-41d4-a716-446655440003"
+            examples:
+              syncModels:
+                summary: 同步模型示例
+                value:
+                  add:
+                    - model_id: gpt-4o-mini
+                      display_name: GPT-4o Mini
+                  delete:
+                    - "550e8400-e29b-41d4-a716-446655440000"
+                  enable:
+                    - "550e8400-e29b-41d4-a716-446655440001"
+                  disable:
+                    - "550e8400-e29b-41d4-a716-446655440002"
+                  default_model_id: "550e8400-e29b-41d4-a716-446655440003"
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncModelsResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflictError:
+                  summary: 模型同时在启用和禁用列表
+                  value:
+                    error: invalid_request
+                    message: 模型不能同时被启用和禁用
 
   # ==========================================
   # 模型管理 (已废弃)

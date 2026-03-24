@@ -74,6 +74,7 @@ func SetupTestDB(t *testing.T) func() {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
 			provider_model_id TEXT,
+			model_id VARCHAR(255),
 			title VARCHAR(500),
 			is_saved BOOLEAN DEFAULT FALSE,
 			created_at DATETIME,
@@ -288,6 +289,22 @@ func CreateTestConversationWithModel(t *testing.T, userID uint, title string, mo
 		UserID:          userID,
 		Title:           title,
 		ProviderModelID: &modelID,
+	}
+	if err := database.DB.Create(conv).Error; err != nil {
+		t.Fatalf("failed to create test conversation: %v", err)
+	}
+	return conv
+}
+
+// CreateTestConversationWithModelID creates a test conversation with both provider_model_id and model_id snapshot.
+func CreateTestConversationWithModelID(t *testing.T, userID uint, title string, providerModelID uuid.UUID, modelID string) *models.Conversation {
+	t.Helper()
+
+	conv := &models.Conversation{
+		UserID:          userID,
+		Title:           title,
+		ProviderModelID: &providerModelID,
+		ModelID:         modelID,
 	}
 	if err := database.DB.Create(conv).Error; err != nil {
 		t.Fatalf("failed to create test conversation: %v", err)

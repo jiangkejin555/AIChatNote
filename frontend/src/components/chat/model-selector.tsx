@@ -15,13 +15,22 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { ProviderModel } from '@/types'
 import { useTranslations } from '@/i18n'
+import { cn } from '@/lib/utils'
 
 interface ModelSelectorProps {
   value?: string // provider_model_id
   onChange?: (providerModelId: string) => void
+  // For displaying deleted model info
+  deletedModelId?: string // model_id snapshot when provider_model_id is null
+  isModelDeleted?: boolean // indicates if the current model is deleted
 }
 
-export function ModelSelector({ value, onChange }: ModelSelectorProps) {
+export function ModelSelector({
+  value,
+  onChange,
+  deletedModelId,
+  isModelDeleted
+}: ModelSelectorProps) {
   const { data: providers, isLoading } = useProviders()
   const t = useTranslations()
 
@@ -55,13 +64,30 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
 
   // Sync default value to parent when value is not set
   useEffect(() => {
-    if (!value && currentValue && onChange) {
+    if (!value && currentValue && onChange && !isModelDeleted) {
       onChange(currentValue)
     }
-  }, [value, currentValue, onChange])
+  }, [value, currentValue, onChange, isModelDeleted])
 
   if (isLoading) {
     return <Skeleton className="h-9 w-48" />
+  }
+
+  // Show deleted model state
+  if (isModelDeleted && deletedModelId) {
+    return (
+      <div
+        className={cn(
+          "h-9 px-3 py-2 rounded-md border border-dashed",
+          "flex items-center gap-1.5 text-sm",
+          "text-muted-foreground bg-muted/30"
+        )}
+      >
+        <span className="line-through">{t('provider.modelDeleted')}</span>
+        <span className="text-muted-foreground/50">/</span>
+        <span>{deletedModelId}</span>
+      </div>
+    )
   }
 
   if (!providers || providers.length === 0) {
@@ -134,7 +160,7 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
                   <div className="flex items-center gap-2">
                     <span>{model.display_name || model.model_id}</span>
                     {model.is_default && (
-                      <span className="text-xs text-muted-foreground">({t('model.default')})</span>
+                      <span className="text-xs text-muted-foreground">({t('provider.defaultModel')})</span>
                     )}
                   </div>
                 </SelectItem>

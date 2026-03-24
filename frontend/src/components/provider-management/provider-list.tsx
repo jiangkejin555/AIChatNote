@@ -5,7 +5,6 @@ import { Provider } from '@/types'
 import {
   useProviders,
   useDeleteProvider,
-  useSetProviderDefaultModel,
 } from '@/hooks'
 import { ProviderCard } from './provider-card'
 import { ProviderFormDialog } from './provider-form-dialog'
@@ -30,7 +29,6 @@ export function ProviderList() {
   const t = useTranslations()
   const { data: providers, isLoading, refetch } = useProviders()
   const deleteProvider = useDeleteProvider()
-  const setDefaultModel = useSetProviderDefaultModel()
 
   const [formDialogOpen, setFormDialogOpen] = useState(false)
   const [modelDialogOpen, setModelDialogOpen] = useState(false)
@@ -67,10 +65,6 @@ export function ProviderList() {
       setDeleteDialogOpen(false)
       setProviderToDelete(null)
     }
-  }
-
-  const handleSetDefaultModel = (providerId: string, modelId: string) => {
-    setDefaultModel.mutate({ providerId, modelId })
   }
 
   // After provider is created, open model selection dialog
@@ -129,7 +123,6 @@ export function ProviderList() {
               provider={provider}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              onSetDefaultModel={handleSetDefaultModel}
               onManageModels={handleManageModels}
             />
           </div>

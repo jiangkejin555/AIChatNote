@@ -123,8 +123,8 @@ export default function SettingsPage() {
               <Label>{t('settings.interfaceLanguage')}</Label>
             </div>
             <Select value={locale} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder={t('settings.selectLanguage')} />
+              <SelectTrigger className="w-[100px]">
+                {locale ? localeNames[locale as keyof typeof localeNames] : t('settings.selectLanguage')}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="zh">{localeNames.zh}</SelectItem>

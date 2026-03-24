@@ -241,7 +241,15 @@
     "selectedCount": "{count} models selected",
     "noAvailableModelsToAdd": "No available models to add",
     "confirmRemoveModel": "Confirm Remove Model",
-    "confirmRemoveModelDesc": "Are you sure you want to remove this model from configuration?"
+    "confirmRemoveModelDesc": "Are you sure you want to remove this model from configuration?",
+    "enable": "Enable",
+    "disable": "Disable",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "willEnable": "Will Enable",
+    "willDisable": "Will Disable",
+    "modelDeleted": "Model Deleted",
+    "modelDeletedDesc": "The model used by this conversation has been deleted and cannot continue"
   },
   "notes": {
     "title": "My Notes",

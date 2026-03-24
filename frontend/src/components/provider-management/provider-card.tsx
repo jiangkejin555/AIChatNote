@@ -1,11 +1,18 @@
 'use client'
 
-import { Provider, ProviderModel } from '@/types'
+import { useState } from 'react'
+import { Provider } from '@/types'
 import { getProviderIcon } from '@/constants/providers'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Trash2, Star, Check, Settings2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Pencil, Trash2, ChevronDown, Settings2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from '@/i18n'
 
@@ -13,7 +20,6 @@ interface ProviderCardProps {
   provider: Provider
   onEdit: (provider: Provider) => void
   onDelete: (provider: Provider) => void
-  onSetDefaultModel: (providerId: string, modelId: string) => void
   onManageModels: (provider: Provider) => void
 }
 
@@ -21,9 +27,9 @@ export function ProviderCard({
   provider,
   onEdit,
   onDelete,
-  onSetDefaultModel,
   onManageModels,
 }: ProviderCardProps) {
+  const [isOpen, setIsOpen] = useState(false)
   const icon = getProviderIcon(provider.type)
   const enabledModels = provider.models.filter((m) => m.enabled)
   const defaultModel = provider.models.find((m) => m.is_default)
@@ -70,84 +76,60 @@ export function ProviderCard({
           </p>
         </div>
 
-        {enabledModels.length > 0 ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">{t('provider.enabledModels')}:</p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onManageModels(provider)}
-                className="h-7 text-xs"
-              >
-                <Settings2 className="h-3 w-3 mr-1" />
-                {t('provider.manageModels')}
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {enabledModels.map((model) => (
-                <ModelBadge
-                  key={model.id}
-                  model={model}
-                  isDefault={model.is_default}
-                  onSetDefault={() => onSetDefaultModel(provider.id, model.id)}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground italic">{t('provider.noModels')}</p>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => onManageModels(provider)}
-              className="h-8"
+        {/* Combined row: model dropdown + manage button */}
+        <div className="flex items-center gap-2">
+          {/* Model dropdown selector */}
+          <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuTrigger
+              className="inline-flex items-center justify-between gap-2 h-8 px-3 py-2 text-sm font-medium border rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
             >
-              <Settings2 className="h-4 w-4 mr-2" />
-              {t('provider.selectModels')}
-            </Button>
-          </div>
-        )}
+              <span className="truncate">
+                {t('provider.enabledModels')} ({enabledModels.length})
+              </span>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-transform',
+                  isOpen && 'transform rotate-180'
+                )}
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="max-h-60 overflow-y-auto !w-auto min-w-[200px]"
+              align="start"
+            >
+              {hasNoModels ? (
+                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                  {t('provider.noModels')}
+                </div>
+              ) : (
+                enabledModels.map((model) => (
+                  <DropdownMenuItem
+                    key={model.id}
+                    className="whitespace-nowrap"
+                    disabled
+                  >
+                    {model.display_name || model.model_id}
+                    {model.is_default && (
+                      <span className="text-muted-foreground ml-1">({t('provider.defaultModel')})</span>
+                    )}
+                  </DropdownMenuItem>
+                ))
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Manage models button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onManageModels(provider)}
+            className="h-8 text-xs ml-auto shrink-0"
+          >
+            <Settings2 className="h-3.5 w-3.5 mr-1" />
+            {t('provider.manageModels')}
+          </Button>
+        </div>
       </CardContent>
     </Card>
-  )
-}
-
-interface ModelBadgeProps {
-  model: ProviderModel
-  isDefault: boolean
-  onSetDefault: () => void
-}
-
-function ModelBadge({ model, isDefault, onSetDefault }: ModelBadgeProps) {
-  const t = useTranslations()
-
-  return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs',
-        isDefault
-          ? 'bg-primary text-primary-foreground'
-          : 'bg-secondary text-secondary-foreground'
-      )}
-    >
-      <span>{model.display_name || model.model_id}</span>
-      {!isDefault && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-4 w-4 p-0 hover:bg-transparent"
-          onClick={(e) => {
-            e.stopPropagation()
-            onSetDefault()
-          }}
-          title={t('provider.setAsDefault')}
-        >
-          <Star className="h-3 w-3" />
-        </Button>
-      )}
-      {isDefault && <Check className="h-3 w-3" />}
-    </div>
   )
 }
