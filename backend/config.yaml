@@ -24,10 +24,6 @@ jwt:
 encryption:
   key: "your-32-byte-encryption-key-here"  # Must be exactly 32 bytes
 
-llm:
-  deepseek_api_key: "sk-5af036850f9f49ec9ba5bbcd25e5d246"  # Set your DeepSeek API key here or via environment variable
-  deepseek_api_base: "https://api.deepseek.com"
-
 cors:
   frontend_url: "http://localhost:3000"
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/crypto"
 	"github.com/chat-note/backend/internal/models"
 	"github.com/chat-note/backend/internal/repository"
 	"github.com/chat-note/backend/internal/utils"
@@ -14,24 +14,25 @@ import (
 )
 
 type AIService struct {
-	client      *openai.Client
-	convRepo    *repository.ConversationRepository
-	mockEnabled bool
+	convRepo         *repository.ConversationRepository
+	providerRepo     *repository.ProviderRepository
+	providerModelRepo *repository.ProviderModelRepository
+	aesCrypto        *crypto.AESCrypto
+	mockEnabled      bool
 }
 
-func NewAIService(cfg *config.NoteLLMConfig, mockEnabled bool) *AIService {
-	var client *openai.Client
-	if !mockEnabled && cfg.DeepSeekAPIKey != "" {
-		clientConfig := openai.DefaultConfig(cfg.DeepSeekAPIKey)
-		clientConfig.BaseURL = cfg.DeepSeekAPIBase
-		client = openai.NewClientWithConfig(clientConfig)
-	}
-
+func NewAIService(mockEnabled bool) *AIService {
 	return &AIService{
-		client:      client,
-		convRepo:    repository.NewConversationRepository(),
-		mockEnabled: mockEnabled,
+		convRepo:          repository.NewConversationRepository(),
+		providerRepo:      repository.NewProviderRepository(),
+		providerModelRepo: repository.NewProviderModelRepository(),
+		mockEnabled:       mockEnabled,
 	}
+}
+
+// SetCrypto sets the AES crypto for decrypting API keys
+func (s *AIService) SetCrypto(aesCrypto *crypto.AESCrypto) {
+	s.aesCrypto = aesCrypto
 }
 
 type GeneratedNote struct {
@@ -41,6 +42,7 @@ type GeneratedNote struct {
 }
 
 // GenerateNoteFromConversation generates a note summary from a conversation
+// It uses the conversation's associated ProviderModel for AI generation
 func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, userID uint) (*GeneratedNote, error) {
 	start := time.Now()
 	utils.LogOperationStart("AIService", "GenerateNoteFromConversation", "convID", convID, "userID", userID, "mockMode", s.mockEnabled)
@@ -50,20 +52,20 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		utils.LogLatency("AIService", "GenerateNoteFromConversation", time.Since(start), "convID", convID, "mockMode", true)
 		return &GeneratedNote{
 			Title: "AI 对话总结 (Mock)",
-			Content: `## 概要
+			Content: `## 📌 核心知识点
+
+### 概念与原理
 
 这是 Mock 生成的笔记内容，用于测试目的。
 
-## 主要内容
+### 关键结论
 
 - 讨论了 AI 相关话题
 - 探索了技术实现方案
 - 确定了下一步计划
 
-## 总结
-
-这是一次富有成效的对话。如果你需要真实 AI 功能，请配置相应的 API Key。`,
-			Tags: []string{"mock", "测试", "AI生成"},
+这是一次富有成效的对话。如果你需要真实 AI 功能，请配置相应的 Provider。`,
+			Tags: []string{"mock", "测试"},
 		}, nil
 	}
 
@@ -73,6 +75,41 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		utils.LogOperationError("AIService", "GenerateNoteFromConversation", err, "convID", convID, "userID", userID, "step", "get_conversation")
 		return nil, fmt.Errorf("conversation not found: %w", err)
 	}
+
+	// Validate that conversation has an associated model
+	if conv.ProviderModelID == nil {
+		utils.LogOperationError("AIService", "GenerateNoteFromConversation", fmt.Errorf("no model associated"), "convID", convID, "userID", userID, "step", "validate_model")
+		return nil, fmt.Errorf("该会话没有关联模型，无法使用 AI 总结功能")
+	}
+
+	// Get the ProviderModel
+	providerModel, err := s.providerModelRepo.FindByID(*conv.ProviderModelID)
+	if err != nil {
+		utils.LogOperationError("AIService", "GenerateNoteFromConversation", err, "convID", convID, "userID", userID, "step", "get_provider_model")
+		return nil, fmt.Errorf("关联的模型已不可用")
+	}
+
+	// Get the Provider
+	provider, err := s.providerRepo.FindByID(providerModel.ProviderID)
+	if err != nil {
+		utils.LogOperationError("AIService", "GenerateNoteFromConversation", err, "convID", convID, "userID", userID, "step", "get_provider")
+		return nil, fmt.Errorf("关联的 Provider 已不可用")
+	}
+
+	// Decrypt API Key
+	if s.aesCrypto == nil {
+		return nil, fmt.Errorf("crypto service not initialized")
+	}
+	apiKey, err := s.aesCrypto.Decrypt(provider.APIKeyEncrypted)
+	if err != nil {
+		utils.LogOperationError("AIService", "GenerateNoteFromConversation", err, "convID", convID, "userID", userID, "step", "decrypt_api_key")
+		return nil, fmt.Errorf("failed to decrypt API key: %w", err)
+	}
+
+	// Create OpenAI client with the provider's config
+	clientConfig := openai.DefaultConfig(apiKey)
+	clientConfig.BaseURL = provider.APIBase
+	client := openai.NewClientWithConfig(clientConfig)
 
 	// Build conversation text
 	var conversationText string
@@ -89,10 +126,10 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 	// Build prompt for summary
 	prompt := buildSummaryPrompt(conv.Title, conversationText)
 
-	// Call DeepSeek API
+	// Call AI API
 	apiStart := time.Now()
-	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: "deepseek-chat",
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: providerModel.ModelID,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -108,7 +145,7 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 	apiLatency := time.Since(apiStart)
 
 	if err != nil {
-		utils.LogExternalCallError("AIService", "deepseek", err, "convID", convID, "msgCount", msgCount, "apiLatency_ms", apiLatency.Milliseconds())
+		utils.LogExternalCallError("AIService", string(provider.Type), err, "convID", convID, "msgCount", msgCount, "model", providerModel.ModelID, "apiLatency_ms", apiLatency.Milliseconds())
 		return nil, fmt.Errorf("failed to generate note: %w", err)
 	}
 
@@ -117,7 +154,7 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		return nil, fmt.Errorf("no response from AI")
 	}
 
-	utils.LogExternalCall("AIService", "deepseek", "deepseek-chat", apiLatency, "convID", convID, "msgCount", msgCount)
+	utils.LogExternalCall("AIService", string(provider.Type), providerModel.ModelID, apiLatency, "convID", convID, "msgCount", msgCount)
 
 	// Parse JSON response
 	content := resp.Choices[0].Message.Content
@@ -128,7 +165,7 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		return &GeneratedNote{
 			Title:   conv.Title + " - Summary",
 			Content: content,
-			Tags:    []string{"AI-generated"},
+			Tags:    []string{"AI生成"},
 		}, nil
 	}
 
@@ -137,40 +174,51 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 }
 
 func getSystemPrompt() string {
-	return `You are an AI assistant that helps summarize conversations into well-structured notes.
+	return `你是一个专业的知识整理助手，擅长从 AI 对话中提炼核心知识。
 
-Given a conversation between a user and an AI assistant, your task is to create a concise, well-organized note that captures the key points, insights, and conclusions.
+## 任务
+将用户与 AI 的对话总结为结构化的学习笔记。
 
-You MUST respond in JSON format with the following structure:
+## 输出格式
+你必须以 JSON 格式响应：
 {
-  "title": "A clear, descriptive title for the note (max 100 characters)",
-  "content": "The note content in Markdown format. Include:
-- A brief summary at the top
-- Key points as bullet points or numbered list
-- Important conclusions or insights
-- Any action items or follow-ups mentioned",
-  "tags": ["tag1", "tag2", "tag3"]
+  "title": "简洁准确的标题（不超过50字）",
+  "content": "Markdown 格式的笔记内容",
+  "tags": ["1-3个相关标签"]
 }
 
-Guidelines:
-- The title should be descriptive but concise
-- Use Markdown formatting in the content (headers, bullets, bold, etc.)
-- Extract 3-5 relevant tags that categorize the topic
-- Focus on the most valuable information, not every detail
-- If code was discussed, include relevant code snippets
-- Preserve important context and decisions made
-- Respond in the same language as the original conversation`
+## content 内容结构
+
+笔记内容应包含以下部分：
+
+### 📌 核心知识点
+
+梳理对话中讨论的主要内容，按主题组织：
+
+- **概念与原理**：解释讨论的核心概念、工作原理
+- **关键结论**：重要的结论、决策、最佳实践
+- **代码示例**：保留必要的技术细节和代码片段
+
+使用合理的层级结构（H3/H4 + 列表）组织内容，使其清晰易读。
+
+## 注意事项
+- 使用与对话相同的语言输出
+- 聚焦有价值的知识，忽略寒暄和无关内容
+- 保留足够的技术细节，不要过度精简
+- 代码块必须标注语言类型
+- 标题要能准确概括对话主题
+- 标签应涵盖主要技术领域和关键概念`
 }
 
 func buildSummaryPrompt(conversationTitle, conversationText string) string {
-	return fmt.Sprintf(`Please summarize the following conversation into a well-structured note.
+	return fmt.Sprintf(`请总结以下对话：
 
-Conversation Title: %s
+对话标题：%s
 
-Conversation:
+对话内容：
 %s
 
-Create a JSON response with title, content (in Markdown), and tags.`, conversationTitle, conversationText)
+请生成 JSON 格式的笔记。`, conversationTitle, conversationText)
 }
 
 func parseAIResponse(content string) (*GeneratedNote, error) {

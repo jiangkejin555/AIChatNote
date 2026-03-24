@@ -237,10 +237,13 @@ export function SaveNoteDialog({
       // First generate AI summary
       const result = await generateNote.mutateAsync({ conversation_id: conversationId })
 
+      // Convert Markdown to HTML for consistent storage
+      const htmlContent = await markdownToHtml(result.content)
+
       // Then create note with AI-generated or user-provided title/tags
       await createNote.mutateAsync({
         title: title.trim() || result.title,
-        content: result.content,
+        content: htmlContent,
         tags: tags.length > 0 ? tags : result.tags,
         folder_id: folderId ?? undefined,
         source_conversation_id: conversationId,

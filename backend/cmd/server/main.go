@@ -49,15 +49,10 @@ func main() {
 	}
 
 	// Initialize AI service
-	var aiService *services.AIService
+	aiService := services.NewAIService(cfg.Mock.Enabled)
+	aiService.SetCrypto(aesCrypto)
 	if cfg.Mock.Enabled {
-		aiService = services.NewAIService(&cfg.NoteLLM, true)
 		log.Println("⚠️  AI service running in MOCK mode - no real API calls will be made")
-	} else if cfg.NoteLLM.DeepSeekAPIKey != "" {
-		aiService = services.NewAIService(&cfg.NoteLLM, false)
-		log.Println("AI service initialized with DeepSeek")
-	} else {
-		log.Println("Warning: DeepSeek API key not configured, AI features will be unavailable")
 	}
 
 	// Initialize handlers

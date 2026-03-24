@@ -28,7 +28,7 @@ func setupNoteTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 
 	// Create handlers
 	authHandler := NewAuthHandler(jwtService)
-	aiService := services.NewAIService(&cfg.NoteLLM, true) // Mock mode
+	aiService := services.NewAIService(true) // Mock mode
 	noteHandler := NewNoteHandler(aiService)
 	folderHandler := NewFolderHandler()
 	tagHandler := NewTagHandler()

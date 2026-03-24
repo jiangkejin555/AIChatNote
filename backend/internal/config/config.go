@@ -16,7 +16,6 @@ type Config struct {
 	Database   DatabaseConfig   `yaml:"database"`
 	JWT        JWTConfig        `yaml:"jwt"`
 	Encryption EncryptionConfig `yaml:"encryption"`
-	NoteLLM    NoteLLMConfig    `yaml:"llm"`
 	CORS       CORSConfig       `yaml:"cors"`
 	Mock       MockConfig       `yaml:"mock"`
 }
@@ -51,11 +50,6 @@ type JWTConfig struct {
 
 type EncryptionConfig struct {
 	Key string `yaml:"key"`
-}
-
-type NoteLLMConfig struct {
-	DeepSeekAPIKey  string `yaml:"deepseek_api_key"`
-	DeepSeekAPIBase string `yaml:"deepseek_api_base"`
 }
 
 type CORSConfig struct {
@@ -139,12 +133,6 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("ENCRYPTION_KEY"); v != "" {
 		cfg.Encryption.Key = v
-	}
-	if v := os.Getenv("DEEPSEEK_API_KEY"); v != "" {
-		cfg.NoteLLM.DeepSeekAPIKey = v
-	}
-	if v := os.Getenv("DEEPSEEK_API_BASE"); v != "" {
-		cfg.NoteLLM.DeepSeekAPIBase = v
 	}
 	if v := os.Getenv("FRONTEND_URL"); v != "" {
 		cfg.CORS.FrontendURL = v

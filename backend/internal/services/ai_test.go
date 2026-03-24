@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chat-note/backend/internal/config"
 	"github.com/chat-note/backend/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,8 +13,7 @@ func TestAIService_MockMode(t *testing.T) {
 	cleanup := testutil.SetupTestDB(t)
 	defer cleanup()
 
-	cfg := &config.NoteLLMConfig{}
-	service := NewAIService(cfg, true) // Mock mode enabled
+	service := NewAIService(true) // Mock mode enabled
 
 	t.Run("should return mock note when mock mode is enabled", func(t *testing.T) {
 		user := testutil.CreateTestUser(t, "ai_test@example.com", "hash")
@@ -45,21 +43,17 @@ func TestAIService_MockMode(t *testing.T) {
 
 func TestAIService_NewAIService(t *testing.T) {
 	t.Run("should create service in mock mode", func(t *testing.T) {
-		cfg := &config.NoteLLMConfig{}
-		service := NewAIService(cfg, true)
+		service := NewAIService(true)
 
 		assert.NotNil(t, service)
 		assert.True(t, service.mockEnabled)
 	})
 
-	t.Run("should create service without client when no API key", func(t *testing.T) {
-		cfg := &config.NoteLLMConfig{
-			DeepSeekAPIKey: "",
-		}
-		service := NewAIService(cfg, false)
+	t.Run("should create service without crypto", func(t *testing.T) {
+		service := NewAIService(false)
 
 		assert.NotNil(t, service)
-		assert.Nil(t, service.client)
+		assert.Nil(t, service.aesCrypto)
 	})
 }
 

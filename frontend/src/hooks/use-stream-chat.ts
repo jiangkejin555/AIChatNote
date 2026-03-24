@@ -68,7 +68,19 @@ export function useStreamChat({
           clearTimeout(timeoutId)
 
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+            // Try to parse error message from response body
+            let errorMessage = `HTTP error! status: ${response.status}`
+            try {
+              const errorData = await response.json()
+              if (errorData.message) {
+                errorMessage = errorData.message
+              } else if (errorData.error) {
+                errorMessage = errorData.error
+              }
+            } catch {
+              // Ignore JSON parse errors
+            }
+            throw new Error(errorMessage)
           }
 
           if (!response.body) {
