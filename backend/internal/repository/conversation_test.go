@@ -51,6 +51,22 @@ func TestConversationRepository(t *testing.T) {
 		assert.Equal(t, modelID, *conv.ProviderModelID)
 	})
 
+	t.Run("Create_WithModelIDSnapshot", func(t *testing.T) {
+		modelID := uuid.New()
+		conv := &models.Conversation{
+			UserID:          user.ID,
+			Title:           "Conversation with Model Snapshot",
+			ProviderModelID: &modelID,
+			ModelID:         "gpt-4o",
+		}
+
+		err := convRepo.Create(conv)
+
+		require.NoError(t, err)
+		assert.Equal(t, modelID, *conv.ProviderModelID)
+		assert.Equal(t, "gpt-4o", conv.ModelID)
+	})
+
 	t.Run("FindByUserID", func(t *testing.T) {
 		// Create multiple conversations
 		for i := 0; i < 3; i++ {

@@ -42,6 +42,7 @@ func NewConversationHandler(aesCrypto *crypto.AESCrypto, mockEnabled bool) *Conv
 
 type CreateConversationRequest struct {
 	ProviderModelID *uuid.UUID `json:"provider_model_id"`
+	ModelID         string     `json:"model_id"` // Model ID snapshot (e.g., "gpt-4o")
 	Title           string     `json:"title"`
 }
 
@@ -78,9 +79,19 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 		title = "新对话"
 	}
 
+	// If model_id is not provided but provider_model_id is, fetch model_id from database
+	modelID := req.ModelID
+	if modelID == "" && req.ProviderModelID != nil {
+		providerModel, err := h.modelRepo.FindByID(*req.ProviderModelID)
+		if err == nil {
+			modelID = providerModel.ModelID
+		}
+	}
+
 	conv := &models.Conversation{
 		UserID:          userID,
 		ProviderModelID: req.ProviderModelID,
+		ModelID:         modelID,
 		Title:           title,
 	}
 
@@ -268,7 +279,12 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 
 	// Get provider model and provider info
 	if conv.ProviderModelID == nil {
-		utils.SendError(c, http.StatusBadRequest, "no_model", "No model configured for this conversation")
+		// Model has been deleted - show friendly error with model_id snapshot
+		modelInfo := "未知模型"
+		if conv.ModelID != "" {
+			modelInfo = conv.ModelID
+		}
+		utils.SendError(c, http.StatusBadRequest, "model_deleted", "该会话使用的模型已删除("+modelInfo+")，无法继续对话")
 		return
 	}
 
@@ -559,7 +575,12 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 
 	// Get provider info
 	if conv.ProviderModelID == nil {
-		utils.SendError(c, http.StatusBadRequest, "no_model", "No model configured")
+		// Model has been deleted - show friendly error with model_id snapshot
+		modelInfo := "未知模型"
+		if conv.ModelID != "" {
+			modelInfo = conv.ModelID
+		}
+		utils.SendError(c, http.StatusBadRequest, "model_deleted", "该会话使用的模型已删除("+modelInfo+")，无法继续对话")
 		return
 	}
 

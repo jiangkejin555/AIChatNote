@@ -44,7 +44,9 @@ type UpdateModelRequest struct {
 // SyncModelsRequest represents the request body for syncing provider models
 type SyncModelsRequest struct {
 	Add            []AddModelRequest `json:"add"`
-	Delete         []string          `json:"delete"`          // provider_model IDs to delete
+	Delete         []string          `json:"delete"`           // provider_model IDs to delete (hard delete)
+	Enable         []string          `json:"enable"`           // provider_model IDs to enable
+	Disable        []string          `json:"disable"`          // provider_model IDs to disable
 	DefaultModelID string            `json:"default_model_id"` // provider_model ID to set as default
 }
 
@@ -271,7 +273,7 @@ func (h *ProviderModelHandler) SetDefault(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"model": model})
 }
 
-// Sync syncs provider models (add, delete, update default in one transaction)
+// Sync syncs provider models (add, delete, enable, disable, update default in one transaction)
 func (h *ProviderModelHandler) Sync(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	providerID, err := uuid.Parse(c.Param("id"))
@@ -290,6 +292,18 @@ func (h *ProviderModelHandler) Sync(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
 		return
+	}
+
+	// Validate: same model cannot be in both enable and disable lists
+	enableSet := make(map[string]bool)
+	for _, id := range req.Enable {
+		enableSet[id] = true
+	}
+	for _, id := range req.Disable {
+		if enableSet[id] {
+			utils.SendError(c, http.StatusBadRequest, "invalid_request", "Model cannot be in both enable and disable lists: "+id)
+			return
+		}
 	}
 
 	// Convert request to repository params
@@ -321,6 +335,26 @@ func (h *ProviderModelHandler) Sync(c *gin.Context) {
 		deleteIDs = append(deleteIDs, id)
 	}
 
+	var enableIDs []uuid.UUID
+	for _, idStr := range req.Enable {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid model ID in enable list: "+idStr)
+			return
+		}
+		enableIDs = append(enableIDs, id)
+	}
+
+	var disableIDs []uuid.UUID
+	for _, idStr := range req.Disable {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid model ID in disable list: "+idStr)
+			return
+		}
+		disableIDs = append(disableIDs, id)
+	}
+
 	var defaultModelID uuid.UUID
 	if req.DefaultModelID != "" {
 		defaultModelID, err = uuid.Parse(req.DefaultModelID)
@@ -331,7 +365,7 @@ func (h *ProviderModelHandler) Sync(c *gin.Context) {
 	}
 
 	// Execute sync in transaction
-	result, err := h.modelRepo.Sync(provider.ID, modelsToAdd, deleteIDs, defaultModelID, newDefaultModelIndex)
+	result, err := h.modelRepo.Sync(provider.ID, modelsToAdd, deleteIDs, defaultModelID, newDefaultModelIndex, enableIDs, disableIDs)
 	if err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "sync_error", "Failed to sync models: "+err.Error(), err)
 		return
