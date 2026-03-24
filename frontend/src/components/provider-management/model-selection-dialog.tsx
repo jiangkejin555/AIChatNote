@@ -64,9 +64,9 @@ export function ModelSelectionDialog({
   // Reset selection when dialog opens
   useEffect(() => {
     if (open && provider) {
-      const existingModelIds = new Set(provider.models.map((m) => m.model_id))
+      const existingModelIds = new Set(provider.models?.map((m) => m.model_id) || [])
       setSelectedModels(existingModelIds)
-      const defaultModel = provider.models.find((m) => m.is_default)
+      const defaultModel = provider.models?.find((m) => m.is_default)
       setDefaultModelId(defaultModel?.model_id || null)
       setManualModelId('')
       setManualDisplayName('')
@@ -136,7 +136,7 @@ export function ModelSelectionDialog({
   const handleSave = async () => {
     if (!provider) return
 
-    const existingModelIds = new Set(provider.models.map((m) => m.model_id))
+    const existingModelIds = new Set(provider.models?.map((m) => m.model_id) || [])
     const newModels = [...selectedModels]
       .filter((id) => !existingModelIds.has(id))
       .map((id) => {

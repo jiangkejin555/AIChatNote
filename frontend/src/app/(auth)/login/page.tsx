@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { useAuthStore } from '@/stores'
+import { authApi } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,15 +19,6 @@ interface LoginForm {
   email: string
   password: string
 }
-
-// Mock 用户数据
-const MOCK_USER = {
-  id: 1,
-  email: 'test@test.com',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-}
-const MOCK_TOKEN = 'mock-jwt-token-12345'
 
 function LoginFormContent() {
   const [isLoading, setIsLoading] = useState(false)
@@ -43,22 +35,25 @@ function LoginFormContent() {
     formState: { errors },
   } = useForm<LoginForm>({
     defaultValues: {
-      email: 'test@test.com',
-      password: '12345678',
+      email: '',
+      password: '',
     },
   })
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true)
     try {
-      // Mock 登录：模拟延迟后直接设置用户状态
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      const response = await authApi.login({
+        email: data.email,
+        password: data.password,
+      })
 
-      login(MOCK_USER, MOCK_TOKEN)
+      login(response.user, response.token)
       toast.success(t('auth.loginSuccess'))
       router.push(decodeURIComponent(redirect))
     } catch (error: any) {
-      toast.error(t('auth.loginFailed'))
+      const message = error?.response?.data?.message || error?.message || t('auth.loginFailed')
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -70,9 +65,6 @@ function LoginFormContent() {
         <CardTitle>{t('auth.loginTitle')}</CardTitle>
         <CardDescription>
           {t('auth.loginDesc')}
-          <span className="block text-xs text-orange-500 mt-1">
-            {t('auth.mockMode')}
-          </span>
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>

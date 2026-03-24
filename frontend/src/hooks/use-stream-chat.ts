@@ -13,16 +13,6 @@ interface UseStreamChatOptions {
   onError?: (error: Error) => void
 }
 
-// Toggle mock mode - set to false when backend is ready
-const USE_MOCK = true
-
-// Mock responses for demo
-const MOCK_RESPONSES = [
-  '这是一个模拟的 AI 响应。在实际环境中，这里会调用真实的 LLM API 并流式返回内容。\n\n如果你看到这条消息，说明 mock 模式正在正常工作。',
-  '好的，我来帮你解答这个问题。\n\n在 mock 模式下，我会返回预设的响应内容。要使用真实的 AI 功能，需要启动后端服务并设置 `USE_MOCK = false`。',
-  '这是一个演示响应。\n\nMock 模式允许你在没有后端服务的情况下测试前端功能。',
-]
-
 export function useStreamChat({
   conversationId,
   onMessageStart,
@@ -50,30 +40,61 @@ export function useStreamChat({
       stopRef.current = false
 
       try {
-        if (USE_MOCK) {
-          // === Mock Stream Implementation ===
-          const messageId = Date.now().toString()
-          onMessageStart?.(messageId)
+        if (!token) {
+          onError?.(new Error('未登录'))
+          return
+        }
 
-          // Simulate streaming with random response
-          const responseText = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)]
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
 
-          // Stream character by character to simulate real streaming
-          let fullContent = ''
-          const chars = responseText.split('')
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
 
-          for (const char of chars) {
-            // Check if stopped
-            if (stopRef.current) break
+        try {
+          const response = await fetch(`${API_URL}/conversations/${conversationId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              Accept: 'text/event-stream',
+            },
+            body: JSON.stringify({
+              content,
+              stream: true,
+            }),
+            signal: controller.signal,
+          })
 
-            await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 30))
-            fullContent += char
-            onMessageChunk?.(char)
+          clearTimeout(timeoutId)
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
           }
 
-          // Create message object
+          if (!response.body) {
+            throw new Error('No response body')
+          }
+
+          let fullContent = ''
+          let messageId = ''
+
+          for await (const chunk of parseSSEStream(response.body)) {
+            if (stopRef.current || chunk.done) {
+              break
+            }
+
+            if (chunk.id && !messageId) {
+              messageId = chunk.id
+              onMessageStart?.(messageId)
+            }
+
+            fullContent += chunk.content
+            onMessageChunk?.(chunk.content)
+          }
+
+          // Create a temporary message object for the UI
           const tempMessage: Message = {
-            id: parseInt(messageId),
+            id: parseInt(messageId) || Date.now(),
             conversation_id: conversationId,
             role: 'assistant',
             content: fullContent,
@@ -81,73 +102,8 @@ export function useStreamChat({
           }
 
           onMessageEnd?.(tempMessage)
-        } else {
-          // === Real Stream Implementation ===
-          if (!token) {
-            onError?.(new Error('未登录'))
-            return
-          }
-
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
-
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
-
-          try {
-            const response = await fetch(`${API_URL}/conversations/${conversationId}/messages`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-                Accept: 'text/event-stream',
-              },
-              body: JSON.stringify({
-                content,
-                stream: true,
-              }),
-              signal: controller.signal,
-            })
-
-            clearTimeout(timeoutId)
-
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`)
-            }
-
-            if (!response.body) {
-              throw new Error('No response body')
-            }
-
-            let fullContent = ''
-            let messageId = ''
-
-            for await (const chunk of parseSSEStream(response.body)) {
-              if (stopRef.current || chunk.done) {
-                break
-              }
-
-              if (chunk.id && !messageId) {
-                messageId = chunk.id
-                onMessageStart?.(messageId)
-              }
-
-              fullContent += chunk.content
-              onMessageChunk?.(chunk.content)
-            }
-
-            // Create a temporary message object for the UI
-            const tempMessage: Message = {
-              id: parseInt(messageId) || Date.now(),
-              conversation_id: conversationId,
-              role: 'assistant',
-              content: fullContent,
-              created_at: new Date().toISOString(),
-            }
-
-            onMessageEnd?.(tempMessage)
-          } finally {
-            clearTimeout(timeoutId)
-          }
+        } finally {
+          clearTimeout(timeoutId)
         }
       } catch (error) {
         console.error('Stream error:', error)

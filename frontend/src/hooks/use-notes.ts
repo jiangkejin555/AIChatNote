@@ -33,16 +33,15 @@ export function useNote(id: number | null) {
 
 export function useCreateNote() {
   const queryClient = useQueryClient()
-  const t = getT()
 
   return useMutation({
     mutationFn: (data: CreateNoteRequest) => notesApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       queryClient.invalidateQueries({ queryKey: ['tags'] })
-      toast.success(t('notes.saveSuccess'))
     },
     onError: () => {
+      const t = getT()
       toast.error(t('notes.saveFailed'))
     },
   })
@@ -50,7 +49,6 @@ export function useCreateNote() {
 
 export function useUpdateNote() {
   const queryClient = useQueryClient()
-  const t = getT()
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateNoteRequest }) =>
@@ -58,9 +56,9 @@ export function useUpdateNote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       queryClient.invalidateQueries({ queryKey: ['tags'] })
-      toast.success(t('notes.updateSuccess'))
     },
     onError: () => {
+      const t = getT()
       toast.error(t('notes.updateFailed'))
     },
   })
