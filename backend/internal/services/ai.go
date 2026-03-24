@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/chat-note/backend/internal/config"
 	"github.com/chat-note/backend/internal/models"
 	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/utils"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -40,8 +42,12 @@ type GeneratedNote struct {
 
 // GenerateNoteFromConversation generates a note summary from a conversation
 func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, userID uint) (*GeneratedNote, error) {
+	start := time.Now()
+	utils.LogOperationStart("AIService", "GenerateNoteFromConversation", "convID", convID, "userID", userID, "mockMode", s.mockEnabled)
+
 	// Return mock data if mock mode is enabled
 	if s.mockEnabled {
+		utils.LogLatency("AIService", "GenerateNoteFromConversation", time.Since(start), "convID", convID, "mockMode", true)
 		return &GeneratedNote{
 			Title: "AI 对话总结 (Mock)",
 			Content: `## 概要
@@ -64,23 +70,27 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 	// Get conversation with messages (ensures user owns the conversation)
 	conv, err := s.convRepo.FindByIDWithMessagesAndUserID(convID, userID)
 	if err != nil {
+		utils.LogOperationError("AIService", "GenerateNoteFromConversation", err, "convID", convID, "userID", userID, "step", "get_conversation")
 		return nil, fmt.Errorf("conversation not found: %w", err)
 	}
 
 	// Build conversation text
 	var conversationText string
+	var msgCount int
 	for _, msg := range conv.Messages {
 		role := "User"
 		if msg.Role == models.RoleAssistant {
 			role = "Assistant"
 		}
 		conversationText += fmt.Sprintf("%s: %s\n\n", role, msg.Content)
+		msgCount++
 	}
 
 	// Build prompt for summary
 	prompt := buildSummaryPrompt(conv.Title, conversationText)
 
 	// Call DeepSeek API
+	apiStart := time.Now()
 	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model: "deepseek-chat",
 		Messages: []openai.ChatCompletionMessage{
@@ -95,19 +105,26 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		},
 		Temperature: 0.7,
 	})
+	apiLatency := time.Since(apiStart)
+
 	if err != nil {
+		utils.LogExternalCallError("AIService", "deepseek", err, "convID", convID, "msgCount", msgCount, "apiLatency_ms", apiLatency.Milliseconds())
 		return nil, fmt.Errorf("failed to generate note: %w", err)
 	}
 
 	if len(resp.Choices) == 0 {
+		utils.LogWarn("AIService", "GenerateNoteFromConversation", "convID", convID, "reason", "no_response_choices")
 		return nil, fmt.Errorf("no response from AI")
 	}
+
+	utils.LogExternalCall("AIService", "deepseek", "deepseek-chat", apiLatency, "convID", convID, "msgCount", msgCount)
 
 	// Parse JSON response
 	content := resp.Choices[0].Message.Content
 	note, err := parseAIResponse(content)
 	if err != nil {
 		// Fallback: return raw content as note
+		utils.LogWarn("AIService", "GenerateNoteFromConversation", "convID", convID, "reason", "json_parse_failed", "usingFallback", true)
 		return &GeneratedNote{
 			Title:   conv.Title + " - Summary",
 			Content: content,
@@ -115,6 +132,7 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 		}, nil
 	}
 
+	utils.LogLatency("AIService", "GenerateNoteFromConversation", time.Since(start), "convID", convID, "title", note.Title, "tagCount", len(note.Tags))
 	return note, nil
 }
 

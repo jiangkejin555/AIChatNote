@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -93,6 +95,7 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 	// Encrypt API key
 	encryptedKey, err := h.aesCrypto.Encrypt(req.APIKey)
 	if err != nil {
+		utils.LogOperationError("ProviderHandler", "Create", err, "userID", userID, "step", "encrypt_api_key")
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "encryption_error", "Failed to secure API key", err)
 		return
 	}
@@ -110,6 +113,7 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("ProviderHandler", "Create", "providerID", provider.ID, "userID", userID, "type", req.Type, "name", req.Name)
 	c.JSON(http.StatusCreated, gin.H{"provider": provider})
 }
 
@@ -152,19 +156,24 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 		return
 	}
 
+	updatedFields := []string{}
 	if req.Name != "" {
 		provider.Name = req.Name
+		updatedFields = append(updatedFields, "name")
 	}
 	if req.APIBase != "" {
 		provider.APIBase = req.APIBase
+		updatedFields = append(updatedFields, "api_base")
 	}
 	if req.APIKey != "" {
 		encryptedKey, err := h.aesCrypto.Encrypt(req.APIKey)
 		if err != nil {
+			utils.LogOperationError("ProviderHandler", "Update", err, "providerID", providerID, "step", "encrypt_api_key")
 			utils.SendErrorWithErr(c, http.StatusInternalServerError, "encryption_error", "Failed to secure API key", err)
 			return
 		}
 		provider.APIKeyEncrypted = encryptedKey
+		updatedFields = append(updatedFields, "api_key")
 	}
 
 	if err := h.providerRepo.Update(provider); err != nil {
@@ -172,6 +181,7 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("ProviderHandler", "Update", "providerID", providerID, "userID", userID, "fields", updatedFields)
 	c.JSON(http.StatusOK, gin.H{"provider": provider})
 }
 
@@ -189,6 +199,7 @@ func (h *ProviderHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("ProviderHandler", "Delete", "providerID", providerID, "userID", userID)
 	utils.SendSuccess(c, "Provider deleted successfully")
 }
 
@@ -210,12 +221,17 @@ func (h *ProviderHandler) TestConnection(c *gin.Context) {
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
+		utils.LogOperationError("ProviderHandler", "TestConnection", err, "providerID", providerID, "step", "decrypt_api_key")
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decryption_error", "Failed to decrypt API key", err)
 		return
 	}
 
 	// Test connection by calling the models endpoint
+	start := time.Now()
 	success, message, latency := testLLMConnection(provider.APIBase, apiKey)
+	totalLatency := time.Since(start)
+
+	utils.LogLatency("ProviderHandler", "TestConnection", totalLatency, "providerID", providerID, "success", success, "message", message)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": success,
@@ -256,17 +272,23 @@ func (h *ProviderHandler) GetAvailableModels(c *gin.Context) {
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
+		utils.LogOperationError("ProviderHandler", "GetAvailableModels", err, "providerID", providerID, "step", "decrypt_api_key")
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decryption_error", "Failed to decrypt API key", err)
 		return
 	}
 
 	// Call the provider's /models endpoint
+	start := time.Now()
 	models, err := fetchAvailableModels(provider.APIBase, apiKey)
+	latency := time.Since(start)
+
 	if err != nil {
+		utils.LogExternalCallError("ProviderHandler", string(provider.Type), err, "providerID", providerID, "latency_ms", latency.Milliseconds())
 		utils.SendError(c, http.StatusInternalServerError, "fetch_error", "Failed to fetch models: "+err.Error())
 		return
 	}
 
+	utils.LogExternalCall("ProviderHandler", string(provider.Type), "models_list", latency, "providerID", providerID, "model_count", len(models))
 	c.JSON(http.StatusOK, gin.H{"models": models})
 }
 
@@ -293,7 +315,8 @@ func fetchAvailableModels(apiBase, apiKey string) ([]AvailableModel, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, err
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	var result struct {

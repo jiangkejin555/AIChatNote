@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/chat-note/backend/internal/crypto"
+	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +13,7 @@ func Auth(jwtService *crypto.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			utils.LogAuthEvent("token_validation", false, "reason", "missing_authorization_header", "path", c.Request.URL.Path)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error":   "unauthorized",
 				"message": "Missing authorization header",
@@ -22,6 +24,7 @@ func Auth(jwtService *crypto.JWTService) gin.HandlerFunc {
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
+			utils.LogAuthEvent("token_validation", false, "reason", "invalid_header_format", "path", c.Request.URL.Path)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error":   "unauthorized",
 				"message": "Invalid authorization header format",
@@ -32,6 +35,7 @@ func Auth(jwtService *crypto.JWTService) gin.HandlerFunc {
 
 		claims, err := jwtService.ValidateToken(parts[1])
 		if err != nil {
+			utils.LogAuthEvent("token_validation", false, "reason", "invalid_or_expired_token", "error", err.Error(), "path", c.Request.URL.Path)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error":   "unauthorized",
 				"message": "Invalid or expired token",
@@ -43,6 +47,7 @@ func Auth(jwtService *crypto.JWTService) gin.HandlerFunc {
 		// Set user info in context
 		c.Set("user_id", claims.UserID)
 		c.Set("email", claims.Email)
+		utils.LogAuthEvent("token_validation", true, "userID", claims.UserID, "email", claims.Email)
 		c.Next()
 	}
 }

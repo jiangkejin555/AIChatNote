@@ -89,6 +89,7 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("ConversationHandler", "Create", "convID", conv.ID, "userID", userID, "title", title)
 	c.JSON(http.StatusCreated, gin.H{"data": conv})
 }
 
@@ -159,6 +160,7 @@ func (h *ConversationHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("ConversationHandler", "Delete", "convID", convID, "userID", userID)
 	c.JSON(http.StatusOK, gin.H{"message": "Conversation deleted"})
 }
 
@@ -240,6 +242,8 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationStart("ConversationHandler", "SendMessage", "convID", convID, "userID", userID, "stream", req.Stream)
+
 	// Save user message
 	userMsg := &models.Message{
 		ConversationID: conv.ID,
@@ -253,6 +257,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 
 	// Handle mock mode
 	if h.mockEnabled {
+		utils.LogInfo("ConversationHandler", "SendMessage", "mock_mode", true, "convID", convID)
 		if req.Stream {
 			h.handleMockStreamResponse(c, conv)
 		} else {
@@ -282,6 +287,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 	// Decrypt API key
 	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
 	if err != nil {
+		utils.LogOperationError("ConversationHandler", "SendMessage", err, "step", "decrypt_api_key", "providerID", provider.ID)
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "decrypt_error", "Failed to decrypt API key", err)
 		return
 	}
@@ -321,9 +327,12 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 }
 
 func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *openai.Client, model string, messages []openai.ChatCompletionMessage, conv *models.Conversation) {
+	start := time.Now()
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
+
+	utils.LogInfo("ConversationHandler", "StreamResponse started", "convID", conv.ID, "model", model)
 
 	ctx := context.Background()
 	req := openai.ChatCompletionRequest{
@@ -334,6 +343,7 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 
 	stream, err := client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
+		utils.LogExternalCallError("ConversationHandler", "openai", err, "convID", conv.ID, "model", model)
 		fmt.Fprintf(c.Writer, "data: {\"error\":\"%s\"}\n\n", err.Error())
 		c.Writer.Flush()
 		return
@@ -351,12 +361,12 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 			content := response.Choices[0].Delta.Content
 			fullContent += content
 
-			chunk := map[string]interface{}{
+			chunk := map[string]any{
 				"id":      response.ID,
 				"object":  response.Object,
 				"created": response.Created,
 				"model":   response.Model,
-				"choices": []map[string]interface{}{
+				"choices": []map[string]any{
 					{
 						"index": response.Choices[0].Index,
 						"delta": map[string]string{
@@ -383,11 +393,15 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 	// Update conversation timestamp
 	h.convRepo.Update(conv)
 
+	latency := time.Since(start)
+	utils.LogLatencyWithSlowWarning("ConversationHandler", "StreamResponse", latency, "convID", conv.ID, "model", model, "responseLen", len(fullContent))
+
 	fmt.Fprintf(c.Writer, "data: [DONE]\n\n")
 	c.Writer.Flush()
 }
 
 func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *openai.Client, model string, messages []openai.ChatCompletionMessage, conv *models.Conversation) {
+	start := time.Now()
 	ctx := context.Background()
 	req := openai.ChatCompletionRequest{
 		Model:    model,
@@ -396,11 +410,13 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 
 	resp, err := client.CreateChatCompletion(ctx, req)
 	if err != nil {
+		utils.LogExternalCallError("ConversationHandler", "openai", err, "convID", conv.ID, "model", model)
 		utils.SendError(c, http.StatusInternalServerError, "llm_error", err.Error())
 		return
 	}
 
 	if len(resp.Choices) == 0 {
+		utils.LogWarn("ConversationHandler", "NonStreamResponse", "convID", conv.ID, "reason", "no_response_from_model")
 		utils.SendError(c, http.StatusInternalServerError, "no_response", "No response from model")
 		return
 	}
@@ -421,6 +437,9 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 
 	// Update conversation timestamp
 	h.convRepo.Update(conv)
+
+	latency := time.Since(start)
+	utils.LogLatencyWithSlowWarning("ConversationHandler", "NonStreamResponse", latency, "convID", conv.ID, "model", model, "responseLen", len(content))
 
 	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
 }
@@ -501,6 +520,8 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid message ID")
 		return
 	}
+
+	utils.LogOperationStart("ConversationHandler", "Regenerate", "convID", convID, "msgID", msgID, "userID", userID)
 
 	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
@@ -105,21 +106,23 @@ func (h *NoteHandler) Create(c *gin.Context) {
 		SourceConversationID: req.SourceConversationID,
 	}
 
-	if err := h.noteRepo.Create(note); err != nil {
+	// Build tags slice
+	var tags []models.NoteTag
+	if len(req.Tags) > 0 {
+		tags = make([]models.NoteTag, len(req.Tags))
+		for i, tag := range req.Tags {
+			tags[i] = models.NoteTag{Tag: tag}
+		}
+	}
+
+	// Create note with tags in a single transaction
+	if err := h.noteRepo.CreateWithTags(note, tags); err != nil {
+		utils.LogOperationError("NoteHandler", "Create", err, "userID", userID, "title", req.Title, "tagCount", len(req.Tags))
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create note", err)
 		return
 	}
 
-	// Add tags
-	if len(req.Tags) > 0 {
-		tags := make([]models.NoteTag, len(req.Tags))
-		for i, tag := range req.Tags {
-			tags[i] = models.NoteTag{NoteID: note.ID, Tag: tag}
-		}
-		h.noteRepo.CreateTags(tags)
-		note.Tags = tags
-	}
-
+	utils.LogOperationSuccess("NoteHandler", "Create", "noteID", note.ID, "userID", userID, "title", note.Title, "tagCount", len(req.Tags))
 	c.JSON(http.StatusCreated, gin.H{"data": note})
 }
 
@@ -172,24 +175,31 @@ func (h *NoteHandler) Update(c *gin.Context) {
 		note.FolderID = req.FolderID
 	}
 
-	if err := h.noteRepo.Update(note); err != nil {
-		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update note", err)
-		return
-	}
-
-	// Update tags if provided
+	// If tags are provided, use transaction to update note and tags together
 	if req.Tags != nil {
-		h.noteRepo.DeleteTags(note.ID)
+		var tags []models.NoteTag
 		if len(req.Tags) > 0 {
-			tags := make([]models.NoteTag, len(req.Tags))
+			tags = make([]models.NoteTag, len(req.Tags))
 			for i, tag := range req.Tags {
-				tags[i] = models.NoteTag{NoteID: note.ID, Tag: tag}
+				tags[i] = models.NoteTag{Tag: tag}
 			}
-			h.noteRepo.CreateTags(tags)
-			note.Tags = tags
+		}
+
+		if err := h.noteRepo.UpdateWithTags(note, tags); err != nil {
+			utils.LogOperationError("NoteHandler", "Update", err, "noteID", noteID, "userID", userID, "tagCount", len(req.Tags))
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update note", err)
+			return
+		}
+	} else {
+		// Only update note without touching tags
+		if err := h.noteRepo.Update(note); err != nil {
+			utils.LogOperationError("NoteHandler", "Update", err, "noteID", noteID, "userID", userID)
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update note", err)
+			return
 		}
 	}
 
+	utils.LogOperationSuccess("NoteHandler", "Update", "noteID", note.ID, "userID", userID, "title", note.Title)
 	c.JSON(http.StatusOK, gin.H{"data": note})
 }
 
@@ -207,6 +217,7 @@ func (h *NoteHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("NoteHandler", "Delete", "noteID", noteID, "userID", userID)
 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
 }
 
@@ -238,16 +249,21 @@ func (h *NoteHandler) Copy(c *gin.Context) {
 		return
 	}
 
-	// Copy tags
+	// Copy tags using transaction
 	if len(note.Tags) > 0 {
 		tags := make([]models.NoteTag, len(note.Tags))
 		for i, tag := range note.Tags {
-			tags[i] = models.NoteTag{NoteID: newNote.ID, Tag: tag.Tag}
+			tags[i] = models.NoteTag{Tag: tag.Tag}
 		}
-		h.noteRepo.CreateTags(tags)
+		if err := h.noteRepo.CreateTags(tags); err != nil {
+			utils.LogOperationError("NoteHandler", "Copy", err, "sourceNoteID", noteID, "userID", userID, "step", "copy_tags")
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "copy_error", "Failed to copy note tags", err)
+			return
+		}
 		newNote.Tags = tags
 	}
 
+	utils.LogOperationSuccess("NoteHandler", "Copy", "sourceNoteID", noteID, "newNoteID", newNote.ID, "userID", userID, "title", newNote.Title)
 	c.JSON(http.StatusOK, gin.H{"data": newNote})
 }
 
@@ -397,10 +413,12 @@ func (h *NoteHandler) BatchDelete(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.BatchDelete(req.IDs, userID); err != nil {
+		utils.LogOperationError("NoteHandler", "BatchDelete", err, "userID", userID, "count", len(req.IDs))
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete notes", err)
 		return
 	}
 
+	utils.LogOperationSuccess("NoteHandler", "BatchDelete", "userID", userID, "count", len(req.IDs))
 	c.JSON(http.StatusOK, gin.H{"message": "Notes deleted"})
 }
 
@@ -415,10 +433,12 @@ func (h *NoteHandler) BatchMove(c *gin.Context) {
 	}
 
 	if err := h.noteRepo.BatchMove(req.IDs, userID, req.TargetFolderID); err != nil {
+		utils.LogOperationError("NoteHandler", "BatchMove", err, "userID", userID, "count", len(req.IDs), "targetFolderID", req.TargetFolderID)
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "move_error", "Failed to move notes", err)
 		return
 	}
 
+	utils.LogOperationSuccess("NoteHandler", "BatchMove", "userID", userID, "count", len(req.IDs), "targetFolderID", req.TargetFolderID)
 	c.JSON(http.StatusOK, gin.H{"message": "Notes moved"})
 }
 
@@ -440,12 +460,18 @@ func (h *NoteHandler) Generate(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationStart("NoteHandler", "Generate", "userID", userID, "convID", req.ConversationID)
+	start := time.Now()
+
 	// Generate note using AI service
 	note, err := h.aiService.GenerateNoteFromConversation(context.Background(), req.ConversationID, userID)
 	if err != nil {
+		utils.LogExternalCallError("NoteHandler", "ai_service", err, "userID", userID, "convID", req.ConversationID)
 		utils.SendError(c, http.StatusInternalServerError, "generation_error", "Failed to generate note: "+err.Error())
 		return
 	}
+
+	utils.LogLatencyWithSlowWarning("NoteHandler", "Generate", time.Since(start), "userID", userID, "convID", req.ConversationID, "title", note.Title)
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
@@ -514,10 +540,12 @@ func (h *FolderHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Create(folder); err != nil {
+		utils.LogOperationError("FolderHandler", "Create", err, "userID", userID, "name", req.Name)
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create folder", err)
 		return
 	}
 
+	utils.LogOperationSuccess("FolderHandler", "Create", "folderID", folder.ID, "userID", userID, "name", folder.Name)
 	c.JSON(http.StatusCreated, gin.H{"data": folder})
 }
 
@@ -571,10 +599,12 @@ func (h *FolderHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Update(folder); err != nil {
+		utils.LogOperationError("FolderHandler", "Update", err, "folderID", folderID, "userID", userID)
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update folder", err)
 		return
 	}
 
+	utils.LogOperationSuccess("FolderHandler", "Update", "folderID", folder.ID, "userID", userID, "name", folder.Name)
 	c.JSON(http.StatusOK, gin.H{"data": folder})
 }
 
@@ -589,16 +619,19 @@ func (h *FolderHandler) Delete(c *gin.Context) {
 
 	// Move notes to root
 	notes, _ := h.noteRepo.FindByUserID(userID, map[string]interface{}{"folder_id": uint(folderID)})
+	noteCount := len(notes)
 	for _, note := range notes {
 		note.FolderID = nil
 		h.noteRepo.Update(&note)
 	}
 
 	if err := h.folderRepo.Delete(uint(folderID), userID); err != nil {
+		utils.LogOperationError("FolderHandler", "Delete", err, "folderID", folderID, "userID", userID)
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete folder", err)
 		return
 	}
 
+	utils.LogOperationSuccess("FolderHandler", "Delete", "folderID", folderID, "userID", userID, "notesMovedToRoot", noteCount)
 	c.JSON(http.StatusOK, gin.H{"message": "Folder deleted"})
 }
 
@@ -624,6 +657,7 @@ func (h *FolderHandler) Copy(c *gin.Context) {
 	}
 
 	if err := h.folderRepo.Create(newFolder); err != nil {
+		utils.LogOperationError("FolderHandler", "Copy", err, "sourceFolderID", folderID, "userID", userID)
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to copy folder", err)
 		return
 	}
@@ -640,6 +674,7 @@ func (h *FolderHandler) Copy(c *gin.Context) {
 		h.noteRepo.Create(newNote)
 	}
 
+	utils.LogOperationSuccess("FolderHandler", "Copy", "sourceFolderID", folderID, "newFolderID", newFolder.ID, "userID", userID, "notesCopied", len(notes))
 	c.JSON(http.StatusOK, gin.H{"data": newFolder})
 }
 

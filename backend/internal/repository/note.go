@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/models"
+	"gorm.io/gorm"
 )
 
 type NoteRepository struct{}
@@ -68,6 +69,60 @@ func (r *NoteRepository) DeleteTags(noteID uint) error {
 
 func (r *NoteRepository) CreateTags(tags []models.NoteTag) error {
 	return database.DB.Create(&tags).Error
+}
+
+// CreateWithTags creates a note with tags in a single transaction
+func (r *NoteRepository) CreateWithTags(note *models.Note, tags []models.NoteTag) error {
+	return database.DB.Transaction(func(tx *gorm.DB) error {
+		// Create note first
+		if err := tx.Create(note).Error; err != nil {
+			return err
+		}
+
+		// Create tags if any
+		if len(tags) > 0 {
+			// Update tags with the note ID
+			for i := range tags {
+				tags[i].NoteID = note.ID
+			}
+			if err := tx.Create(&tags).Error; err != nil {
+				return err
+			}
+			note.Tags = tags
+		}
+
+		return nil
+	})
+}
+
+// UpdateWithTags updates a note with tags in a single transaction
+func (r *NoteRepository) UpdateWithTags(note *models.Note, tags []models.NoteTag) error {
+	return database.DB.Transaction(func(tx *gorm.DB) error {
+		// Update note
+		if err := tx.Save(note).Error; err != nil {
+			return err
+		}
+
+		// Delete existing tags
+		if err := tx.Where("note_id = ?", note.ID).Delete(&models.NoteTag{}).Error; err != nil {
+			return err
+		}
+
+		// Create new tags if any
+		if len(tags) > 0 {
+			for i := range tags {
+				tags[i].NoteID = note.ID
+			}
+			if err := tx.Create(&tags).Error; err != nil {
+				return err
+			}
+			note.Tags = tags
+		} else {
+			note.Tags = nil
+		}
+
+		return nil
+	})
 }
 
 func (r *NoteRepository) BatchDelete(ids []uint, userID uint) error {

@@ -30,6 +30,7 @@ export function NoteEditor({ content, onChange, className, editable = true }: No
             class: 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg p-4 overflow-x-auto text-sm font-mono shadow-sm my-3',
           },
         },
+        link: false,
       }),
       Placeholder.configure({
         placeholder: t('notes.placeholder'),
