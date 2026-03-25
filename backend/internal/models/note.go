@@ -16,7 +16,7 @@ type Note struct {
 	UpdatedAt            time.Time  `json:"updated_at"`
 
 	Folder             *Folder        `gorm:"foreignKey:FolderID" json:"-"`
-	SourceConversation *Conversation  `gorm:"foreignKey:SourceConversationID" json:"-"`
+	SourceConversation *Conversation  `gorm:"foreignKey:SourceConversationID;constraint:OnDelete:SET NULL" json:"-"`
 }
 
 func (Note) TableName() string {

@@ -77,6 +77,52 @@ func Migrate() error {
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
+
+	// Update foreign key constraint for notes.source_conversation_id to SET NULL on delete
+	if err := updateNoteConversationFK(); err != nil {
+		return fmt.Errorf("failed to update note conversation foreign key: %w", err)
+	}
+
 	log.Println("Database migration completed")
 	return nil
+}
+
+// updateNoteConversationFK updates the foreign key constraint on notes table
+// to SET NULL when the referenced conversation is deleted
+func updateNoteConversationFK() error {
+	// Drop the existing constraint and recreate with SET NULL
+	sql := `
+		DO $$
+		BEGIN
+			-- Check if the old constraint exists
+			IF EXISTS (
+				SELECT 1 FROM information_schema.table_constraints
+				WHERE constraint_name = 'fk_notes_source_conversation'
+				AND table_name = 'notes'
+			) THEN
+				ALTER TABLE notes DROP CONSTRAINT fk_notes_source_conversation;
+			END IF;
+
+			-- Check if the auto-generated constraint exists (GORM style)
+			IF EXISTS (
+				SELECT 1 FROM information_schema.table_constraints
+				WHERE constraint_name LIKE 'fk_notes_source_conversation%'
+				AND table_name = 'notes'
+			) THEN
+				EXECUTE 'ALTER TABLE notes DROP CONSTRAINT ' || (
+					SELECT constraint_name FROM information_schema.table_constraints
+					WHERE constraint_name LIKE 'fk_notes_source_conversation%'
+					AND table_name = 'notes'
+					LIMIT 1
+				);
+			END IF;
+		END $$;
+
+		-- Add the new constraint with SET NULL on delete
+		ALTER TABLE notes
+		ADD CONSTRAINT fk_notes_source_conversation
+		FOREIGN KEY (source_conversation_id) REFERENCES conversations(id)
+		ON DELETE SET NULL;
+	`
+	return DB.Exec(sql).Error
 }

@@ -1,19 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useChatStore, useAuthStore } from '@/stores'
+import { useChatStore } from '@/stores'
 import {
   useConversations,
   useCreateConversation,
-  useMessages,
   useStreamChat,
   useMarkAsSaved,
   useProviders,
 } from '@/hooks'
-import { ConversationList, MessageList, MessageInput, ModelSelector, SaveNoteDialog, SaveNoteButton } from '@/components/chat'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { Plus } from 'lucide-react'
+import { MessageList, MessageInput, ModelSelector, SaveNoteDialog, SaveNoteButton } from '@/components/chat'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from '@/i18n'
@@ -22,7 +18,6 @@ import type { Message } from '@/types'
 export default function ChatPage() {
   const t = useTranslations()
   const { currentConversationId, setCurrentConversation } = useChatStore()
-  const { isAuthenticated } = useAuthStore()
   const { data: conversations } = useConversations()
   const { data: providers } = useProviders()
   const createConversation = useCreateConversation()
@@ -38,7 +33,7 @@ export default function ChatPage() {
     onMessageChunk: (content) => {
       setStreamingContent((prev) => prev + content)
     },
-    onMessageEnd: (message) => {
+    onMessageEnd: () => {
       // Clear streaming content and optimistic messages
       setStreamingContent('')
       setOptimisticMessages([])
@@ -115,31 +110,6 @@ export default function ChatPage() {
     }
   }, [currentConversation, modelStatus.isDeleted, providers])
 
-  const handleNewConversation = async () => {
-    // Find a valid model for new conversation
-    let modelIdToUse = selectedModelId
-    if (!modelIdToUse && providers) {
-      for (const provider of providers) {
-        const defaultModel = provider.models.find(m => m.is_default && m.enabled)
-        if (defaultModel) {
-          modelIdToUse = defaultModel.id
-          break
-        }
-        const anyEnabled = provider.models.find(m => m.enabled)
-        if (anyEnabled) {
-          modelIdToUse = anyEnabled.id
-          break
-        }
-      }
-    }
-
-    if (!modelIdToUse) {
-      toast.error(t('chat.configureProviderFirst'))
-      return
-    }
-    createConversation.mutate({ provider_model_id: modelIdToUse })
-  }
-
   const handleSendMessage = useCallback(
     async (content: string) => {
       // Check if model is deleted
@@ -191,20 +161,6 @@ export default function ChatPage() {
 
   return (
     <div className="h-full flex relative">
-      {/* Left Sidebar - Conversation List */}
-      <div className="w-64 border-r flex flex-col bg-muted h-full min-h-0">
-        <div className="p-3 shrink-0">
-          <Button onClick={handleNewConversation} className="w-full" variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            {t('chat.newConversation')}
-          </Button>
-        </div>
-        <Separator className="shrink-0" />
-        <div className="flex-1 min-h-0">
-          <ConversationList />
-        </div>
-      </div>
-
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Chat Header */}
