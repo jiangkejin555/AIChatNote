@@ -1,9 +1,8 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { useMessages } from '@/hooks'
 import { useChatStore } from '@/stores'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { MessageItem } from './message-item'
 import { Loader2 } from 'lucide-react'
 import { useTranslations } from '@/i18n'
@@ -12,19 +11,39 @@ import type { Message } from '@/types'
 interface MessageListProps {
   streamingContent?: string
   optimisticMessages?: Message[]
+  isThinking?: boolean
+  isTimeout?: boolean
+  onRetry?: () => void
+  lastUserMessage?: string
 }
 
-export function MessageList({ streamingContent, optimisticMessages = [] }: MessageListProps) {
+export function MessageList({
+  streamingContent,
+  optimisticMessages = [],
+  isThinking,
+  isTimeout,
+  onRetry,
+}: MessageListProps) {
   const t = useTranslations()
   const { currentConversationId } = useChatStore()
   const { data: messages, isLoading } = useMessages(currentConversationId)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
 
+  // Detect if user scrolled to bottom
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
+    setShouldAutoScroll(isAtBottom)
+  }, [])
+
+  // Scroll to bottom when new content arrives (only if shouldAutoScroll)
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (shouldAutoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages, streamingContent, optimisticMessages])
+  }, [messages, streamingContent, optimisticMessages, shouldAutoScroll])
 
   if (!currentConversationId) {
     return (
@@ -49,7 +68,7 @@ export function MessageList({ streamingContent, optimisticMessages = [] }: Messa
   const allMessages = [...(messages || []), ...optimisticMessages]
 
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+    <div className="flex-1 overflow-auto p-4" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className="max-w-3xl mx-auto space-y-4">
         {allMessages.map((message) => (
           <MessageItem key={message.id} message={message} />
@@ -67,7 +86,39 @@ export function MessageList({ streamingContent, optimisticMessages = [] }: Messa
             isStreaming
           />
         )}
+
+        {/* Thinking state - show when waiting for response */}
+        {isThinking && !streamingContent && !isTimeout && (
+          <MessageItem
+            message={{
+              id: -2,
+              conversation_id: currentConversationId,
+              role: 'assistant',
+              content: '',
+              created_at: new Date().toISOString(),
+            }}
+            isThinking
+          />
+        )}
+
+        {/* Timeout state - show when request timed out */}
+        {isTimeout && (
+          <MessageItem
+            message={{
+              id: -3,
+              conversation_id: currentConversationId,
+              role: 'assistant',
+              content: '',
+              created_at: new Date().toISOString(),
+            }}
+            isTimeout
+            onRetry={onRetry}
+          />
+        )}
+
+        {/* Sentinel element for scroll-to-bottom */}
+        <div ref={messagesEndRef} />
       </div>
-    </ScrollArea>
+    </div>
   )
 }

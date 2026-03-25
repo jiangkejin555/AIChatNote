@@ -395,12 +395,12 @@ func TestProviderModelRepository_Sync(t *testing.T) {
 		// Delete model1 using Sync (hard delete)
 		result, err := modelRepo.Sync(
 			provider.ID,
-			nil,           // modelsToAdd
+			nil,                   // modelsToAdd
 			[]uuid.UUID{model1ID}, // deleteIDs
-			uuid.Nil,      // defaultModelID
-			-1,            // newDefaultModelIndex
-			nil,           // enableIDs
-			nil,           // disableIDs
+			uuid.Nil,              // defaultModelID
+			-1,                    // newDefaultModelIndex
+			nil,                   // enableIDs
+			nil,                   // disableIDs
 		)
 
 		require.NoError(t, err)
@@ -513,10 +513,10 @@ func TestProviderModelRepository_Sync(t *testing.T) {
 		result, err := modelRepo.Sync(
 			provider.ID,
 			modelsToAdd,
-			[]uuid.UUID{model1ID},     // delete model1
+			[]uuid.UUID{model1ID}, // delete model1
 			uuid.Nil,
-			0,                          // set new model as default
-			[]uuid.UUID{model2ID},     // enable model2
+			0,                     // set new model as default
+			[]uuid.UUID{model2ID}, // enable model2
 			nil,
 		)
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { Message } from '@/types'
 import { cn, formatMessageTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Copy, RotateCcw, Check, Loader2, User, Bot, Clock } from 'lucide-react'
+import { Copy, RotateCcw, Check, Loader2, User, Bot, Clock, RefreshCw, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRegenerateMessage } from '@/hooks'
 import { MarkdownContent } from './markdown-content'
@@ -13,9 +13,12 @@ import { useTranslations } from '@/i18n'
 interface MessageItemProps {
   message: Message
   isStreaming?: boolean
+  isThinking?: boolean
+  isTimeout?: boolean
+  onRetry?: () => void
 }
 
-export function MessageItem({ message, isStreaming }: MessageItemProps) {
+export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRetry }: MessageItemProps) {
   const [copied, setCopied] = useState(false)
   const regenerate = useRegenerateMessage()
   const t = useTranslations()
@@ -86,6 +89,37 @@ export function MessageItem({ message, isStreaming }: MessageItemProps) {
               <p className="text-sm whitespace-pre-wrap leading-relaxed">
                 {message.content}
               </p>
+            ) : isTimeout ? (
+              // Timeout state: show error and retry button
+              <div className="text-sm">
+                <div className="flex items-center gap-2 text-destructive mb-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{t('chat.timeout')}</span>
+                </div>
+                {onRetry && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRetry}
+                    className="h-8 gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    {t('chat.retry')}
+                  </Button>
+                )}
+              </div>
+            ) : isThinking ? (
+              // Thinking state: show animated text
+              <div className="text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <span className="animate-pulse">{t('chat.thinking')}</span>
+                  <span className="inline-flex gap-0.5">
+                    <span className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </span>
+                </span>
+              </div>
             ) : (
               // AI message: rendered markdown, full width
               <div className="text-sm leading-relaxed">

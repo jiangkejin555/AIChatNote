@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
+import { AxiosError } from 'axios'
 import { useAuthStore } from '@/stores'
 import { authApi } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import { Suspense } from 'react'
 import { useTranslations } from '@/i18n'
 
 interface LoginForm {
@@ -51,8 +51,9 @@ function LoginFormContent() {
       login(response.user, response.token)
       toast.success(t('auth.loginSuccess'))
       router.push(decodeURIComponent(redirect))
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || t('auth.loginFailed')
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>
+      const message = axiosError.response?.data?.message || axiosError.message || t('auth.loginFailed')
       toast.error(message)
     } finally {
       setIsLoading(false)

@@ -78,7 +78,10 @@
     "configureProviderFirst": "请先配置提供商和模型",
     "selectConversation": "选择一个对话或开始新对话",
     "conversationHistoryHint": "您的对话历史将显示在这里",
-    "welcomeMessage": "您好，请开始你的聊天 !"
+    "welcomeMessage": "您好，请开始你的聊天 !",
+    "thinking": "思考中...",
+    "timeout": "请求超时，请重试",
+    "retry": "重试"
   },
   "saveNote": {
     "title": "保存为笔记",

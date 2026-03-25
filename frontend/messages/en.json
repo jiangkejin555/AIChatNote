@@ -78,7 +78,10 @@
     "configureProviderFirst": "Please configure a provider and model first",
     "selectConversation": "Select a conversation or start a new one",
     "conversationHistoryHint": "Your conversation history will appear here",
-    "welcomeMessage": "Hello, please start your chat."
+    "welcomeMessage": "Hello, please start your chat.",
+    "thinking": "Thinking...",
+    "timeout": "Request timeout, please retry",
+    "retry": "Retry"
   },
   "saveNote": {
     "title": "Save as Note",

@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
+import { AxiosError } from 'axios'
 import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/stores'
 import { Button } from '@/components/ui/button'
@@ -48,8 +49,9 @@ function RegisterFormContent() {
       login(response.user, response.token)
       toast.success(t('auth.registerSuccess'))
       router.push(decodeURIComponent(redirect))
-    } catch (error: any) {
-      const message = error.response?.data?.message || t('auth.registerFailed')
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>
+      const message = axiosError.response?.data?.message || axiosError.message || t('auth.registerFailed')
       toast.error(message)
     } finally {
       setIsLoading(false)

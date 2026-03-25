@@ -67,4 +67,11 @@ export const conversationsApi = {
     )
     return response.data.data
   },
+
+  generateTitle: async (id: number): Promise<{ title: string }> => {
+    const response = await apiClient.post<ApiResponse<{ title: string }>>(
+      `/conversations/${id}/generate-title`
+    )
+    return response.data.data
+  },
 }

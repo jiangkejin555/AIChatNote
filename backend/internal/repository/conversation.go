@@ -52,7 +52,24 @@ func (r *ConversationRepository) Update(conv *models.Conversation) error {
 }
 
 func (r *ConversationRepository) Delete(id, userID uint) error {
-	return database.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Conversation{}).Error
+	return database.DB.Transaction(func(tx *gorm.DB) error {
+		// Delete associated message_requests first
+		if err := tx.Where("conversation_id = ?", id).Delete(&models.MessageRequest{}).Error; err != nil {
+			return err
+		}
+		// Then delete the conversation
+		return tx.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Conversation{}).Error
+	})
+}
+
+// UpdateTitle 更新对话标题（同时更新 updated_at 以触发排序刷新）
+func (r *ConversationRepository) UpdateTitle(id, userID uint, title string) error {
+	return database.DB.Model(&models.Conversation{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		Updates(map[string]interface{}{
+			"title":      title,
+			"updated_at": gorm.Expr("CURRENT_TIMESTAMP"),
+		}).Error
 }
 
 type MessageRepository struct{}
@@ -63,6 +80,15 @@ func NewMessageRepository() *MessageRepository {
 
 func (r *MessageRepository) Create(msg *models.Message) error {
 	return database.DB.Create(msg).Error
+}
+
+func (r *MessageRepository) FindByID(id uint) (*models.Message, error) {
+	var msg models.Message
+	err := database.DB.First(&msg, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &msg, nil
 }
 
 func (r *MessageRepository) FindByConversationID(convID uint) ([]models.Message, error) {
@@ -91,6 +117,18 @@ func (r *MessageRepository) GetLastAssistantMessage(convID uint) (*models.Messag
 	var msg models.Message
 	err := database.DB.Where("conversation_id = ? AND role = ?", convID, models.RoleAssistant).
 		Order("created_at DESC").
+		First(&msg).Error
+	if err != nil {
+		return nil, err
+	}
+	return &msg, nil
+}
+
+// GetFirstUserMessage 获取对话的首条用户消息
+func (r *MessageRepository) GetFirstUserMessage(convID uint) (*models.Message, error) {
+	var msg models.Message
+	err := database.DB.Where("conversation_id = ? AND role = ?", convID, models.RoleUser).
+		Order("created_at ASC").
 		First(&msg).Error
 	if err != nil {
 		return nil, err

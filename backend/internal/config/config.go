@@ -38,10 +38,10 @@ type DatabaseConfig struct {
 }
 
 type JWTConfig struct {
-	Secret           string `yaml:"secret"`
-	RefreshSecret    string `yaml:"refresh_secret"`
-	ExpiryHours      int    `yaml:"expiry_hours"`
-	RefreshExpiryHours int  `yaml:"refresh_expiry_hours"`
+	Secret             string `yaml:"secret"`
+	RefreshSecret      string `yaml:"refresh_secret"`
+	ExpiryHours        int    `yaml:"expiry_hours"`
+	RefreshExpiryHours int    `yaml:"refresh_expiry_hours"`
 
 	// Computed values
 	Expiry        time.Duration `yaml:"-"`

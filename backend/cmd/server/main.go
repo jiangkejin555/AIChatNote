@@ -132,6 +132,7 @@ func main() {
 			conversations.GET("/:id/messages", conversationHandler.GetMessages)
 			conversations.POST("/:id/messages", conversationHandler.SendMessage)
 			conversations.POST("/:id/messages/:messageId/regenerate", conversationHandler.Regenerate)
+			conversations.POST("/:id/generate-title", conversationHandler.GenerateTitle)
 		}
 
 		// Note routes

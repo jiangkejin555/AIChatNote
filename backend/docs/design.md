@@ -422,6 +422,37 @@ Content-Type: application/json
 | POST | /conversations/:id/messages | 发送消息 (支持 SSE) |
 | POST | /conversations/:id/messages/:msgId/regenerate | 重新生成 |
 
+#### 3.5.1 发送消息 API (POST /conversations/:id/messages)
+
+**请求参数**:
+
+```json
+{
+  "content": "用户消息内容",
+  "stream": true,
+  "request_id": "uuid-v4-string"  // 可选，用于请求去重
+}
+```
+
+**request_id 说明**:
+- 类型：UUID v4 字符串（如 `550e8400-e29b-41d4-a716-446655440000`）
+- 用途：请求去重，- 行为：
+  - 首次请求：后端创建请求记录并处理
+  - 超时后重试：前端复用同一个 `request_id`
+  - 后端检测到已处理的请求时：
+    - `completed`: 返回已保存的 AI 回复
+    - `processing`: 返回 202 Accepted，提示"请求正在处理中"
+
+**响应**:
+- 成功：SSE 流式响应或 JSON 响应（非流式）
+- 去重响应：
+  ```json
+  {
+    "data": { /* 已保存的消息 */ },
+    "deduplicated": true
+  }
+  ```
+
 ### 3.6 笔记管理
 
 | 方法 | 路径 | 说明 |

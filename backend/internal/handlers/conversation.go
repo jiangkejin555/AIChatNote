@@ -23,6 +23,7 @@ type ConversationHandler struct {
 	msgRepo      *repository.MessageRepository
 	providerRepo *repository.ProviderRepository
 	modelRepo    *repository.ProviderModelRepository
+	requestRepo  *repository.MessageRequestRepository
 	aesCrypto    *crypto.AESCrypto
 	mockEnabled  bool
 }
@@ -35,6 +36,7 @@ func NewConversationHandler(aesCrypto *crypto.AESCrypto, mockEnabled bool) *Conv
 		msgRepo:      repository.NewMessageRepository(),
 		providerRepo: repository.NewProviderRepository(),
 		modelRepo:    repository.NewProviderModelRepository(),
+		requestRepo:  repository.NewMessageRequestRepository(),
 		aesCrypto:    aesCrypto,
 		mockEnabled:  mockEnabled,
 	}
@@ -47,8 +49,9 @@ type CreateConversationRequest struct {
 }
 
 type SendMessageRequest struct {
-	Content string `json:"content" binding:"required"`
-	Stream  bool   `json:"stream"`
+	Content   string `json:"content" binding:"required"`
+	Stream    bool   `json:"stream"`
+	RequestID string `json:"request_id"` // Optional UUID for request deduplication
 }
 
 // List returns all conversations for the user
@@ -253,7 +256,23 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	utils.LogOperationStart("ConversationHandler", "SendMessage", "convID", convID, "userID", userID, "stream", req.Stream)
+	utils.LogOperationStart("ConversationHandler", "SendMessage", "convID", convID, "userID", userID, "stream", req.Stream, "requestID", req.RequestID)
+
+	// Handle request deduplication if request_id is provided
+	var msgReq *models.MessageRequest
+	var isNewRequest bool
+	if req.RequestID != "" {
+		msgReq, isNewRequest, err = h.handleRequestDeduplication(c, conv.ID, req.RequestID, 0)
+		if err != nil {
+			// Error already sent to client
+			return
+		}
+		if msgReq != nil && !isNewRequest {
+			// Existing request (completed or processing), response already sent
+			return
+		}
+		// New request (isNewRequest=true), continue with normal processing
+	}
 
 	// Save user message
 	userMsg := &models.Message{
@@ -263,16 +282,27 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 	}
 	if err := h.msgRepo.Create(userMsg); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save message", err)
+		// Mark request as failed if we have one
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
 		return
+	}
+
+	// Update request with user message ID
+	if msgReq != nil && msgReq.ID > 0 {
+		if err := h.requestRepo.SetUserMessage(msgReq.ID, userMsg.ID); err != nil {
+			utils.LogOperationError("ConversationHandler", "SendMessage", err, "step", "set_user_message_id", "requestID", msgReq.ID)
+		}
 	}
 
 	// Handle mock mode
 	if h.mockEnabled {
 		utils.LogInfo("ConversationHandler", "SendMessage", "mock_mode", true, "convID", convID)
 		if req.Stream {
-			h.handleMockStreamResponse(c, conv)
+			h.handleMockStreamResponse(c, conv, msgReq)
 		} else {
-			h.handleMockNonStreamResponse(c, conv)
+			h.handleMockNonStreamResponse(c, conv, msgReq)
 		}
 		return
 	}
@@ -335,14 +365,14 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 
 	if req.Stream {
 		// Streaming response
-		h.handleStreamResponse(c, client, providerModel.ModelID, chatMessages, conv)
+		h.handleStreamResponse(c, client, providerModel.ModelID, chatMessages, conv, msgReq)
 	} else {
 		// Non-streaming response
-		h.handleNonStreamResponse(c, client, providerModel.ModelID, chatMessages, conv)
+		h.handleNonStreamResponse(c, client, providerModel.ModelID, chatMessages, conv, msgReq)
 	}
 }
 
-func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *openai.Client, model string, messages []openai.ChatCompletionMessage, conv *models.Conversation) {
+func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *openai.Client, model string, messages []openai.ChatCompletionMessage, conv *models.Conversation, msgReq *models.MessageRequest) {
 	start := time.Now()
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
@@ -362,6 +392,10 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 		utils.LogExternalCallError("ConversationHandler", "openai", err, "convID", conv.ID, "model", model)
 		fmt.Fprintf(c.Writer, "data: {\"error\":\"%s\"}\n\n", err.Error())
 		c.Writer.Flush()
+		// Mark request as failed
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
 		return
 	}
 	defer stream.Close()
@@ -404,7 +438,18 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 		Role:           models.RoleAssistant,
 		Content:        fullContent,
 	}
-	h.msgRepo.Create(assistantMsg)
+	err = h.msgRepo.Create(assistantMsg)
+	if err != nil {
+		utils.LogOperationError("ConversationHandler", "StreamResponse", err, "step", "create_message", "convID", conv.ID)
+		return
+	}
+
+	// Update request status to completed
+	if msgReq != nil && msgReq.ID > 0 {
+		if err := h.requestRepo.SetCompleted(msgReq.ID, assistantMsg.ID); err != nil {
+			utils.LogOperationError("ConversationHandler", "StreamResponse", err, "step", "set_request_completed", "requestID", msgReq.ID)
+		}
+	}
 
 	// Update conversation timestamp
 	h.convRepo.Update(conv)
@@ -416,7 +461,7 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 	c.Writer.Flush()
 }
 
-func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *openai.Client, model string, messages []openai.ChatCompletionMessage, conv *models.Conversation) {
+func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *openai.Client, model string, messages []openai.ChatCompletionMessage, conv *models.Conversation, msgReq *models.MessageRequest) {
 	start := time.Now()
 	ctx := context.Background()
 	req := openai.ChatCompletionRequest{
@@ -428,12 +473,20 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 	if err != nil {
 		utils.LogExternalCallError("ConversationHandler", "openai", err, "convID", conv.ID, "model", model)
 		utils.SendError(c, http.StatusInternalServerError, "llm_error", err.Error())
+		// Mark request as failed
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
 		return
 	}
 
 	if len(resp.Choices) == 0 {
 		utils.LogWarn("ConversationHandler", "NonStreamResponse", "convID", conv.ID, "reason", "no_response_from_model")
 		utils.SendError(c, http.StatusInternalServerError, "no_response", "No response from model")
+		// Mark request as failed
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
 		return
 	}
 
@@ -448,7 +501,18 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
+		// Mark request as failed
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
 		return
+	}
+
+	// Update request status to completed
+	if msgReq != nil && msgReq.ID > 0 {
+		if err := h.requestRepo.SetCompleted(msgReq.ID, assistantMsg.ID); err != nil {
+			utils.LogOperationError("ConversationHandler", "NonStreamResponse", err, "step", "set_request_completed", "requestID", msgReq.ID)
+		}
 	}
 
 	// Update conversation timestamp
@@ -461,7 +525,7 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 }
 
 // handleMockStreamResponse handles mock streaming response
-func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *models.Conversation) {
+func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *models.Conversation, msgReq *models.MessageRequest) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
@@ -494,7 +558,17 @@ func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *mod
 		Role:           models.RoleAssistant,
 		Content:        mockResponse,
 	}
-	h.msgRepo.Create(assistantMsg)
+	err := h.msgRepo.Create(assistantMsg)
+	if err != nil {
+		utils.LogOperationError("ConversationHandler", "MockStreamResponse", err, "step", "create_message", "convID", conv.ID)
+		return
+	}
+	// Update request status to completed
+	if msgReq != nil && msgReq.ID > 0 {
+		if err := h.requestRepo.SetCompleted(msgReq.ID, assistantMsg.ID); err != nil {
+			utils.LogOperationError("ConversationHandler", "MockStreamResponse", err, "step", "set_request_completed", "requestID", msgReq.ID)
+		}
+	}
 
 	// Update conversation timestamp
 	h.convRepo.Update(conv)
@@ -504,7 +578,7 @@ func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *mod
 }
 
 // handleMockNonStreamResponse handles mock non-streaming response
-func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *models.Conversation) {
+func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *models.Conversation, msgReq *models.MessageRequest) {
 	assistantMsg := &models.Message{
 		ConversationID: conv.ID,
 		Role:           models.RoleAssistant,
@@ -513,7 +587,18 @@ func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
+		// Mark request as failed
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
 		return
+	}
+
+	// Update request status to completed
+	if msgReq != nil && msgReq.ID > 0 {
+		if err := h.requestRepo.SetCompleted(msgReq.ID, assistantMsg.ID); err != nil {
+			utils.LogOperationError("ConversationHandler", "MockNonStreamResponse", err, "step", "set_request_completed", "requestID", msgReq.ID)
+		}
 	}
 
 	// Update conversation timestamp
@@ -649,4 +734,199 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
+}
+
+// handleRequestDeduplication handles request deduplication logic
+// Returns:
+// - request, isNew, nil: Request found or created
+//   - If isNew=true: New request created, proceed with normal processing
+//   - If isNew=false: Existing request (completed/processing), response already sent
+//
+// - nil, false, error: Error occurred, response already sent to client
+const maxDedupRetries = 3
+
+func (h *ConversationHandler) handleRequestDeduplication(c *gin.Context, convID uint, requestID string, retryCount int) (*models.MessageRequest, bool, error) {
+	// Try to find existing request
+	existingReq, err := h.requestRepo.FindByRequestID(requestID)
+	if err != nil && err != repository.ErrRequestNotFound {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to check request", err)
+		return nil, false, err
+	}
+
+	if existingReq != nil {
+		switch existingReq.Status {
+		case models.StatusCompleted:
+			// Request already completed, return existing assistant message
+			if existingReq.AssistantMessageID != nil {
+				assistantMsg, err := h.msgRepo.FindByID(*existingReq.AssistantMessageID)
+				if err != nil {
+					utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch existing response", err)
+					return nil, false, err
+				}
+				utils.LogInfo("ConversationHandler", "RequestDeduplication", "status", "completed", "requestID", requestID)
+				c.JSON(http.StatusOK, gin.H{"data": assistantMsg, "deduplicated": true})
+				return existingReq, false, nil
+			}
+			// Completed but no message (shouldn't happen), fall through to process normally
+
+		case models.StatusProcessing:
+			// Request still processing
+			utils.LogInfo("ConversationHandler", "RequestDeduplication", "status", "processing", "requestID", requestID)
+			c.JSON(http.StatusAccepted, gin.H{
+				"error":      "request_in_progress",
+				"message":    "请求正在处理中，请稍后刷新查看",
+				"request_id": requestID,
+			})
+			return existingReq, false, nil
+
+		case models.StatusFailed:
+			// Request failed, allow retry by creating new request
+			utils.LogInfo("ConversationHandler", "RequestDeduplication", "status", "failed", "requestID", requestID)
+			// Delete failed request to allow retry
+			h.requestRepo.Delete(existingReq.ID)
+			// Continue to create new request below
+		}
+	}
+
+	// Create new request record
+	newReq := &models.MessageRequest{
+		ConversationID: convID,
+		RequestID:      requestID,
+		Status:         models.StatusProcessing,
+	}
+	if _, err := h.requestRepo.CreateIfNotExists(newReq); err != nil {
+		if err == repository.ErrRequestAlreadyExists {
+			// Race condition: another request created it between our check and create
+			// Retry with limit to prevent infinite recursion
+			if retryCount >= maxDedupRetries {
+				utils.SendError(c, http.StatusTooManyRequests, "retry_exceeded", "请求处理繁忙，请稍后重试")
+				return nil, false, fmt.Errorf("max retries exceeded for request deduplication")
+			}
+			return h.handleRequestDeduplication(c, convID, requestID, retryCount+1)
+		}
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to create request", err)
+		return nil, false, err
+	}
+
+	utils.LogInfo("ConversationHandler", "RequestDeduplication", "status", "new", "requestID", requestID)
+	return newReq, true, nil
+}
+
+// GenerateTitle generates a title for the conversation based on the first user message
+func (h *ConversationHandler) GenerateTitle(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	convID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid conversation ID")
+		return
+	}
+
+	// Verify conversation exists and belongs to user
+	conv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
+		return
+	}
+
+	// Get first user message
+	firstMsg, err := h.msgRepo.GetFirstUserMessage(conv.ID)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "no_message", "对话无消息")
+		return
+	}
+
+	// Generate title using AI
+	title, err := h.generateTitleWithAI(conv, firstMsg.Content)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "generate_error", "Failed to generate title", err)
+		return
+	}
+
+	// Update conversation title
+	if err := h.convRepo.UpdateTitle(conv.ID, userID, title); err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update title", err)
+		return
+	}
+
+	utils.LogOperationSuccess("ConversationHandler", "GenerateTitle", "convID", convID, "userID", userID, "title", title)
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"title": title}})
+}
+
+// generateTitleWithAI calls AI to generate a title based on the first message
+func (h *ConversationHandler) generateTitleWithAI(conv *models.Conversation, firstMessage string) (string, error) {
+	// Handle mock mode
+	if h.mockEnabled {
+		// Return first 15 characters of the message as title
+		if len(firstMessage) > 15 {
+			return firstMessage[:15] + "...", nil
+		}
+		return firstMessage, nil
+	}
+
+	// Get provider info
+	if conv.ProviderModelID == nil {
+		// Fallback to first 15 characters
+		if len(firstMessage) > 15 {
+			return firstMessage[:15] + "...", nil
+		}
+		return firstMessage, nil
+	}
+
+	providerModel, err := h.modelRepo.FindByID(*conv.ProviderModelID)
+	if err != nil {
+		return "", err
+	}
+
+	provider, err := h.providerRepo.FindByID(providerModel.ProviderID)
+	if err != nil {
+		return "", err
+	}
+
+	// Decrypt API key
+	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
+	if err != nil {
+		return "", err
+	}
+
+	// Build prompt for title generation
+	prompt := fmt.Sprintf(`请根据用户的第一条消息，生成一个简洁的聊天标题（最多15个字符）。
+只输出标题，不要其他内容。
+
+用户消息：%s`, firstMessage)
+
+	// Create OpenAI client
+	config := openai.DefaultConfig(apiKey)
+	config.BaseURL = provider.APIBase
+	client := openai.NewClientWithConfig(config)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req := openai.ChatCompletionRequest{
+		Model: providerModel.ModelID,
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: prompt,
+			},
+		},
+		MaxTokens: 50,
+	}
+
+	resp, err := client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.Choices) == 0 {
+		return "", fmt.Errorf("no response from model")
+	}
+
+	title := resp.Choices[0].Message.Content
+	// Limit title length
+	if len(title) > 50 {
+		title = title[:50]
+	}
+
+	return title, nil
 }

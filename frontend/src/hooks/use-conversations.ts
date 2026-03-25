@@ -40,7 +40,7 @@ export function useCreateConversation() {
     onSuccess: (conversation) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       setCurrentConversation(conversation.id)
-      toast.success(t('chat.conversationCreateSuccess'))
+      // toast.success(t('chat.conversationCreateSuccess'))
     },
     onError: () => {
       toast.error(t('chat.conversationCreateFailed'))
@@ -71,7 +71,11 @@ export function useDeleteConversation() {
 
   return useMutation({
     mutationFn: (id: number) => conversationsApi.delete(id),
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
+      // Clear the messages cache for the deleted conversation first
+      // This prevents stale messages from being displayed
+      queryClient.removeQueries({ queryKey: ['conversations', deletedId, 'messages'] })
+      // Then invalidate conversations list
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       setCurrentConversation(null)
       toast.success(t('chat.conversationDeleteSuccess'))
@@ -134,6 +138,18 @@ export function useMarkAsSaved() {
   return useMutation({
     mutationFn: (id: number) => conversationsApi.markAsSaved(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}
+
+export function useGenerateTitle() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => conversationsApi.generateTitle(id),
+    onSuccess: () => {
+      // Refresh conversations list to show new title
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
     },
   })

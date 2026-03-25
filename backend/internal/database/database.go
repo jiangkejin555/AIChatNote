@@ -69,6 +69,7 @@ func Migrate() error {
 		&models.ProviderModel{},
 		&models.Conversation{},
 		&models.Message{},
+		&models.MessageRequest{},
 		&models.Note{},
 		&models.Folder{},
 		&models.RefreshToken{},

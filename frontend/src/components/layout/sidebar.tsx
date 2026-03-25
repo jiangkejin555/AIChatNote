@@ -168,6 +168,11 @@ export function Sidebar() {
     // Set pending state to show start page
     setIsPendingNewChat(true)
     setCurrentConversation(null)
+
+    // Navigate to chat page if not already there
+    if (pathname !== '/') {
+      router.push('/')
+    }
   }
 
   const handleStartEdit = (id: number, currentTitle: string) => {
@@ -205,8 +210,8 @@ export function Sidebar() {
     ? user.email.substring(0, 2).toUpperCase()
     : 'U'
 
-  // Don't show conversation list when sidebar is collapsed or not on chat page
-  const showConversationList = !sidebarCollapsed && pathname === '/'
+  // Don't show conversation list when sidebar is collapsed
+  const showConversationList = !sidebarCollapsed
 
   return (
     <aside
@@ -316,6 +321,10 @@ export function Sidebar() {
                             onClick={() => {
                               if (editingId !== conversation.id) {
                                 setCurrentConversation(conversation.id)
+                                // Navigate to chat page if not already there
+                                if (pathname !== '/') {
+                                  router.push('/')
+                                }
                               }
                             }}
                           >

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useAuthStore, useChatStore } from '@/stores'
 import { parseSSEStream } from '@/lib/stream'
 import type { Message } from '@/types'
@@ -25,6 +25,21 @@ export function useStreamChat({
   const { setIsStreaming: setGlobalStreaming } = useChatStore()
   const stopRef = useRef(false)
 
+  // Use refs to store callbacks to avoid stale closure issues
+  // and prevent unnecessary re-renders when callbacks change
+  const onMessageStartRef = useRef(onMessageStart)
+  const onMessageChunkRef = useRef(onMessageChunk)
+  const onMessageEndRef = useRef(onMessageEnd)
+  const onErrorRef = useRef(onError)
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onMessageStartRef.current = onMessageStart
+    onMessageChunkRef.current = onMessageChunk
+    onMessageEndRef.current = onMessageEnd
+    onErrorRef.current = onError
+  }, [onMessageStart, onMessageChunk, onMessageEnd, onError])
+
   const stopStreaming = useCallback(() => {
     stopRef.current = true
     setIsStreaming(false)
@@ -32,12 +47,12 @@ export function useStreamChat({
   }, [setGlobalStreaming])
 
   const streamMessage = useCallback(
-    async (content: string, overrideConversationId?: number) => {
+    async (content: string, overrideConversationId?: number, requestId?: string) => {
       if (isStreaming) return
 
       const targetConversationId = overrideConversationId || conversationId
       if (!targetConversationId) {
-        onError?.(new Error('No conversation ID'))
+        onErrorRef.current?.(new Error('No conversation ID'))
         return
       }
 
@@ -47,14 +62,14 @@ export function useStreamChat({
 
       try {
         if (!token) {
-          onError?.(new Error('未登录'))
+          onErrorRef.current?.(new Error('未登录'))
           return
         }
 
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
 
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000) // 1 minutes timeout
 
         try {
           const response = await fetch(`${API_URL}/conversations/${targetConversationId}/messages`, {
@@ -67,6 +82,7 @@ export function useStreamChat({
             body: JSON.stringify({
               content,
               stream: true,
+              request_id: requestId,
             }),
             signal: controller.signal,
           })
@@ -74,6 +90,8 @@ export function useStreamChat({
           clearTimeout(timeoutId)
 
           if (!response.ok) {
+            // Clear timeout before throwing error to prevent AbortError
+            clearTimeout(timeoutId)
             // Try to parse error message from response body
             let errorMessage = `HTTP error! status: ${response.status}`
             try {
@@ -103,23 +121,23 @@ export function useStreamChat({
 
             if (chunk.id && !messageId) {
               messageId = chunk.id
-              onMessageStart?.(messageId)
+              onMessageStartRef.current?.(messageId)
             }
 
             fullContent += chunk.content
-            onMessageChunk?.(chunk.content)
+            onMessageChunkRef.current?.(chunk.content)
           }
 
           // Create a temporary message object for the UI
           const tempMessage: Message = {
             id: parseInt(messageId) || Date.now(),
-            conversation_id: conversationId,
+            conversation_id: targetConversationId,
             role: 'assistant',
             content: fullContent,
             created_at: new Date().toISOString(),
           }
 
-          onMessageEnd?.(tempMessage)
+          onMessageEndRef.current?.(tempMessage)
         } finally {
           clearTimeout(timeoutId)
         }
@@ -129,18 +147,18 @@ export function useStreamChat({
 
         // Return user-friendly error message
         if (err.name === 'AbortError') {
-          onError?.(new Error('请求超时，请稍后重试'))
+          onErrorRef.current?.(new Error('请求超时，请稍后重试'))
         } else if (err.message.includes('Failed to fetch') || err.message.includes('Network')) {
-          onError?.(new Error('大模型服务不可用，请检查网络连接或稍后重试'))
+          onErrorRef.current?.(new Error('大模型服务不可用，请检查网络连接或稍后重试'))
         } else {
-          onError?.(new Error('大模型不可用：' + err.message))
+          onErrorRef.current?.(new Error('大模型不可用：' + err.message))
         }
       } finally {
         setIsStreaming(false)
         setGlobalStreaming(false)
       }
     },
-    [isStreaming, token, conversationId, onMessageStart, onMessageChunk, onMessageEnd, onError, setGlobalStreaming]
+    [isStreaming, token, conversationId, setGlobalStreaming]
   )
 
   return {

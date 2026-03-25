@@ -3,6 +3,7 @@ package repository
 import (
 	"testing"
 
+	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/models"
 	"github.com/chat-note/backend/internal/testutil"
 	"github.com/google/uuid"
@@ -199,6 +200,48 @@ func TestConversationRepository(t *testing.T) {
 		// Should still exist
 		found, _ := convRepo.FindByIDAndUserID(conv.ID, user.ID)
 		require.NotNil(t, found)
+	})
+
+	t.Run("Delete_WithMessageRequests", func(t *testing.T) {
+		// Create a conversation
+		conv := &models.Conversation{
+			UserID: user.ID,
+			Title:  "Conversation with Message Requests",
+		}
+		require.NoError(t, convRepo.Create(conv))
+
+		// Create message requests for the conversation
+		reqRepo := NewMessageRequestRepository()
+		for i := 0; i < 3; i++ {
+			req := &models.MessageRequest{
+				ConversationID: conv.ID,
+				RequestID:      uuid.New().String(),
+				Status:         models.StatusCompleted,
+			}
+			_, err := reqRepo.CreateIfNotExists(req)
+			require.NoError(t, err)
+		}
+
+		// Verify message requests exist
+		var count int64
+		database.DB.Model(&models.MessageRequest{}).Where("conversation_id = ?", conv.ID).Count(&count)
+		require.NoError(t, database.DB.Error)
+		require.Equal(t, int64(3), count)
+
+		// Delete the conversation
+		err := convRepo.Delete(conv.ID, user.ID)
+		require.NoError(t, err)
+
+		// Verify conversation is deleted
+		found, err := convRepo.FindByIDAndUserID(conv.ID, user.ID)
+		require.Error(t, err)
+		require.Nil(t, found)
+
+		// Verify message requests are also deleted
+		var newCount int64
+		database.DB.Model(&models.MessageRequest{}).Where("conversation_id = ?", conv.ID).Count(&newCount)
+		require.NoError(t, database.DB.Error)
+		require.Equal(t, int64(0), newCount)
 	})
 }
 

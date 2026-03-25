@@ -111,6 +111,16 @@ func SetupTestDB(t *testing.T) func() {
 			created_at DATETIME,
 			PRIMARY KEY (note_id, tag)
 		)`,
+		`CREATE TABLE message_requests (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			conversation_id INTEGER NOT NULL,
+			request_id VARCHAR(36) UNIQUE NOT NULL,
+			user_message_id INTEGER,
+			assistant_message_id INTEGER,
+			status VARCHAR(20) NOT NULL DEFAULT 'processing',
+			created_at DATETIME,
+			updated_at DATETIME
+		)`,
 	}
 
 	for _, table := range tables {

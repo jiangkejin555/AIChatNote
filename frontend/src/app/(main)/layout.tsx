@@ -57,7 +57,7 @@ function MainLayoutContent({
             <Menu className="h-5 w-5" />
           </Button>
         </header>
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>

@@ -14,11 +14,11 @@ import (
 )
 
 type AIService struct {
-	convRepo         *repository.ConversationRepository
-	providerRepo     *repository.ProviderRepository
+	convRepo          *repository.ConversationRepository
+	providerRepo      *repository.ProviderRepository
 	providerModelRepo *repository.ProviderModelRepository
-	aesCrypto        *crypto.AESCrypto
-	mockEnabled      bool
+	aesCrypto         *crypto.AESCrypto
+	mockEnabled       bool
 }
 
 func NewAIService(mockEnabled bool) *AIService {
