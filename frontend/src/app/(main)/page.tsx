@@ -17,6 +17,16 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from '@/i18n'
 import type { Message, ProviderModel } from '@/types'
 
+// Streaming state per conversation to avoid cross-conversation pollution
+interface ConversationStreamingState {
+  content: string
+  optimisticMessages: Message[]
+  isThinking: boolean
+  isTimeout: boolean
+  lastUserMessage: string
+  requestId: string | null
+}
+
 export default function ChatPage() {
   const t = useTranslations()
   const { currentConversationId, setCurrentConversation, isPendingNewChat, setIsPendingNewChat } = useChatStore()
@@ -28,15 +38,51 @@ export default function ChatPage() {
   const updateConversationModel = useUpdateConversationModel()
   const queryClient = useQueryClient()
   const [selectedModelId, setSelectedModelId] = useState<string | undefined>()
-  const [streamingContent, setStreamingContent] = useState('')
-  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([])
+  // Per-conversation streaming state to prevent cross-conversation pollution
+  const [streamingStates, setStreamingStates] = useState<Record<number, ConversationStreamingState>>({})
   const [saveNoteDialogOpen, setSaveNoteDialogOpen] = useState(false)
-  const [isThinking, setIsThinking] = useState(false)
-  const [isTimeout, setIsTimeout] = useState(false)
-  const [lastUserMessage, setLastUserMessage] = useState<string>('')
   const [modelSwitchDialogOpen, setModelSwitchDialogOpen] = useState(false)
   const [pendingModelId, setPendingModelId] = useState<string | null>(null)
   const [pendingModelName, setPendingModelName] = useState<string>('')
+
+  // Get current conversation's streaming state (with defaults)
+  const currentStreamingState = useMemo(() => {
+    if (!currentConversationId) return null
+    return streamingStates[currentConversationId] || {
+      content: '',
+      optimisticMessages: [],
+      isThinking: false,
+      isTimeout: false,
+      lastUserMessage: '',
+      requestId: null,
+    }
+  }, [currentConversationId, streamingStates])
+
+  // Helper to update streaming state for a specific conversation
+  const updateStreamingState = useCallback((conversationId: number, updates: Partial<ConversationStreamingState>) => {
+    setStreamingStates(prev => ({
+      ...prev,
+      [conversationId]: {
+        ...prev[conversationId] || {
+          content: '',
+          optimisticMessages: [],
+          isThinking: false,
+          isTimeout: false,
+          lastUserMessage: '',
+          requestId: null,
+        },
+        ...updates,
+      },
+    }))
+  }, [])
+
+  // Helper to clear streaming state for a specific conversation
+  const clearStreamingState = useCallback((conversationId: number) => {
+    setStreamingStates(prev => {
+      const { [conversationId]: _, ...rest } = prev
+      return rest
+    })
+  }, [])
 
   // Track the actual conversation ID being streamed (to avoid stale closure issues)
   const streamingConversationIdRef = useRef<number | null>(null)
@@ -44,30 +90,43 @@ export default function ChatPage() {
   // Track if we need to generate title after message ends (for new conversations)
   const needGenerateTitleRef = useRef<boolean>(false)
 
-  // Track the current request ID for deduplication and retry
-  const currentRequestIdRef = useRef<string | null>(null)
-
   const { streamMessage, isStreaming } = useStreamChat({
     conversationId: currentConversationId!,
     onMessageChunk: (content) => {
-      // Only clear thinking state when we receive actual content
-      if (content) {
-        setIsThinking(false)
-      }
-      setStreamingContent((prev) => prev + content)
+      // Get the conversation ID being streamed
+      const convId = streamingConversationIdRef.current
+      if (!convId) return
+
+      // Update streaming content for the specific conversation
+      setStreamingStates(prev => {
+        const currentState = prev[convId] || {
+          content: '',
+          optimisticMessages: [],
+          isThinking: true,
+          isTimeout: false,
+          lastUserMessage: '',
+          requestId: null,
+        }
+        return {
+          ...prev,
+          [convId]: {
+            ...currentState,
+            // Clear thinking state when we receive actual content
+            isThinking: content ? false : currentState.isThinking,
+            content: currentState.content + content,
+          },
+        }
+      })
     },
     onMessageEnd: (message) => {
-      // Clear streaming content, optimistic messages, and thinking state
-      setStreamingContent('')
-      setOptimisticMessages([])
-      setIsThinking(false)
-      setIsTimeout(false)
-
       // Use the conversation ID from the message or the ref to avoid stale closure
       const conversationIdToInvalidate = message?.conversation_id || streamingConversationIdRef.current
 
-      // Invalidate messages to refetch
+      // Clear streaming state for the specific conversation
       if (conversationIdToInvalidate) {
+        clearStreamingState(conversationIdToInvalidate)
+
+        // Invalidate messages to refetch
         queryClient.invalidateQueries({
           queryKey: ['conversations', conversationIdToInvalidate, 'messages'],
         })
@@ -88,15 +147,18 @@ export default function ChatPage() {
       streamingConversationIdRef.current = null
     },
     onError: (error) => {
-      setStreamingContent('')
-      setOptimisticMessages([])
-      setIsThinking(false)
+      const convId = streamingConversationIdRef.current
+      if (convId) {
+        clearStreamingState(convId)
+      }
       streamingConversationIdRef.current = null
       const errorMsg = error.message || t('chat.sendFailed')
 
-      // Check if it's a timeout error
+      // Check if it's a timeout error - set timeout state for the streaming conversation
       if (error.name === 'AbortError' || errorMsg.includes('超时') || errorMsg.includes('timeout')) {
-        setIsTimeout(true)
+        if (convId) {
+          updateStreamingState(convId, { isTimeout: true, isThinking: false })
+        }
       } else {
         // Check for model deleted error (backend returns 'model_deleted' code in response)
         const isModelDeleted = (error as any).code === 'model_deleted' ||
@@ -175,13 +237,8 @@ export default function ChatPage() {
         return
       }
 
-      // Reset timeout state and save message for potential retry
-      setIsTimeout(false)
-      setLastUserMessage(content)
-
       // Generate a new request ID for this message
       const requestId = crypto.randomUUID()
-      currentRequestIdRef.current = requestId
 
       // Check if we need to create conversation first (from pending state or no conversation)
       const needCreateConversation = isPendingNewChat || !currentConversationId
@@ -195,22 +252,25 @@ export default function ChatPage() {
         // Clear pending state
         setIsPendingNewChat(false)
 
-        // Add optimistic user message
+        // Create new conversation first
+        const conv = await createConversation.mutateAsync({ provider_model_id: selectedModelId })
+        setCurrentConversation(conv.id)
+
+        // Add optimistic user message and set thinking state for the new conversation
         const optimisticUserMessage: Message = {
           id: Date.now(),
-          conversation_id: 0,
+          conversation_id: conv.id,
           role: 'user',
           content,
           created_at: new Date().toISOString(),
         }
-        setOptimisticMessages((prev) => [...prev, optimisticUserMessage])
-
-        // Set thinking state immediately
-        setIsThinking(true)
-
-        // Create new conversation first
-        const conv = await createConversation.mutateAsync({ provider_model_id: selectedModelId })
-        setCurrentConversation(conv.id)
+        updateStreamingState(conv.id, {
+          optimisticMessages: [optimisticUserMessage],
+          isThinking: true,
+          isTimeout: false,
+          lastUserMessage: content,
+          requestId,
+        })
 
         // Track the conversation ID for streaming (to avoid stale closure in onMessageEnd)
         streamingConversationIdRef.current = conv.id
@@ -221,45 +281,55 @@ export default function ChatPage() {
         })
 
         // Then send message to new conversation
-        setStreamingContent('')
         streamMessage(content, conv.id, requestId)
 
         // Mark that we need to generate title after message ends
         needGenerateTitleRef.current = true
       } else {
-        // Add optimistic user message
+        // Add optimistic user message and set thinking state for existing conversation
         const optimisticUserMessage: Message = {
           id: Date.now(),
-          conversation_id: currentConversationId || 0,
+          conversation_id: currentConversationId,
           role: 'user',
           content,
           created_at: new Date().toISOString(),
         }
-        setOptimisticMessages((prev) => [...prev, optimisticUserMessage])
+
+        // Get existing optimistic messages for this conversation
+        const existingState = streamingStates[currentConversationId]
+        const existingOptimisticMessages = existingState?.optimisticMessages || []
+
+        updateStreamingState(currentConversationId, {
+          optimisticMessages: [...existingOptimisticMessages, optimisticUserMessage],
+          isThinking: true,
+          isTimeout: false,
+          lastUserMessage: content,
+          requestId,
+          content: '', // Reset content for new message
+        })
 
         // Track the conversation ID for streaming (to avoid stale closure in onMessageEnd)
         streamingConversationIdRef.current = currentConversationId
 
-        // Set thinking state immediately
-        setIsThinking(true)
-
-        setStreamingContent('')
-        streamMessage(content, currentConversationId!, requestId)
+        streamMessage(content, currentConversationId, requestId)
       }
     },
-    [currentConversationId, selectedModelId, createConversation, setCurrentConversation, streamMessage, modelStatus.isDeleted, isPendingNewChat, setIsPendingNewChat, t]
+    [currentConversationId, selectedModelId, createConversation, setCurrentConversation, streamMessage, modelStatus.isDeleted, isPendingNewChat, setIsPendingNewChat, updateStreamingState, streamingStates, t]
   )
 
   // Retry handler - resend the last user message with the same request_id
   const handleRetry = useCallback(() => {
-    if (lastUserMessage && currentConversationId && currentRequestIdRef.current) {
-      setIsTimeout(false)
-      setIsThinking(true)
-      setStreamingContent('')
-      // Reuse the same request_id for deduplication
-      streamMessage(lastUserMessage, currentConversationId, currentRequestIdRef.current)
-    }
-  }, [lastUserMessage, currentConversationId, streamMessage])
+    if (!currentConversationId || !currentStreamingState?.lastUserMessage || !currentStreamingState?.requestId) return
+
+    updateStreamingState(currentConversationId, {
+      isTimeout: false,
+      isThinking: true,
+      content: '',
+    })
+
+    // Reuse the same request_id for deduplication
+    streamMessage(currentStreamingState.lastUserMessage, currentConversationId, currentStreamingState.requestId)
+  }, [currentConversationId, currentStreamingState, streamMessage, updateStreamingState])
 
   const handleSaveNote = () => {
     setSaveNoteDialogOpen(true)
@@ -368,10 +438,10 @@ export default function ChatPage() {
 
             {/* Messages */}
             <MessageList
-              streamingContent={isStreaming ? streamingContent : undefined}
-              optimisticMessages={optimisticMessages}
-              isThinking={isThinking && !streamingContent}
-              isTimeout={isTimeout}
+              streamingContent={isStreaming && currentStreamingState ? currentStreamingState.content : undefined}
+              optimisticMessages={currentStreamingState?.optimisticMessages || []}
+              isThinking={currentStreamingState?.isThinking && !currentStreamingState?.content}
+              isTimeout={currentStreamingState?.isTimeout}
               onRetry={handleRetry}
             />
 
