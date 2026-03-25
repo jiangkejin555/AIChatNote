@@ -106,7 +106,7 @@ export function Sidebar() {
   const router = useRouter()
   const { sidebarCollapsed, toggleSidebarCollapse } = useUIStore()
   const { user, logout } = useAuthStore()
-  const { currentConversationId, setCurrentConversation } = useChatStore()
+  const { currentConversationId, setCurrentConversation, isPendingNewChat, setIsPendingNewChat } = useChatStore()
   const t = useTranslations()
 
   // Conversation hooks
@@ -146,32 +146,28 @@ export function Sidebar() {
     router.push('/login')
   }
 
-  // Handle new conversation creation
+  // Handle new conversation creation - just set pending state, don't call backend
   const handleNewConversation = async () => {
-    // Find a valid model for new conversation
-    let modelIdToUse: string | undefined
-
-    if (providers) {
-      for (const provider of providers) {
-        const defaultModel = provider.models.find(m => m.is_default && m.enabled)
-        if (defaultModel) {
-          modelIdToUse = defaultModel.id
-          break
-        }
-        const anyEnabled = provider.models.find(m => m.enabled)
-        if (anyEnabled) {
-          modelIdToUse = anyEnabled.id
-          break
-        }
-      }
+    // If already in pending state, ignore click (reuse current start page)
+    if (isPendingNewChat) {
+      return
     }
 
-    if (!modelIdToUse) {
+    // Check if there's at least one enabled model available
+    if (providers) {
+      const hasEnabledModel = providers.some(p => p.models.some(m => m.enabled))
+      if (!hasEnabledModel) {
+        toast.error(t('chat.configureProviderFirst'))
+        return
+      }
+    } else {
       toast.error(t('chat.configureProviderFirst'))
       return
     }
 
-    createConversation.mutate({ provider_model_id: modelIdToUse })
+    // Set pending state to show start page
+    setIsPendingNewChat(true)
+    setCurrentConversation(null)
   }
 
   const handleStartEdit = (id: number, currentTitle: string) => {

@@ -32,8 +32,14 @@ export function useStreamChat({
   }, [setGlobalStreaming])
 
   const streamMessage = useCallback(
-    async (content: string) => {
+    async (content: string, overrideConversationId?: number) => {
       if (isStreaming) return
+
+      const targetConversationId = overrideConversationId || conversationId
+      if (!targetConversationId) {
+        onError?.(new Error('No conversation ID'))
+        return
+      }
 
       setIsStreaming(true)
       setGlobalStreaming(true)
@@ -51,7 +57,7 @@ export function useStreamChat({
         const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
 
         try {
-          const response = await fetch(`${API_URL}/conversations/${conversationId}/messages`, {
+          const response = await fetch(`${API_URL}/conversations/${targetConversationId}/messages`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

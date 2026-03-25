@@ -5,7 +5,9 @@ interface ChatState {
   currentConversationId: number | null
   drafts: Record<number, string>
   isStreaming: boolean
+  isPendingNewChat: boolean
   setCurrentConversation: (id: number | null) => void
+  setIsPendingNewChat: (value: boolean) => void
   setDraft: (conversationId: number, draft: string) => void
   clearDraft: (conversationId: number) => void
   setIsStreaming: (isStreaming: boolean) => void
@@ -17,9 +19,14 @@ export const useChatStore = create<ChatState>()(
       currentConversationId: null,
       drafts: {},
       isStreaming: false,
+      isPendingNewChat: false,
       setCurrentConversation: (id) =>
         set({
           currentConversationId: id,
+        }),
+      setIsPendingNewChat: (value) =>
+        set({
+          isPendingNewChat: value,
         }),
       setDraft: (conversationId, draft) =>
         set((state) => ({
