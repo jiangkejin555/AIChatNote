@@ -9,12 +9,13 @@ import {
   useMarkAsSaved,
   useProviders,
   useGenerateTitle,
+  useUpdateConversationModel,
 } from '@/hooks'
-import { MessageList, MessageInput, ModelSelector, SaveNoteDialog, SaveNoteButton, ChatStartPage } from '@/components/chat'
+import { MessageList, MessageInput, ModelSelector, SaveNoteDialog, SaveNoteButton, ChatStartPage, ModelSwitchConfirmDialog } from '@/components/chat'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from '@/i18n'
-import type { Message } from '@/types'
+import type { Message, ProviderModel } from '@/types'
 
 export default function ChatPage() {
   const t = useTranslations()
@@ -24,6 +25,7 @@ export default function ChatPage() {
   const createConversation = useCreateConversation()
   const markAsSaved = useMarkAsSaved()
   const generateTitle = useGenerateTitle()
+  const updateConversationModel = useUpdateConversationModel()
   const queryClient = useQueryClient()
   const [selectedModelId, setSelectedModelId] = useState<string | undefined>()
   const [streamingContent, setStreamingContent] = useState('')
@@ -32,6 +34,9 @@ export default function ChatPage() {
   const [isThinking, setIsThinking] = useState(false)
   const [isTimeout, setIsTimeout] = useState(false)
   const [lastUserMessage, setLastUserMessage] = useState<string>('')
+  const [modelSwitchDialogOpen, setModelSwitchDialogOpen] = useState(false)
+  const [pendingModelId, setPendingModelId] = useState<string | null>(null)
+  const [pendingModelName, setPendingModelName] = useState<string>('')
 
   // Track the actual conversation ID being streamed (to avoid stale closure issues)
   const streamingConversationIdRef = useRef<number | null>(null)
@@ -120,8 +125,8 @@ export default function ChatPage() {
       return { isDeleted: false, deletedModelId: undefined }
     }
 
-    // If provider_model_id is null but model_id exists, model is deleted
-    const isDeleted = currentConversation.provider_model_id === null && !!currentConversation.model_id
+    // If current_provider_model_id is null but model_id exists, model is deleted
+    const isDeleted = currentConversation.current_provider_model_id === null && !!currentConversation.model_id
     const deletedModelId = isDeleted ? currentConversation.model_id : undefined
 
     return { isDeleted, deletedModelId }
@@ -140,13 +145,10 @@ export default function ChatPage() {
 
   // Set initial model from conversation or default
   useEffect(() => {
-    if (modelStatus.isDeleted) {
-      // Don't auto-select a model if current model is deleted
-      // User needs to manually select a new model
-      setSelectedModelId(undefined)
-    } else if (currentConversation?.provider_model_id) {
-      setSelectedModelId(currentConversation.provider_model_id)
-    } else {
+    // Only update selectedModelId if:
+    // 1. No conversation is selected (new chat state)
+    // 2. Conversation changed and has a valid model (not deleted)
+    if (!currentConversationId) {
       // For new conversation, find default model from providers
       if (providers) {
         for (const provider of providers) {
@@ -157,8 +159,13 @@ export default function ChatPage() {
           }
         }
       }
+    } else if (currentConversation?.current_provider_model_id) {
+      // Conversation has a valid model, sync it it selectedModelId
+      setSelectedModelId(currentConversation.current_provider_model_id)
     }
-  }, [currentConversation, modelStatus.isDeleted, providers])
+    // Note: When model is deleted (current_provider_model_id is null), don't auto-select
+    // User needs to manually select a new model
+  }, [currentConversationId, currentConversation?.current_provider_model_id, providers])
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -264,6 +271,64 @@ export default function ChatPage() {
     }
   }
 
+  // Compute all enabled models with their provider info for model name lookup
+  const allModelsMap = useMemo(() => {
+    const map = new Map<string, { model: ProviderModel; providerName: string }>()
+    if (providers) {
+      for (const provider of providers) {
+        for (const model of provider.models) {
+          if (model.enabled) {
+            map.set(model.id, { model, providerName: provider.name })
+          }
+        }
+      }
+    }
+    return map
+  }, [providers])
+
+    // Handle model change - show confirmation dialog for existing conversations
+  const handleModelChange = useCallback((newModelId: string) => {
+    // For new conversations (pending new chat) or when model is deleted, switch directly without confirmation
+    if (isPendingNewChat || modelStatus.isDeleted) {
+      setSelectedModelId(newModelId)
+      return
+    }
+
+    // For existing conversations with a different model, show confirmation dialog
+    if (currentConversationId && currentConversation?.current_provider_model_id !== newModelId) {
+      const modelInfo = allModelsMap.get(newModelId)
+      const modelName = modelInfo
+        ? `${modelInfo.providerName}/${modelInfo.model.display_name || modelInfo.model.model_id}`
+        : newModelId
+
+      setPendingModelId(newModelId)
+      setPendingModelName(modelName)
+      setModelSwitchDialogOpen(true)
+    }
+  }, [isPendingNewChat, modelStatus.isDeleted, currentConversationId, currentConversation, allModelsMap])
+
+  // Confirm model switch
+  const handleConfirmModelSwitch = useCallback(async () => {
+    if (!pendingModelId || !currentConversationId) return
+
+    const modelInfo = allModelsMap.get(pendingModelId)
+    try {
+      await updateConversationModel.mutateAsync({
+        id: currentConversationId,
+        data: {
+          provider_model_id: pendingModelId,
+          model_id: modelInfo?.model.model_id,
+        },
+      })
+      setSelectedModelId(pendingModelId)
+      setModelSwitchDialogOpen(false)
+      setPendingModelId(null)
+      toast.success(t('chat.switchModelSuccess'))
+    } catch {
+      toast.error(t('chat.switchModelFailed'))
+    }
+  }, [pendingModelId, currentConversationId, allModelsMap, updateConversationModel, t])
+
   return (
     <div className="h-full flex relative">
       {/* Main Chat Area */}
@@ -275,7 +340,7 @@ export default function ChatPage() {
             <div className="h-12 border-b flex items-center px-4 shrink-0">
               <ModelSelector
                 value={selectedModelId}
-                onChange={setSelectedModelId}
+                onChange={handleModelChange}
               />
             </div>
             {/* Start Page */}
@@ -291,7 +356,7 @@ export default function ChatPage() {
             <div className="h-12 border-b flex items-center justify-between px-4 shrink-0">
               <ModelSelector
                 value={selectedModelId}
-                onChange={setSelectedModelId}
+                onChange={handleModelChange}
                 isModelDeleted={modelStatus.isDeleted}
                 deletedModelId={modelStatus.deletedModelId}
               />
@@ -326,6 +391,15 @@ export default function ChatPage() {
         onOpenChange={setSaveNoteDialogOpen}
         conversationId={currentConversationId}
         onSuccess={handleSaveNoteSuccess}
+      />
+
+      {/* Model Switch Confirmation Dialog */}
+      <ModelSwitchConfirmDialog
+        open={modelSwitchDialogOpen}
+        onOpenChange={setModelSwitchDialogOpen}
+        modelName={pendingModelName}
+        onConfirm={handleConfirmModelSwitch}
+        isLoading={updateConversationModel.isPending}
       />
     </div>
   )

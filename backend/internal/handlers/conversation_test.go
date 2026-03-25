@@ -369,7 +369,7 @@ func TestConversationHandler_SendMessage_DeletedModel(t *testing.T) {
 		// Create a conversation with null provider_model_id but with model_id snapshot
 		conv := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: nil, // Model has been deleted
+			CurrentProviderModelID: nil, // Model has been deleted
 			ModelID:         "gpt-4o-deleted",
 			Title:           "Deleted Model Conversation",
 		}
@@ -393,7 +393,7 @@ func TestConversationHandler_SendMessage_DeletedModel(t *testing.T) {
 
 		conv := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &providerModel.ID,
+			CurrentProviderModelID: &providerModel.ID,
 			ModelID:         "gpt-4o-mini",
 			Title:           "Normal Conversation",
 		}
@@ -423,7 +423,7 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 		// Create conversation with model
 		conv := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &providerModel.ID,
+			CurrentProviderModelID: &providerModel.ID,
 			ModelID:         "gpt-4-turbo",
 			Title:           "Snapshot Test",
 		}
@@ -432,7 +432,7 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 		// Verify initial state
 		var initialConv models.Conversation
 		database.DB.First(&initialConv, conv.ID)
-		assert.NotNil(t, initialConv.ProviderModelID)
+		assert.NotNil(t, initialConv.CurrentProviderModelID)
 		assert.Equal(t, "gpt-4-turbo", initialConv.ModelID)
 
 		// Simulate model deletion by setting provider_model_id to NULL
@@ -443,7 +443,7 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 		// Verify model_id is preserved
 		var afterDeletionConv models.Conversation
 		database.DB.First(&afterDeletionConv, conv.ID)
-		assert.Nil(t, afterDeletionConv.ProviderModelID)
+		assert.Nil(t, afterDeletionConv.CurrentProviderModelID)
 		assert.Equal(t, "gpt-4-turbo", afterDeletionConv.ModelID, "model_id snapshot should be preserved")
 	})
 
@@ -461,7 +461,7 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 
 		conv := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &modelID,
+			CurrentProviderModelID: &modelID,
 			ModelID:         "temporary-model",
 			Title:           "Temp Model Conv",
 		}
@@ -480,6 +480,6 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 		result := database.DB.First(&retrievedConv, conv.ID)
 		require.NoError(t, result.Error)
 		assert.Equal(t, "temporary-model", retrievedConv.ModelID)
-		assert.Nil(t, retrievedConv.ProviderModelID)
+		assert.Nil(t, retrievedConv.CurrentProviderModelID)
 	})
 }

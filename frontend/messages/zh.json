@@ -81,7 +81,11 @@
     "welcomeMessage": "您好，请开始你的聊天 !",
     "thinking": "思考中...",
     "timeout": "请求超时，请重试",
-    "retry": "重试"
+    "retry": "重试",
+    "switchModel": "切换模型",
+    "switchModelDesc": "切换到 {model} 将使用新模型继续对话。是否确认切换？",
+    "switchModelSuccess": "模型已切换",
+    "switchModelFailed": "切换模型失败"
   },
   "saveNote": {
     "title": "保存为笔记",

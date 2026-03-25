@@ -296,9 +296,9 @@ func CreateTestConversationWithModel(t *testing.T, userID uint, title string, mo
 	t.Helper()
 
 	conv := &models.Conversation{
-		UserID:          userID,
-		Title:           title,
-		ProviderModelID: &modelID,
+		UserID:                 userID,
+		Title:                  title,
+		CurrentProviderModelID: &modelID,
 	}
 	if err := database.DB.Create(conv).Error; err != nil {
 		t.Fatalf("failed to create test conversation: %v", err)
@@ -311,10 +311,10 @@ func CreateTestConversationWithModelID(t *testing.T, userID uint, title string, 
 	t.Helper()
 
 	conv := &models.Conversation{
-		UserID:          userID,
-		Title:           title,
-		ProviderModelID: &providerModelID,
-		ModelID:         modelID,
+		UserID:                 userID,
+		Title:                  title,
+		CurrentProviderModelID: &providerModelID,
+		ModelID:                modelID,
 	}
 	if err := database.DB.Create(conv).Error; err != nil {
 		t.Fatalf("failed to create test conversation: %v", err)

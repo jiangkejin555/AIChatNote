@@ -449,7 +449,7 @@ func TestProviderModelHandler_Sync_EnableDisable(t *testing.T) {
 		// Create a conversation with this model
 		conv := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &modelToDelete.ID,
+			CurrentProviderModelID: &modelToDelete.ID,
 			ModelID:         modelToDelete.ModelID,
 			Title:           "Test Conversation",
 		}
@@ -470,7 +470,7 @@ func TestProviderModelHandler_Sync_EnableDisable(t *testing.T) {
 		// Verify conversation still exists with model_id preserved but provider_model_id is null
 		var updatedConv models.Conversation
 		database.DB.First(&updatedConv, conv.ID)
-		assert.Nil(t, updatedConv.ProviderModelID)
+		assert.Nil(t, updatedConv.CurrentProviderModelID)
 		assert.Equal(t, modelToDelete.ModelID, updatedConv.ModelID)
 	})
 }

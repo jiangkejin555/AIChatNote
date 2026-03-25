@@ -127,6 +127,7 @@ func main() {
 			conversations.POST("", conversationHandler.Create)
 			conversations.GET("/:id", conversationHandler.Get)
 			conversations.PUT("/:id", conversationHandler.Update)
+			conversations.PUT("/:id/model", conversationHandler.UpdateModel)
 			conversations.DELETE("/:id", conversationHandler.Delete)
 			conversations.PUT("/:id/saved", conversationHandler.MarkSaved)
 			conversations.GET("/:id/messages", conversationHandler.GetMessages)

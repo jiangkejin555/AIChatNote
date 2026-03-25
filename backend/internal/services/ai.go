@@ -77,13 +77,13 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 	}
 
 	// Validate that conversation has an associated model
-	if conv.ProviderModelID == nil {
+	if conv.CurrentProviderModelID == nil {
 		utils.LogOperationError("AIService", "GenerateNoteFromConversation", fmt.Errorf("no model associated"), "convID", convID, "userID", userID, "step", "validate_model")
 		return nil, fmt.Errorf("该会话没有关联模型，无法使用 AI 总结功能")
 	}
 
 	// Get the ProviderModel
-	providerModel, err := s.providerModelRepo.FindByID(*conv.ProviderModelID)
+	providerModel, err := s.providerModelRepo.FindByID(*conv.CurrentProviderModelID)
 	if err != nil {
 		utils.LogOperationError("AIService", "GenerateNoteFromConversation", err, "convID", convID, "userID", userID, "step", "get_provider_model")
 		return nil, fmt.Errorf("关联的模型已不可用")

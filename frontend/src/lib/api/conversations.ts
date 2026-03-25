@@ -74,4 +74,15 @@ export const conversationsApi = {
     )
     return response.data.data
   },
+
+  updateModel: async (
+    id: number,
+    data: { provider_model_id?: string; model_id?: string }
+  ): Promise<Conversation> => {
+    const response = await apiClient.put<ApiResponse<Conversation>>(
+      `/conversations/${id}/model`,
+      data
+    )
+    return response.data.data
+  },
 }

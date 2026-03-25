@@ -72,6 +72,29 @@ func (r *ConversationRepository) UpdateTitle(id, userID uint, title string) erro
 		}).Error
 }
 
+// UpdateCurrentModel 更新对话的当前模型
+func (r *ConversationRepository) UpdateCurrentModel(id, userID uint, providerModelID *string, modelID string) error {
+	updates := map[string]interface{}{
+		"current_provider_model_id": providerModelID,
+		"model_id":                 modelID,
+		"updated_at":               gorm.Expr("CURRENT_TIMESTAMP"),
+	}
+	return database.DB.Model(&models.Conversation{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		Updates(updates).Error
+}
+
+// ClearCurrentModelByProviderModelID clears the current_provider_model_id for all conversations
+// using the specified provider_model_id (used when a model is deleted)
+func (r *ConversationRepository) ClearCurrentModelByProviderModelID(providerModelID string) error {
+	return database.DB.Model(&models.Conversation{}).
+		Where("current_provider_model_id = ?", providerModelID).
+		Updates(map[string]any{
+			"current_provider_model_id": nil,
+			"updated_at":               gorm.Expr("CURRENT_TIMESTAMP"),
+		}).Error
+}
+
 type MessageRepository struct{}
 
 func NewMessageRepository() *MessageRepository {

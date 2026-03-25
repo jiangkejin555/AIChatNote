@@ -1,12 +1,18 @@
 'use client'
 
-import { useRef, useEffect, useState, useCallback } from 'react'
-import { useMessages } from '@/hooks'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import { useMessages, useProviders } from '@/hooks'
 import { useChatStore } from '@/stores'
 import { MessageItem } from './message-item'
 import { Loader2 } from 'lucide-react'
 import { useTranslations } from '@/i18n'
 import type { Message } from '@/types'
+
+interface ModelInfo {
+  providerName: string
+  displayName: string
+  modelId: string
+}
 
 interface MessageListProps {
   streamingContent?: string
@@ -27,9 +33,27 @@ export function MessageList({
   const t = useTranslations()
   const { currentConversationId } = useChatStore()
   const { data: messages, isLoading } = useMessages(currentConversationId)
+  const { data: providers } = useProviders()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+  // Build a map of provider_model_id -> model info for displaying model attribution
+  const modelsMap = useMemo(() => {
+    const map = new Map<string, ModelInfo>()
+    if (providers) {
+      for (const provider of providers) {
+        for (const model of provider.models) {
+          map.set(model.id, {
+            providerName: provider.name,
+            displayName: model.display_name || model.model_id,
+            modelId: model.model_id,
+          })
+        }
+      }
+    }
+    return map
+  }, [providers])
 
   // Detect if user scrolled to bottom
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -71,7 +95,7 @@ export function MessageList({
     <div className="flex-1 overflow-auto p-4" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className="max-w-3xl mx-auto space-y-4">
         {allMessages.map((message) => (
-          <MessageItem key={message.id} message={message} />
+          <MessageItem key={message.id} message={message} modelsMap={modelsMap} />
         ))}
 
         {streamingContent && (
@@ -84,6 +108,7 @@ export function MessageList({
               created_at: new Date().toISOString(),
             }}
             isStreaming
+            modelsMap={modelsMap}
           />
         )}
 
@@ -98,6 +123,7 @@ export function MessageList({
               created_at: new Date().toISOString(),
             }}
             isThinking
+            modelsMap={modelsMap}
           />
         )}
 
@@ -113,6 +139,7 @@ export function MessageList({
             }}
             isTimeout
             onRetry={onRetry}
+            modelsMap={modelsMap}
           />
         )}
 

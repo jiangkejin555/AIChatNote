@@ -154,3 +154,15 @@ export function useGenerateTitle() {
     },
   })
 }
+
+export function useUpdateConversationModel() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { provider_model_id?: string; model_id?: string } }) =>
+      conversationsApi.updateModel(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}

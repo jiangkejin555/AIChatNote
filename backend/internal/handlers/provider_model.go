@@ -13,14 +13,16 @@ import (
 )
 
 type ProviderModelHandler struct {
-	modelRepo    *repository.ProviderModelRepository
-	providerRepo *repository.ProviderRepository
+	modelRepo        *repository.ProviderModelRepository
+	providerRepo     *repository.ProviderRepository
+	conversationRepo *repository.ConversationRepository
 }
 
 func NewProviderModelHandler() *ProviderModelHandler {
 	return &ProviderModelHandler{
-		modelRepo:    repository.NewProviderModelRepository(),
-		providerRepo: repository.NewProviderRepository(),
+		modelRepo:        repository.NewProviderModelRepository(),
+		providerRepo:     repository.NewProviderRepository(),
+		conversationRepo: repository.NewConversationRepository(),
 	}
 }
 
@@ -187,6 +189,19 @@ func (h *ProviderModelHandler) Delete(c *gin.Context) {
 	_, err = h.providerRepo.FindByIDAndUserID(providerID, userID)
 	if err != nil {
 		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Provider not found", err)
+		return
+	}
+
+	// Get the model to find its ID string before deletion
+	model, err := h.modelRepo.FindByIDAndProviderID(modelID, providerID)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Model not found", err)
+		return
+	}
+
+	// Clear current_provider_model_id for all conversations using this model
+	if err := h.conversationRepo.ClearCurrentModelByProviderModelID(model.ID.String()); err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update conversations", err)
 		return
 	}
 

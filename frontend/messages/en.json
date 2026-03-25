@@ -81,7 +81,11 @@
     "welcomeMessage": "Hello, please start your chat.",
     "thinking": "Thinking...",
     "timeout": "Request timeout, please retry",
-    "retry": "Retry"
+    "retry": "Retry",
+    "switchModel": "Switch Model",
+    "switchModelDesc": "Switching to {model} will continue the conversation with the new model. Confirm?",
+    "switchModelSuccess": "Model switched",
+    "switchModelFailed": "Failed to switch model"
   },
   "saveNote": {
     "title": "Save as Note",

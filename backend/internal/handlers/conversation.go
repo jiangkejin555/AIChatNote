@@ -95,10 +95,10 @@ func (h *ConversationHandler) Create(c *gin.Context) {
 	}
 
 	conv := &models.Conversation{
-		UserID:          userID,
-		ProviderModelID: req.ProviderModelID,
-		ModelID:         modelID,
-		Title:           title,
+		UserID:                 userID,
+		CurrentProviderModelID: req.ProviderModelID,
+		ModelID:                modelID,
+		Title:                  title,
 	}
 
 	if err := h.convRepo.Create(conv); err != nil {
@@ -311,7 +311,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 	}
 
 	// Get provider model and provider info
-	if conv.ProviderModelID == nil {
+	if conv.CurrentProviderModelID == nil {
 		// Model has been deleted - show friendly error with model_id snapshot
 		modelInfo := "未知模型"
 		if conv.ModelID != "" {
@@ -321,7 +321,7 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	providerModel, err := h.modelRepo.FindByID(*conv.ProviderModelID)
+	providerModel, err := h.modelRepo.FindByID(*conv.CurrentProviderModelID)
 	if err != nil {
 		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_model", "Model not found", err)
 		return
@@ -435,11 +435,13 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 		}
 	}
 
-	// Save assistant message
+	// Save assistant message with model attribution
 	assistantMsg := &models.Message{
-		ConversationID: conv.ID,
-		Role:           models.RoleAssistant,
-		Content:        fullContent,
+		ConversationID:  conv.ID,
+		Role:            models.RoleAssistant,
+		Content:         fullContent,
+		ProviderModelID: conv.CurrentProviderModelID,
+		ModelID:         conv.ModelID,
 	}
 	err = h.msgRepo.Create(assistantMsg)
 	if err != nil {
@@ -495,12 +497,14 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 
 	content := resp.Choices[0].Message.Content
 
-	// Save assistant message
+	// Save assistant message with model attribution
 	assistantMsg := &models.Message{
-		ConversationID: conv.ID,
-		Role:           models.RoleAssistant,
-		Content:        content,
-		CreatedAt:      time.Now(),
+		ConversationID:  conv.ID,
+		Role:            models.RoleAssistant,
+		Content:         content,
+		ProviderModelID: conv.CurrentProviderModelID,
+		ModelID:         conv.ModelID,
+		CreatedAt:       time.Now(),
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
@@ -555,11 +559,13 @@ func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *mod
 		c.Writer.Flush()
 	}
 
-	// Save assistant message
+	// Save assistant message with model attribution
 	assistantMsg := &models.Message{
-		ConversationID: conv.ID,
-		Role:           models.RoleAssistant,
-		Content:        mockResponse,
+		ConversationID:  conv.ID,
+		Role:            models.RoleAssistant,
+		Content:         mockResponse,
+		ProviderModelID: conv.CurrentProviderModelID,
+		ModelID:         conv.ModelID,
 	}
 	err := h.msgRepo.Create(assistantMsg)
 	if err != nil {
@@ -583,10 +589,12 @@ func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *mod
 // handleMockNonStreamResponse handles mock non-streaming response
 func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *models.Conversation, msgReq *models.MessageRequest) {
 	assistantMsg := &models.Message{
-		ConversationID: conv.ID,
-		Role:           models.RoleAssistant,
-		Content:        mockResponse,
-		CreatedAt:      time.Now(),
+		ConversationID:  conv.ID,
+		Role:            models.RoleAssistant,
+		Content:         mockResponse,
+		ProviderModelID: conv.CurrentProviderModelID,
+		ModelID:         conv.ModelID,
+		CreatedAt:       time.Now(),
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
@@ -662,7 +670,7 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 	}
 
 	// Get provider info
-	if conv.ProviderModelID == nil {
+	if conv.CurrentProviderModelID == nil {
 		// Model has been deleted - show friendly error with model_id snapshot
 		modelInfo := "未知模型"
 		if conv.ModelID != "" {
@@ -672,7 +680,7 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 		return
 	}
 
-	providerModel, err := h.modelRepo.FindByID(*conv.ProviderModelID)
+	providerModel, err := h.modelRepo.FindByID(*conv.CurrentProviderModelID)
 	if err != nil {
 		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_model", "Model not found", err)
 		return
@@ -727,9 +735,11 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 	content := resp.Choices[0].Message.Content
 
 	assistantMsg := &models.Message{
-		ConversationID: conv.ID,
-		Role:           models.RoleAssistant,
-		Content:        content,
+		ConversationID:  conv.ID,
+		Role:            models.RoleAssistant,
+		Content:         content,
+		ProviderModelID: conv.CurrentProviderModelID,
+		ModelID:         conv.ModelID,
 	}
 	if err := h.msgRepo.Create(assistantMsg); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
@@ -929,4 +939,88 @@ func (h *ConversationHandler) callTitleGeneratorAPI(firstMessage string, cfg con
 	}
 
 	return title, nil
+}
+
+// ConversationModelUpdateRequest represents the request body for updating conversation model
+type ConversationModelUpdateRequest struct {
+	ProviderModelID *string `json:"provider_model_id"`
+	ModelID         string  `json:"model_id"`
+}
+
+// UpdateModel updates the current model for a conversation
+func (h *ConversationHandler) UpdateModel(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	convID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid conversation ID")
+		return
+	}
+
+	var req ConversationModelUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	// Validate that at least one of provider_model_id or model_id is provided
+	if req.ProviderModelID == nil && req.ModelID == "" {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", "Either provider_model_id or model_id must be provided")
+		return
+	}
+
+	// Get conversation and verify ownership
+	_, err = h.convRepo.FindByIDAndUserID(uint(convID), userID)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusNotFound, "not_found", "Conversation not found", err)
+		return
+	}
+
+	// Parse provider_model_id if provided
+	var providerModelIDStr *string
+	if req.ProviderModelID != nil && *req.ProviderModelID != "" {
+		// Validate UUID format
+		_, err := uuid.Parse(*req.ProviderModelID)
+		if err != nil {
+			utils.SendError(c, http.StatusBadRequest, "invalid_model_id", "Invalid provider_model_id format")
+			return
+		}
+
+		// Verify the model exists and user has access
+		parsedID, _ := uuid.Parse(*req.ProviderModelID)
+		providerModel, err := h.modelRepo.FindByID(parsedID)
+		if err != nil {
+			utils.SendErrorWithErr(c, http.StatusBadRequest, "model_not_found", "Model not found", err)
+			return
+		}
+
+		// Verify provider ownership
+		provider, err := h.providerRepo.FindByID(providerModel.ProviderID)
+		if err != nil || provider.UserID != userID {
+			utils.SendError(c, http.StatusForbidden, "access_denied", "You don't have access to this model")
+			return
+		}
+
+		providerModelIDStr = req.ProviderModelID
+
+		// If model_id not provided, get it from the provider model
+		if req.ModelID == "" {
+			req.ModelID = providerModel.ModelID
+		}
+	}
+
+	// Update conversation's current model
+	if err := h.convRepo.UpdateCurrentModel(uint(convID), userID, providerModelIDStr, req.ModelID); err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update conversation model", err)
+		return
+	}
+
+	// Return updated conversation
+	updatedConv, err := h.convRepo.FindByIDAndUserID(uint(convID), userID)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "fetch_error", "Failed to fetch updated conversation", err)
+		return
+	}
+
+	utils.LogOperationSuccess("ConversationHandler", "UpdateModel", "convID", convID, "userID", userID, "modelID", req.ModelID)
+	c.JSON(http.StatusOK, gin.H{"data": updatedConv})
 }

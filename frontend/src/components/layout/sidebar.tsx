@@ -320,6 +320,8 @@ export function Sidebar() {
                             )}
                             onClick={() => {
                               if (editingId !== conversation.id) {
+                                // Clear pending new chat state when switching to existing conversation
+                                setIsPendingNewChat(false)
                                 setCurrentConversation(conversation.id)
                                 // Navigate to chat page if not already there
                                 if (pathname !== '/') {

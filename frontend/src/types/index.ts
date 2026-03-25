@@ -156,7 +156,7 @@ export interface UpdateModelRequest {
 export interface Conversation {
   id: number
   user_id: number
-  provider_model_id: string | null // null when model is deleted
+  current_provider_model_id: string | null // Currently selected model (can be switched)
   model_id: string // Snapshot of model_id (e.g., "gpt-4o"), preserved after model deletion
   title: string
   is_saved: boolean
@@ -169,6 +169,8 @@ export interface Message {
   conversation_id: number
   role: 'user' | 'assistant'
   content: string
+  provider_model_id?: string | null // Model used for this message (assistant messages only)
+  model_id?: string // Model ID snapshot (e.g., "gpt-4o"), preserved after model deletion
   created_at: string
 }
 

@@ -43,13 +43,13 @@ func TestConversationRepository(t *testing.T) {
 		conv := &models.Conversation{
 			UserID:          user.ID,
 			Title:           "Conversation with Model",
-			ProviderModelID: &modelID,
+			CurrentProviderModelID: &modelID,
 		}
 
 		err := convRepo.Create(conv)
 
 		require.NoError(t, err)
-		assert.Equal(t, modelID, *conv.ProviderModelID)
+		assert.Equal(t, modelID, *conv.CurrentProviderModelID)
 	})
 
 	t.Run("Create_WithModelIDSnapshot", func(t *testing.T) {
@@ -57,14 +57,14 @@ func TestConversationRepository(t *testing.T) {
 		conv := &models.Conversation{
 			UserID:          user.ID,
 			Title:           "Conversation with Model Snapshot",
-			ProviderModelID: &modelID,
+			CurrentProviderModelID: &modelID,
 			ModelID:         "gpt-4o",
 		}
 
 		err := convRepo.Create(conv)
 
 		require.NoError(t, err)
-		assert.Equal(t, modelID, *conv.ProviderModelID)
+		assert.Equal(t, modelID, *conv.CurrentProviderModelID)
 		assert.Equal(t, "gpt-4o", conv.ModelID)
 	})
 

@@ -372,19 +372,19 @@ func TestProviderModelRepository_Sync(t *testing.T) {
 		// Create conversations associated with model1
 		conv1 := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &model1ID,
+			CurrentProviderModelID: &model1ID,
 			ModelID:         "gpt-4o",
 			Title:           "Conv with GPT-4o",
 		}
 		conv2 := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &model1ID,
+			CurrentProviderModelID: &model1ID,
 			ModelID:         "gpt-4o",
 			Title:           "Another Conv with GPT-4o",
 		}
 		conv3 := &models.Conversation{
 			UserID:          user.ID,
-			ProviderModelID: &model2ID,
+			CurrentProviderModelID: &model2ID,
 			ModelID:         "gpt-4o-mini",
 			Title:           "Conv with GPT-4o-mini",
 		}
@@ -416,14 +416,14 @@ func TestProviderModelRepository_Sync(t *testing.T) {
 		database.DB.First(&updatedConv2, conv2.ID)
 		database.DB.First(&updatedConv3, conv3.ID)
 
-		assert.Nil(t, updatedConv1.ProviderModelID, "provider_model_id should be NULL after model deletion")
+		assert.Nil(t, updatedConv1.CurrentProviderModelID, "provider_model_id should be NULL after model deletion")
 		assert.Equal(t, "gpt-4o", updatedConv1.ModelID, "model_id snapshot should be preserved")
 
-		assert.Nil(t, updatedConv2.ProviderModelID, "provider_model_id should be NULL after model deletion")
+		assert.Nil(t, updatedConv2.CurrentProviderModelID, "provider_model_id should be NULL after model deletion")
 		assert.Equal(t, "gpt-4o", updatedConv2.ModelID, "model_id snapshot should be preserved")
 
-		assert.NotNil(t, updatedConv3.ProviderModelID, "provider_model_id should remain for conv3 (model2 not deleted)")
-		assert.Equal(t, model2ID, *updatedConv3.ProviderModelID)
+		assert.NotNil(t, updatedConv3.CurrentProviderModelID, "provider_model_id should remain for conv3 (model2 not deleted)")
+		assert.Equal(t, model2ID, *updatedConv3.CurrentProviderModelID)
 	})
 
 	t.Run("Sync_EnableDisable", func(t *testing.T) {

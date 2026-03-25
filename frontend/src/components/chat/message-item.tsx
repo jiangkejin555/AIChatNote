@@ -10,20 +10,32 @@ import { useRegenerateMessage } from '@/hooks'
 import { MarkdownContent } from './markdown-content'
 import { useTranslations } from '@/i18n'
 
+interface ModelInfo {
+  providerName: string
+  displayName: string
+  modelId: string
+}
+
 interface MessageItemProps {
   message: Message
   isStreaming?: boolean
   isThinking?: boolean
   isTimeout?: boolean
   onRetry?: () => void
+  modelsMap?: Map<string, ModelInfo>
 }
 
-export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRetry }: MessageItemProps) {
+export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRetry, modelsMap }: MessageItemProps) {
   const [copied, setCopied] = useState(false)
   const regenerate = useRegenerateMessage()
   const t = useTranslations()
 
   const isUser = message.role === 'user'
+
+  // Get model info for attribution display (assistant messages only)
+  const modelAttribution = !isUser && message.provider_model_id && modelsMap
+    ? modelsMap.get(message.provider_model_id)
+    : null
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content)
@@ -42,7 +54,7 @@ export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRet
   return (
     <div
       className={cn(
-        'flex gap-3 mb-4',
+        'flex gap-3 mb-4 items-start',
         isUser ? 'flex-row-reverse' : 'flex-row'
       )}
     >
@@ -80,7 +92,7 @@ export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRet
             className={cn(
               'rounded-2xl px-4 py-3',
               isUser
-                ? 'bg-primary text-primary-foreground rounded-tr-sm max-w-[85%]'
+                ? 'bg-primary text-primary-foreground rounded-tr-sm max-w-[85%] flex items-center'
                 : 'bg-muted rounded-tl-sm border border-border/50 w-full'
             )}
           >
@@ -132,11 +144,11 @@ export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRet
           </div>
         </div>
 
-        {/* Timestamp */}
+        {/* Timestamp and Model Attribution */}
         {!isStreaming && (
           <div
             className={cn(
-              'flex items-center gap-1 mt-1 px-1',
+              'flex items-center gap-1.5 mt-1 px-1',
               isUser ? 'justify-end' : 'justify-start'
             )}
           >
@@ -144,6 +156,26 @@ export function MessageItem({ message, isStreaming, isThinking, isTimeout, onRet
             <span className="text-[11px] text-muted-foreground/60">
               {formatMessageTime(message.created_at)}
             </span>
+            {/* Model attribution for assistant messages */}
+            {!isUser && (
+              <>
+                {(modelAttribution || message.model_id) && (
+                  <>
+                    <span className="text-[11px] text-muted-foreground/40">·</span>
+                    {modelAttribution ? (
+                      <span className="text-[11px] text-muted-foreground/60">
+                        {modelAttribution.providerName}/{modelAttribution.displayName}
+                      </span>
+                    ) : message.model_id ? (
+                      // Model deleted - show model_id snapshot with muted styling
+                      <span className="text-[11px] text-muted-foreground/40 line-through">
+                        {message.model_id}
+                      </span>
+                    ) : null}
+                  </>
+                )}
+              </>
+            )}
           </div>
         )}
 
