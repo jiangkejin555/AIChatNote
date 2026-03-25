@@ -12,12 +12,13 @@ import (
 )
 
 type Config struct {
-	Server     ServerConfig     `yaml:"server"`
-	Database   DatabaseConfig   `yaml:"database"`
-	JWT        JWTConfig        `yaml:"jwt"`
-	Encryption EncryptionConfig `yaml:"encryption"`
-	CORS       CORSConfig       `yaml:"cors"`
-	Mock       MockConfig       `yaml:"mock"`
+	Server         ServerConfig         `yaml:"server"`
+	Database       DatabaseConfig       `yaml:"database"`
+	JWT            JWTConfig            `yaml:"jwt"`
+	Encryption     EncryptionConfig     `yaml:"encryption"`
+	CORS           CORSConfig           `yaml:"cors"`
+	Mock           MockConfig           `yaml:"mock"`
+	TitleGenerator TitleGeneratorConfig `yaml:"title_generator"`
 }
 
 type ServerConfig struct {
@@ -60,6 +61,14 @@ type MockConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+type TitleGeneratorConfig struct {
+	Enabled   bool   `yaml:"enabled"`
+	APIBase   string `yaml:"api_base"`
+	APIKey    string `yaml:"api_key"`
+	Model     string `yaml:"model"`
+	MaxTokens int    `yaml:"max_tokens"`
+}
+
 // Load reads configuration from config.yaml file.
 // Returns an error if config.yaml is not found.
 func Load() (*Config, error) {
@@ -94,6 +103,11 @@ func LoadFromPath(configPath string) (*Config, error) {
 	// Compute duration values
 	cfg.JWT.Expiry = time.Duration(cfg.JWT.ExpiryHours) * time.Hour
 	cfg.JWT.RefreshExpiry = time.Duration(cfg.JWT.RefreshExpiryHours) * time.Hour
+
+	// Set default values for title generator
+	if cfg.TitleGenerator.MaxTokens == 0 {
+		cfg.TitleGenerator.MaxTokens = 50
+	}
 
 	// Apply environment variable overrides (optional)
 	applyEnvOverrides(&cfg)
@@ -139,6 +153,21 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("MOCK_ENABLED"); v != "" {
 		cfg.Mock.Enabled = strings.ToLower(v) == "true"
+	}
+	if v := os.Getenv("TITLE_GENERATOR_ENABLED"); v != "" {
+		cfg.TitleGenerator.Enabled = strings.ToLower(v) == "true"
+	}
+	if v := os.Getenv("TITLE_GENERATOR_API_BASE"); v != "" {
+		cfg.TitleGenerator.APIBase = v
+	}
+	if v := os.Getenv("TITLE_GENERATOR_API_KEY"); v != "" {
+		cfg.TitleGenerator.APIKey = v
+	}
+	if v := os.Getenv("TITLE_GENERATOR_MODEL"); v != "" {
+		cfg.TitleGenerator.Model = v
+	}
+	if v := os.Getenv("TITLE_GENERATOR_MAX_TOKENS"); v != "" {
+		cfg.TitleGenerator.MaxTokens = parseInt(v, cfg.TitleGenerator.MaxTokens)
 	}
 }
 

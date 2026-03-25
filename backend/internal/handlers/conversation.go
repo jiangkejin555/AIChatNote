@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/chat-note/backend/internal/config"
 	"github.com/chat-note/backend/internal/crypto"
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
@@ -19,26 +20,28 @@ import (
 )
 
 type ConversationHandler struct {
-	convRepo     *repository.ConversationRepository
-	msgRepo      *repository.MessageRepository
-	providerRepo *repository.ProviderRepository
-	modelRepo    *repository.ProviderModelRepository
-	requestRepo  *repository.MessageRequestRepository
-	aesCrypto    *crypto.AESCrypto
-	mockEnabled  bool
+	convRepo            *repository.ConversationRepository
+	msgRepo             *repository.MessageRepository
+	providerRepo        *repository.ProviderRepository
+	modelRepo           *repository.ProviderModelRepository
+	requestRepo         *repository.MessageRequestRepository
+	aesCrypto           *crypto.AESCrypto
+	mockEnabled         bool
+	titleGeneratorCfg   config.TitleGeneratorConfig
 }
 
 const mockResponse = "这是 Mock AI 的回复。如果你需要测试真实 AI 功能，请配置相应的 API Key。\n\n你可以继续与我对话，我会一直返回这个 Mock 响应。"
 
-func NewConversationHandler(aesCrypto *crypto.AESCrypto, mockEnabled bool) *ConversationHandler {
+func NewConversationHandler(cfg *config.Config, aesCrypto *crypto.AESCrypto) *ConversationHandler {
 	return &ConversationHandler{
-		convRepo:     repository.NewConversationRepository(),
-		msgRepo:      repository.NewMessageRepository(),
-		providerRepo: repository.NewProviderRepository(),
-		modelRepo:    repository.NewProviderModelRepository(),
-		requestRepo:  repository.NewMessageRequestRepository(),
-		aesCrypto:    aesCrypto,
-		mockEnabled:  mockEnabled,
+		convRepo:          repository.NewConversationRepository(),
+		msgRepo:           repository.NewMessageRepository(),
+		providerRepo:      repository.NewProviderRepository(),
+		modelRepo:         repository.NewProviderModelRepository(),
+		requestRepo:       repository.NewMessageRequestRepository(),
+		aesCrypto:         aesCrypto,
+		mockEnabled:       cfg.Mock.Enabled,
+		titleGeneratorCfg: cfg.TitleGenerator,
 	}
 }
 
@@ -852,65 +855,62 @@ func (h *ConversationHandler) GenerateTitle(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": gin.H{"title": title}})
 }
 
+// fallbackTitle generates a fallback title from the first message
+func fallbackTitle(firstMessage string) string {
+	const maxLen = 10
+	runes := []rune(firstMessage)
+	if len(runes) > maxLen {
+		return string(runes[:maxLen]) + "..."
+	}
+	return firstMessage
+}
+
 // generateTitleWithAI calls AI to generate a title based on the first message
-func (h *ConversationHandler) generateTitleWithAI(conv *models.Conversation, firstMessage string) (string, error) {
-	// Handle mock mode
+func (h *ConversationHandler) generateTitleWithAI(_ *models.Conversation, firstMessage string) (string, error) {
+	// Handle mock mode - use fallback
 	if h.mockEnabled {
-		// Return first 15 characters of the message as title
-		if len(firstMessage) > 15 {
-			return firstMessage[:15] + "...", nil
+		return fallbackTitle(firstMessage), nil
+	}
+
+	// Check if title generator is enabled and properly configured
+	cfg := h.titleGeneratorCfg
+	if cfg.Enabled && cfg.APIBase != "" && cfg.APIKey != "" && cfg.Model != "" {
+		title, err := h.callTitleGeneratorAPI(firstMessage, cfg)
+		if err != nil {
+			// Log error but don't fail - use fallback
+			utils.LogWarn("ConversationHandler", "generateTitleWithAI", "error", err.Error(), "fallback", "using first 10 chars")
+			return fallbackTitle(firstMessage), nil
 		}
-		return firstMessage, nil
+		return title, nil
 	}
 
-	// Get provider info
-	if conv.ProviderModelID == nil {
-		// Fallback to first 15 characters
-		if len(firstMessage) > 15 {
-			return firstMessage[:15] + "...", nil
-		}
-		return firstMessage, nil
-	}
+	// Title generator not configured - use fallback
+	return fallbackTitle(firstMessage), nil
+}
 
-	providerModel, err := h.modelRepo.FindByID(*conv.ProviderModelID)
-	if err != nil {
-		return "", err
-	}
-
-	provider, err := h.providerRepo.FindByID(providerModel.ProviderID)
-	if err != nil {
-		return "", err
-	}
-
-	// Decrypt API key
-	apiKey, err := h.aesCrypto.Decrypt(provider.APIKeyEncrypted)
-	if err != nil {
-		return "", err
-	}
-
-	// Build prompt for title generation
+// callTitleGeneratorAPI calls the configured title generator API
+func (h *ConversationHandler) callTitleGeneratorAPI(firstMessage string, cfg config.TitleGeneratorConfig) (string, error) {
 	prompt := fmt.Sprintf(`请根据用户的第一条消息，生成一个简洁的聊天标题（最多15个字符）。
 只输出标题，不要其他内容。
 
 用户消息：%s`, firstMessage)
 
-	// Create OpenAI client
-	config := openai.DefaultConfig(apiKey)
-	config.BaseURL = provider.APIBase
-	client := openai.NewClientWithConfig(config)
+	clientCfg := openai.DefaultConfig(cfg.APIKey)
+	clientCfg.BaseURL = cfg.APIBase
+	client := openai.NewClientWithConfig(clientCfg)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	req := openai.ChatCompletionRequest{
-		Model: providerModel.ModelID,
+		Model: cfg.Model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
 				Content: prompt,
 			},
 		},
-		MaxTokens: 50,
+		MaxTokens: cfg.MaxTokens,
 	}
 
 	resp, err := client.CreateChatCompletion(ctx, req)

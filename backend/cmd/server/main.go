@@ -59,7 +59,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(jwtService)
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
-	conversationHandler := handlers.NewConversationHandler(aesCrypto, cfg.Mock.Enabled)
+	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto)
 	noteHandler := handlers.NewNoteHandler(aiService)
 	folderHandler := handlers.NewFolderHandler()
 	tagHandler := handlers.NewTagHandler()

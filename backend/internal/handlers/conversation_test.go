@@ -26,7 +26,7 @@ func setupConversationTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	aesCrypto, _ := crypto.NewAESCrypto(cfg.Encryption.Key)
 
 	authHandler := NewAuthHandler(jwtService)
-	convHandler := NewConversationHandler(aesCrypto, true) // Mock mode enabled
+	convHandler := NewConversationHandler(cfg, aesCrypto)
 
 	router := gin.New()
 

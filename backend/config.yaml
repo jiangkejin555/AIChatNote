@@ -29,3 +29,10 @@ cors:
 
 mock:
   enabled: false  # Set to true to enable mock mode for testing without LLM API keys
+
+title_generator:
+  enabled: true  # Set to true to enable AI-powered title generation
+  api_base: "https://api.deepseek.com"    # API base URL, e.g., "https://api.deepseek.com/v1"
+  api_key: "sk-0a96ae141e2d4d23a318ba216ff4c130"     # API key (recommend using TITLE_GENERATOR_API_KEY env var)
+  model: "deepseek-chat"       # Model ID, e.g., "deepseek-chat"
+  max_tokens: 50  # Maximum tokens for title generation
