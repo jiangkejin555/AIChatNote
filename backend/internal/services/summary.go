@@ -12,12 +12,12 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-// Summary generation constants
+// Default constants (used as fallback when config is not available)
 const (
-	WindowAutoSize         = 20 // Trigger summary when messages exceed this
-	KeepRecentCount        = 10 // Keep this many recent messages as raw
-	SummaryUpdateFrequency = 5  // Update summary every N new messages
-	SummaryMaxTokens       = 300
+	DefaultWindowAutoSize         = 20
+	DefaultKeepRecentCount        = 10
+	DefaultSummaryUpdateFrequency = 5
+	DefaultSummaryMaxTokens       = 300
 )
 
 type SummaryService struct {
@@ -41,8 +41,16 @@ func (s *SummaryService) SaveSummary(summary *models.ConversationSummary) error 
 }
 
 // ShouldGenerateSummary determines if a summary needs to be generated or updated
-func (s *SummaryService) ShouldGenerateSummary(totalMessages int, summary *models.ConversationSummary) bool {
-	if totalMessages <= WindowAutoSize {
+// Deprecated: Use ContextConfigService.ShouldGenerateSummary instead
+func (s *SummaryService) ShouldGenerateSummary(totalMessages int, summary *models.ConversationSummary, windowAutoSize, updateFrequency int) bool {
+	if windowAutoSize <= 0 {
+		windowAutoSize = DefaultWindowAutoSize
+	}
+	if updateFrequency <= 0 {
+		updateFrequency = DefaultSummaryUpdateFrequency
+	}
+
+	if totalMessages <= windowAutoSize {
 		return false
 	}
 
@@ -53,18 +61,24 @@ func (s *SummaryService) ShouldGenerateSummary(totalMessages int, summary *model
 
 	// Check if enough new messages have been added since last summary
 	messagesSinceSummary := totalMessages - int(summary.EndMessageID)
-	return messagesSinceSummary >= SummaryUpdateFrequency
+	return messagesSinceSummary >= updateFrequency
 }
 
 // GenerateSummary generates a summary for the given messages
 // If oldSummary is provided, it performs an incremental update
+// maxTokens controls the maximum tokens for summary generation
 func (s *SummaryService) GenerateSummary(
 	ctx context.Context,
 	messages []models.Message,
 	oldSummary *models.ConversationSummary,
 	client *openai.Client,
 	model string,
+	maxTokens int,
 ) (string, error) {
+	if maxTokens <= 0 {
+		maxTokens = DefaultSummaryMaxTokens
+	}
+
 	start := time.Now()
 	utils.LogOperationStart("SummaryService", "GenerateSummary", "msgCount", len(messages), "incremental", oldSummary != nil)
 
@@ -85,7 +99,7 @@ func (s *SummaryService) GenerateSummary(
 				Content: prompt,
 			},
 		},
-		MaxTokens:   SummaryMaxTokens,
+		MaxTokens:   maxTokens,
 		Temperature: 0.3, // Lower temperature for more consistent summaries
 	})
 	if err != nil {

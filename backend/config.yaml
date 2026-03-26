@@ -36,3 +36,38 @@ title_generator:
   api_key: "sk-0a96ae141e2d4d23a318ba216ff4c130"     # API key (recommend using TITLE_GENERATOR_API_KEY env var)
   model: "deepseek-chat"       # Model ID, e.g., "deepseek-chat"
   max_tokens: 50  # Maximum tokens for title generation
+
+# Context processing configuration for conversation memory
+context:
+  # Default settings for new users
+  default_mode: "simple"      # summary | simple
+  default_level: "normal"     # short | normal | long
+
+  # Summary mode: sliding window + compression
+  # WindowAutoSize: trigger summary when messages exceed this count
+  # KeepRecentCount: keep this many recent messages as raw
+  # SummaryUpdateFrequency: update summary every N new messages
+  summary:
+    short:
+      window_auto_size: 10
+      keep_recent_count: 5
+      summary_update_frequency: 3
+    normal:
+      window_auto_size: 20
+      keep_recent_count: 10
+      summary_update_frequency: 5
+    long:
+      window_auto_size: 40
+      keep_recent_count: 20
+      summary_update_frequency: 10
+    max_tokens: 300  # Maximum tokens for summary generation
+
+  # Simple mode: direct pass of recent messages
+  # HistoryLimit: number of recent messages to pass to LLM
+  simple:
+    short:
+      history_limit: 5
+    normal:
+      history_limit: 10
+    long:
+      history_limit: 15

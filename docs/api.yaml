@@ -142,6 +142,49 @@ components:
           type: string
           format: date-time
 
+    UserSettings:
+      type: object
+      description: 用户会话设置
+      properties:
+        context_mode:
+          type: string
+          enum: [summary, simple]
+          description: |
+            上下文处理模式：
+            - summary: 滑动窗口 + 摘要压缩策略
+            - simple: 直接传递最近 N 条消息
+          example: simple
+        memory_level:
+          type: string
+          enum: [short, normal, long]
+          description: |
+            记忆等级：
+            - short: 短期记忆（较少消息）
+            - normal: 普通记忆（平衡）
+            - long: 长期记忆（更多消息）
+          example: normal
+      required:
+        - context_mode
+        - memory_level
+
+    UserSettingsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserSettings'
+
+    UpdateUserSettingsRequest:
+      type: object
+      properties:
+        context_mode:
+          type: string
+          enum: [summary, simple]
+          description: 上下文处理模式
+        memory_level:
+          type: string
+          enum: [short, normal, long]
+          description: 记忆等级
+
     # ---------- 模型相关（已废弃） ----------
     Model:
       type: object
@@ -667,6 +710,78 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
+  # ==========================================
+  # 用户设置
+  # ==========================================
+  /user/settings:
+    get:
+      tags:
+        - User Settings
+      summary: 获取用户设置
+      description: 获取当前用户的会话记忆设置（上下文处理模式和记忆等级）
+      operationId: getUserSettings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+        '401':
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - User Settings
+      summary: 更新用户设置
+      description: 更新当前用户的会话记忆设置
+      operationId: updateUserSettings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserSettingsRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # ==========================================
   # 提供商管理

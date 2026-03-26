@@ -19,6 +19,7 @@ type Config struct {
 	CORS           CORSConfig           `yaml:"cors"`
 	Mock           MockConfig           `yaml:"mock"`
 	TitleGenerator TitleGeneratorConfig `yaml:"title_generator"`
+	Context        ContextConfig        `yaml:"context"`
 }
 
 type ServerConfig struct {
@@ -69,6 +70,41 @@ type TitleGeneratorConfig struct {
 	MaxTokens int    `yaml:"max_tokens"`
 }
 
+// ContextConfig defines conversation context processing settings
+type ContextConfig struct {
+	DefaultMode  string                `yaml:"default_mode"`  // summary | simple
+	DefaultLevel string                `yaml:"default_level"` // short | normal | long
+	Summary      ContextSummaryConfig  `yaml:"summary"`
+	Simple       ContextSimpleConfig   `yaml:"simple"`
+}
+
+// ContextSummaryConfig holds parameters for summary mode
+type ContextSummaryConfig struct {
+	Short     ContextSummaryParams `yaml:"short"`
+	Normal    ContextSummaryParams `yaml:"normal"`
+	Long      ContextSummaryParams `yaml:"long"`
+	MaxTokens int                  `yaml:"max_tokens"`
+}
+
+// ContextSummaryParams holds individual level parameters for summary mode
+type ContextSummaryParams struct {
+	WindowAutoSize         int `yaml:"window_auto_size"`
+	KeepRecentCount        int `yaml:"keep_recent_count"`
+	SummaryUpdateFrequency int `yaml:"summary_update_frequency"`
+}
+
+// ContextSimpleConfig holds parameters for simple mode
+type ContextSimpleConfig struct {
+	Short  ContextSimpleParams `yaml:"short"`
+	Normal ContextSimpleParams `yaml:"normal"`
+	Long   ContextSimpleParams `yaml:"long"`
+}
+
+// ContextSimpleParams holds individual level parameters for simple mode
+type ContextSimpleParams struct {
+	HistoryLimit int `yaml:"history_limit"`
+}
+
 // Load reads configuration from config.yaml file.
 // Returns an error if config.yaml is not found.
 func Load() (*Config, error) {
@@ -108,6 +144,9 @@ func LoadFromPath(configPath string) (*Config, error) {
 	if cfg.TitleGenerator.MaxTokens == 0 {
 		cfg.TitleGenerator.MaxTokens = 50
 	}
+
+	// Set default values for context config
+	setContextDefaults(&cfg)
 
 	// Apply environment variable overrides (optional)
 	applyEnvOverrides(&cfg)
@@ -176,4 +215,54 @@ func parseInt(s string, defaultValue int) int {
 		return v
 	}
 	return defaultValue
+}
+
+// setContextDefaults sets default values for context configuration
+func setContextDefaults(cfg *Config) {
+	// Set default mode and level if not specified
+	if cfg.Context.DefaultMode == "" {
+		cfg.Context.DefaultMode = "simple"
+	}
+	if cfg.Context.DefaultLevel == "" {
+		cfg.Context.DefaultLevel = "normal"
+	}
+
+	// Set default summary mode parameters if not specified
+	if cfg.Context.Summary.MaxTokens == 0 {
+		cfg.Context.Summary.MaxTokens = 300
+	}
+
+	// Set default summary params for each level
+	if cfg.Context.Summary.Short.WindowAutoSize == 0 {
+		cfg.Context.Summary.Short = ContextSummaryParams{
+			WindowAutoSize:         10,
+			KeepRecentCount:        5,
+			SummaryUpdateFrequency: 3,
+		}
+	}
+	if cfg.Context.Summary.Normal.WindowAutoSize == 0 {
+		cfg.Context.Summary.Normal = ContextSummaryParams{
+			WindowAutoSize:         20,
+			KeepRecentCount:        10,
+			SummaryUpdateFrequency: 5,
+		}
+	}
+	if cfg.Context.Summary.Long.WindowAutoSize == 0 {
+		cfg.Context.Summary.Long = ContextSummaryParams{
+			WindowAutoSize:         40,
+			KeepRecentCount:        20,
+			SummaryUpdateFrequency: 10,
+		}
+	}
+
+	// Set default simple mode params for each level
+	if cfg.Context.Simple.Short.HistoryLimit == 0 {
+		cfg.Context.Simple.Short = ContextSimpleParams{HistoryLimit: 5}
+	}
+	if cfg.Context.Simple.Normal.HistoryLimit == 0 {
+		cfg.Context.Simple.Normal = ContextSimpleParams{HistoryLimit: 10}
+	}
+	if cfg.Context.Simple.Long.HistoryLimit == 0 {
+		cfg.Context.Simple.Long = ContextSimpleParams{HistoryLimit: 15}
+	}
 }

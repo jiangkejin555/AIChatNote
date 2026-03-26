@@ -179,7 +179,7 @@ export function useMoveNote() {
 
   return useMutation({
     mutationFn: ({ id, folderId }: { id: number; folderId: number | null }) =>
-      notesApi.update(id, { folder_id: folderId }),
+      notesApi.update(id, { folder_id: folderId ?? undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       toast.success(t('notes.moveSuccess'))

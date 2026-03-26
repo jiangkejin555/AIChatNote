@@ -129,6 +129,14 @@ func SetupTestDB(t *testing.T) func() {
 			created_at DATETIME,
 			updated_at DATETIME
 		)`,
+		`CREATE TABLE user_settings (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER UNIQUE NOT NULL,
+			context_mode VARCHAR(20) DEFAULT 'simple',
+			memory_level VARCHAR(20) DEFAULT 'normal',
+			created_at DATETIME,
+			updated_at DATETIME
+		)`,
 	}
 
 	for _, table := range tables {

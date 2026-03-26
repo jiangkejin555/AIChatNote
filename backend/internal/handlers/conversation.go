@@ -22,29 +22,31 @@ import (
 )
 
 type ConversationHandler struct {
-	convRepo       *repository.ConversationRepository
-	msgRepo        *repository.MessageRepository
-	providerRepo   *repository.ProviderRepository
-	modelRepo      *repository.ProviderModelRepository
-	requestRepo    *repository.MessageRequestRepository
-	summaryService *services.SummaryService
-	aesCrypto      *crypto.AESCrypto
-	// mockEnabled       bool
+	convRepo          *repository.ConversationRepository
+	msgRepo           *repository.MessageRepository
+	providerRepo      *repository.ProviderRepository
+	modelRepo         *repository.ProviderModelRepository
+	requestRepo       *repository.MessageRequestRepository
+	userSettingsRepo  *repository.UserSettingsRepository
+	summaryService    *services.SummaryService
+	contextConfigSvc  *services.ContextConfigService
+	aesCrypto         *crypto.AESCrypto
 	titleGeneratorCfg config.TitleGeneratorConfig
 }
 
 const mockResponse = "这是 Mock AI 的回复。如果你需要测试真实 AI 功能，请配置相应的 API Key。\n\n你可以继续与我对话，我会一直返回这个 Mock 响应。"
 
-func NewConversationHandler(cfg *config.Config, aesCrypto *crypto.AESCrypto) *ConversationHandler {
+func NewConversationHandler(cfg *config.Config, aesCrypto *crypto.AESCrypto, contextConfigSvc *services.ContextConfigService) *ConversationHandler {
 	return &ConversationHandler{
-		convRepo:       repository.NewConversationRepository(),
-		msgRepo:        repository.NewMessageRepository(),
-		providerRepo:   repository.NewProviderRepository(),
-		modelRepo:      repository.NewProviderModelRepository(),
-		requestRepo:    repository.NewMessageRequestRepository(),
-		summaryService: services.NewSummaryService(),
-		aesCrypto:      aesCrypto,
-		// mockEnabled:       cfg.Mock.Enabled,
+		convRepo:          repository.NewConversationRepository(),
+		msgRepo:           repository.NewMessageRepository(),
+		providerRepo:      repository.NewProviderRepository(),
+		modelRepo:         repository.NewProviderModelRepository(),
+		requestRepo:       repository.NewMessageRequestRepository(),
+		userSettingsRepo:  repository.NewUserSettingsRepository(),
+		summaryService:    services.NewSummaryService(),
+		contextConfigSvc:  contextConfigSvc,
+		aesCrypto:         aesCrypto,
 		titleGeneratorCfg: cfg.TitleGenerator,
 	}
 }
@@ -346,30 +348,58 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	// Get conversation history
-	messages, err := h.msgRepo.FindByConversationID(conv.ID)
-	if err != nil {
-		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", err)
-		return
+	// Get user settings for context configuration
+	defaultMode := h.contextConfigSvc.GetDefaultMode()
+	defaultLevel := h.contextConfigSvc.GetDefaultLevel()
+	userSettings, settingsErr := h.userSettingsRepo.GetOrCreate(userID, defaultMode, defaultLevel)
+	if settingsErr != nil {
+		utils.LogOperationError("ConversationHandler", "SendMessage", settingsErr, "step", "get_user_settings", "userID", userID)
+		// Continue with defaults on error
+		userSettings = &models.UserSettings{
+			ContextMode: defaultMode,
+			MemoryLevel: defaultLevel,
+		}
 	}
+
+	// Get context parameters based on user settings
+	contextParams := h.contextConfigSvc.GetContextParams(userSettings.ContextMode, userSettings.MemoryLevel)
 
 	// Create OpenAI client
 	clientConfig := openai.DefaultConfig(apiKey)
 	clientConfig.BaseURL = provider.APIBase
 	client := openai.NewClientWithConfig(clientConfig)
 
-	// Build context messages with sliding window + summary support
-	chatMessages, summaryUpdated, buildErr := h.buildContextMessages(
-		c.Request.Context(),
-		conv,
-		messages,
-		client,
-		providerModel.ModelID,
-	)
-	if buildErr != nil {
-		utils.LogOperationError("ConversationHandler", "SendMessage", buildErr, "step", "build_context_messages", "convID", conv.ID)
-		// Fallback: use all messages without summary
+	// Build context messages based on mode
+	var chatMessages []openai.ChatCompletionMessage
+	var summaryUpdated bool
+
+	if userSettings.ContextMode == models.ContextModeSimple {
+		// Simple mode: just get recent messages
+		messages, err := h.msgRepo.FindRecentByConversationID(conv.ID, contextParams.HistoryLimit)
+		if err != nil {
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", err)
+			return
+		}
 		chatMessages = h.messagesToChatMessages(messages)
+	} else {
+		// Summary mode: build context with summary support
+		chatMessages, summaryUpdated, err = h.buildContextMessagesWithSummary(
+			c.Request.Context(),
+			conv,
+			contextParams,
+			client,
+			providerModel.ModelID,
+		)
+		if err != nil {
+			utils.LogOperationError("ConversationHandler", "SendMessage", err, "step", "build_context_messages", "convID", conv.ID)
+			// Fallback: get recent messages
+			messages, fallbackErr := h.msgRepo.FindRecentByConversationID(conv.ID, contextParams.KeepRecentCount)
+			if fallbackErr != nil {
+				utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", fallbackErr)
+				return
+			}
+			chatMessages = h.messagesToChatMessages(messages)
+		}
 	}
 
 	if summaryUpdated {
@@ -748,19 +778,27 @@ func (h *ConversationHandler) handleRequestDeduplication(c *gin.Context, convID 
 	return newReq, true, nil
 }
 
-// buildContextMessages builds the context messages for LLM with sliding window and summary support
+// buildContextMessagesWithSummary builds the context messages for LLM with sliding window and summary support
+// Uses dynamic parameters from ContextParams
 // Returns: chatMessages, summaryWasUpdated, error
-func (h *ConversationHandler) buildContextMessages(
+func (h *ConversationHandler) buildContextMessagesWithSummary(
 	ctx context.Context,
 	conv *models.Conversation,
-	messages []models.Message,
+	params *services.ContextParams,
 	client *openai.Client,
 	model string,
 ) ([]openai.ChatCompletionMessage, bool, error) {
+	// Get messages - fetch enough for window size + recent count
+	totalNeeded := params.WindowAutoSize + params.KeepRecentCount + params.SummaryUpdateFrequency
+	messages, err := h.msgRepo.FindRecentByConversationID(conv.ID, totalNeeded)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to fetch messages: %w", err)
+	}
+
 	totalMessages := len(messages)
 
 	// If within window size, use all messages directly
-	if totalMessages <= services.WindowAutoSize {
+	if totalMessages <= params.WindowAutoSize {
 		return h.messagesToChatMessages(messages), false, nil
 	}
 
@@ -771,7 +809,11 @@ func (h *ConversationHandler) buildContextMessages(
 	}
 
 	// Check if we need to generate or update summary
-	shouldUpdate := h.summaryService.ShouldGenerateSummary(totalMessages, summary)
+	var summaryEndID uint
+	if summary != nil {
+		summaryEndID = summary.EndMessageID
+	}
+	shouldUpdate := h.contextConfigSvc.ShouldGenerateSummary(totalMessages, params, summaryEndID)
 
 	var summaryWasUpdated bool
 	if shouldUpdate {
@@ -783,12 +825,14 @@ func (h *ConversationHandler) buildContextMessages(
 
 		if summary == nil {
 			// Initial summary: summarize messages before the recent ones
-			keepFrom := totalMessages - services.KeepRecentCount
+			keepFrom := totalMessages - params.KeepRecentCount
 			if keepFrom < 0 {
 				keepFrom = 0
 			}
-			messagesToSummarize = messages[:keepFrom]
-			newEndMessageID = messages[keepFrom-1].ID
+			if keepFrom > 0 {
+				messagesToSummarize = messages[:keepFrom]
+				newEndMessageID = messages[keepFrom-1].ID
+			}
 		} else {
 			// Incremental update: get messages after the summary's end
 			startIdx := 0
@@ -799,7 +843,7 @@ func (h *ConversationHandler) buildContextMessages(
 				}
 			}
 			// Include messages up to (total - keepRecentCount)
-			endIdx := totalMessages - services.KeepRecentCount
+			endIdx := totalMessages - params.KeepRecentCount
 			if endIdx > startIdx {
 				messagesToSummarize = messages[startIdx:endIdx]
 				newEndMessageID = messages[endIdx-1].ID
@@ -808,12 +852,16 @@ func (h *ConversationHandler) buildContextMessages(
 
 		if len(messagesToSummarize) > 0 {
 			// Generate summary
-			summaryText, genErr := h.summaryService.GenerateSummary(ctx, messagesToSummarize, summary, client, model)
+			summaryText, genErr := h.summaryService.GenerateSummary(ctx, messagesToSummarize, summary, client, model, params.SummaryMaxTokens)
 			if genErr != nil {
 				utils.LogOperationError("ConversationHandler", "buildContextMessages", genErr, "step", "generate_summary", "convID", conv.ID)
-				// Fallback: use all messages without summary
-				utils.LogWarn("ConversationHandler", "buildContextMessages", "convID", conv.ID, "fallback", "using_full_history")
-				return h.messagesToChatMessages(messages), false, nil
+				// Fallback: use recent messages without summary
+				utils.LogWarn("ConversationHandler", "buildContextMessages", "convID", conv.ID, "fallback", "using_recent_only")
+				recentMsgs := messages
+				if len(messages) > params.KeepRecentCount {
+					recentMsgs = messages[totalMessages-params.KeepRecentCount:]
+				}
+				return h.messagesToChatMessages(recentMsgs), false, nil
 			}
 
 			// Save/update summary
@@ -842,7 +890,7 @@ func (h *ConversationHandler) buildContextMessages(
 	}
 
 	// Add recent raw messages
-	keepFrom := totalMessages - services.KeepRecentCount
+	keepFrom := totalMessages - params.KeepRecentCount
 	if keepFrom < 0 {
 		keepFrom = 0
 	}

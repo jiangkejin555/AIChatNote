@@ -10,6 +10,7 @@ import (
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/services"
 	"github.com/chat-note/backend/internal/testutil"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -24,9 +25,10 @@ func setupConversationTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	cfg := testutil.TestConfig()
 	jwtService := crypto.NewJWTService(cfg)
 	aesCrypto, _ := crypto.NewAESCrypto(cfg.Encryption.Key)
+	contextConfigService := services.NewContextConfigService(cfg)
 
 	authHandler := NewAuthHandler(jwtService)
-	convHandler := NewConversationHandler(cfg, aesCrypto)
+	convHandler := NewConversationHandler(cfg, aesCrypto, contextConfigService)
 
 	router := gin.New()
 

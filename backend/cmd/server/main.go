@@ -55,14 +55,18 @@ func main() {
 		log.Println("⚠️  AI service running in MOCK mode - no real API calls will be made")
 	}
 
+	// Initialize context config service
+	contextConfigService := services.NewContextConfigService(cfg)
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(jwtService)
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
-	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto)
+	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto, contextConfigService)
 	noteHandler := handlers.NewNoteHandler(aiService)
 	folderHandler := handlers.NewFolderHandler()
 	tagHandler := handlers.NewTagHandler()
+	userSettingsHandler := handlers.NewUserSettingsHandler(contextConfigService)
 
 	// Initialize feedback handlers
 	satisfactionHandler := handlers.NewSatisfactionHandler()
@@ -102,6 +106,14 @@ func main() {
 		{
 			authProtected.POST("/logout", authHandler.Logout)
 			authProtected.GET("/me", authHandler.GetCurrentUser)
+		}
+
+		// User settings routes
+		userSettings := api.Group("/user")
+		userSettings.Use(middleware.Auth(jwtService))
+		{
+			userSettings.GET("/settings", userSettingsHandler.GetUserSettings)
+			userSettings.PUT("/settings", userSettingsHandler.UpdateUserSettings)
 		}
 
 		// Provider routes

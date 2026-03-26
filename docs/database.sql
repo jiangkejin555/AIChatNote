@@ -173,6 +173,37 @@ CREATE TRIGGER notes_search_update
     FOR EACH ROW EXECUTE FUNCTION update_notes_search_vector();
 
 -- ============================================
+-- 10.5 会话摘要表
+-- ============================================
+CREATE TABLE conversation_summaries (
+    id SERIAL PRIMARY KEY,
+    conversation_id INTEGER UNIQUE NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    summary TEXT NOT NULL,                    -- 摘要内容
+    end_message_id INTEGER NOT NULL,          -- 摘要覆盖到的最后一条消息 ID
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_conversation_summaries_conversation_id ON conversation_summaries(conversation_id);
+
+-- ============================================
+-- 10.6 用户设置表
+-- ============================================
+CREATE TABLE user_settings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    context_mode VARCHAR(20) DEFAULT 'simple',  -- 上下文处理模式: summary | simple
+    memory_level VARCHAR(20) DEFAULT 'normal',  -- 记忆等级: short | normal | long
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_context_mode CHECK (context_mode IN ('summary', 'simple')),
+    CONSTRAINT chk_memory_level CHECK (memory_level IN ('short', 'normal', 'long'))
+);
+
+CREATE INDEX idx_user_settings_user_id ON user_settings(user_id);
+
+-- ============================================
 -- 11. 更新时间触发器
 -- ============================================
 
@@ -212,6 +243,16 @@ CREATE TRIGGER update_notes_updated_at
 -- 文件夹表更新触发器
 CREATE TRIGGER update_folders_updated_at
     BEFORE UPDATE ON folders
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 会话摘要表更新触发器
+CREATE TRIGGER update_conversation_summaries_updated_at
+    BEFORE UPDATE ON conversation_summaries
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 用户设置表更新触发器
+CREATE TRIGGER update_user_settings_updated_at
+    BEFORE UPDATE ON user_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================

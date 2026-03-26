@@ -597,8 +597,8 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
   {
     id: 1,
     user_id: 1,
-    provider_model_id: '1-1',
-    model_id: 1,
+    current_provider_model_id: '1-1',
+    model_id: 'deepseek-chat',
     title: 'Markdown 格式测试',
     is_saved: false,
     created_at: new Date(Date.now() - 86400000).toISOString(),
@@ -607,8 +607,8 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
   {
     id: 2,
     user_id: 1,
-    provider_model_id: '1-1',
-    model_id: 1,
+    current_provider_model_id: '1-1',
+    model_id: 'deepseek-chat',
     title: '如何学习 React',
     is_saved: false,
     created_at: new Date(Date.now() - 86400000).toISOString(),
@@ -617,8 +617,8 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
   {
     id: 3,
     user_id: 1,
-    provider_model_id: '1-1',
-    model_id: 1,
+    current_provider_model_id: '1-1',
+    model_id: 'deepseek-chat',
     title: 'TypeScript 类型体操',
     is_saved: true,
     created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
@@ -794,13 +794,13 @@ export const mockConversationsApi = {
     return [...(mockConversationMessages[conversationId] || [])]
   },
 
-  create: async (data: { provider_model_id?: string; model_id?: number; title?: string }): Promise<Conversation> => {
+  create: async (data: { provider_model_id?: string; model_id?: string; title?: string }): Promise<Conversation> => {
     await delay()
     const newConversation: Conversation = {
       id: nextConversationId++,
       user_id: 1,
-      provider_model_id: data.provider_model_id || '1-1',
-      model_id: data.model_id || 1,
+      current_provider_model_id: data.provider_model_id || '1-1',
+      model_id: data.model_id || 'deepseek-chat',
       title: data.title || '新对话',
       is_saved: false,
       created_at: new Date().toISOString(),

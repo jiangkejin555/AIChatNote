@@ -11,16 +11,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Sun, Moon, Monitor, Settings, Languages, Type, CaseSensitive } from 'lucide-react'
+import { Sun, Moon, Monitor, Settings, Languages, Type, CaseSensitive, Brain, Info } from 'lucide-react'
 import { useI18n, localeNames } from '@/i18n'
 import { useUIStore, FONT_OPTIONS, type FontSize } from '@/stores/ui-store'
+import { useUserSettings } from '@/hooks/use-user-settings'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { locale, setLocale, t } = useI18n()
   const { fontSize, fontFamily, setFontSize, setFontFamily } = useUIStore()
+  const { settings, loading, setContextMode, setMemoryLevel } = useUserSettings()
   const [mounted, setMounted] = useState(false)
 
   // Avoid hydration mismatch
@@ -54,6 +64,22 @@ export default function SettingsPage() {
     }
   }
 
+  const handleContextModeChange = async (mode: 'summary' | 'simple') => {
+    try {
+      await setContextMode(mode)
+    } catch (error) {
+      console.error('Failed to update context mode:', error)
+    }
+  }
+
+  const handleMemoryLevelChange = async (level: 'short' | 'normal' | 'long') => {
+    try {
+      await setMemoryLevel(level)
+    } catch (error) {
+      console.error('Failed to update memory level:', error)
+    }
+  }
+
   if (!mounted) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -74,9 +100,15 @@ export default function SettingsPage() {
     { value: 'large', label: t('settings.fontSizeLarge') },
   ]
 
+  const memoryLevelOptions = [
+    { value: 'short', label: t('settings.memoryShort') },
+    { value: 'normal', label: t('settings.memoryNormal') },
+    { value: 'long', label: t('settings.memoryLong') },
+  ]
+
   return (
-    <div className="flex items-center justify-center h-full p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex flex-col items-center justify-start h-full p-4 overflow-auto">
+      <Card className="w-full max-w-md mb-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -178,6 +210,113 @@ export default function SettingsPage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Session Memory Settings Card */}
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5" />
+            {t('settings.memoryTitle')}
+          </CardTitle>
+          <CardDescription>
+            {t('settings.memoryDesc')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Context Mode Selection */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Label>{t('settings.contextMode')}</Label>
+              <Dialog>
+                <DialogTrigger>
+                  <Button variant="ghost" size="icon" className="h-5 w-5">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>{t('settings.contextModeInfoTitle')}</DialogTitle>
+                    <DialogDescription className="pt-4 text-left space-y-3">
+                      <div>
+                        <strong>{t('settings.summaryMode')}:</strong>
+                        <p className="text-muted-foreground mt-1">{t('settings.summaryModeDesc')}</p>
+                      </div>
+                      <div>
+                        <strong>{t('settings.simpleMode')}:</strong>
+                        <p className="text-muted-foreground mt-1">{t('settings.simpleModeDesc')}</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="flex border rounded-lg p-1 gap-1">
+              <Button
+                variant={settings.context_mode === 'summary' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleContextModeChange('summary')}
+                disabled={loading}
+                className="px-3"
+              >
+                {t('settings.summaryMode')}
+              </Button>
+              <Button
+                variant={settings.context_mode === 'simple' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleContextModeChange('simple')}
+                disabled={loading}
+                className="px-3"
+              >
+                {t('settings.simpleMode')}
+              </Button>
+            </div>
+          </div>
+
+          {/* Memory Level Selection */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Label>{t('settings.memoryLevel')}</Label>
+            </div>
+            <div className="flex border rounded-lg p-1 gap-1">
+              {memoryLevelOptions.map((option) => {
+                const isActive = settings.memory_level === option.value
+                return (
+                  <Button
+                    key={option.value}
+                    variant={isActive ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleMemoryLevelChange(option.value as 'short' | 'normal' | 'long')}
+                    disabled={loading}
+                    className={cn(
+                      'px-3',
+                      !isActive && 'hover:bg-accent'
+                    )}
+                  >
+                    {option.label}
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Current Settings Description */}
+          <div className="text-sm text-muted-foreground">
+            {settings.context_mode === 'simple' ? (
+              <p>
+                {settings.memory_level === 'short' && t('settings.simpleShortDesc')}
+                {settings.memory_level === 'normal' && t('settings.simpleNormalDesc')}
+                {settings.memory_level === 'long' && t('settings.simpleLongDesc')}
+              </p>
+            ) : (
+              <p>
+                {settings.memory_level === 'short' && t('settings.summaryShortDesc')}
+                {settings.memory_level === 'normal' && t('settings.summaryNormalDesc')}
+                {settings.memory_level === 'long' && t('settings.summaryLongDesc')}
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

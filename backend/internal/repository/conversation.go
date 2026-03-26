@@ -122,6 +122,23 @@ func (r *MessageRepository) FindByConversationID(convID uint) ([]models.Message,
 	return messages, err
 }
 
+// FindRecentByConversationID returns the most recent N messages for a conversation
+// in chronological order (oldest first). Used for simple context mode.
+func (r *MessageRepository) FindRecentByConversationID(convID uint, limit int) ([]models.Message, error) {
+	var messages []models.Message
+	// Use subquery to get the most recent N messages, then order them chronologically
+	subQuery := database.DB.Model(&models.Message{}).
+		Select("id").
+		Where("conversation_id = ?", convID).
+		Order("created_at DESC").
+		Limit(limit)
+
+	err := database.DB.Where("id IN (?)", subQuery).
+		Order("created_at ASC").
+		Find(&messages).Error
+	return messages, err
+}
+
 func (r *MessageRepository) FindByConversationIDBefore(convID uint, beforeID uint, limit int) ([]models.Message, error) {
 	var messages []models.Message
 	query := database.DB.Where("conversation_id = ?", convID)

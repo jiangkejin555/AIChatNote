@@ -95,7 +95,7 @@ export function useMoveFolder() {
 
   return useMutation({
     mutationFn: ({ id, parentId }: { id: number; parentId: number | null }) =>
-      foldersApi.update(id, { parent_id: parentId }),
+      foldersApi.update(id, { parent_id: parentId ?? undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders'] })
       toast.success(t('notes.folderMoveSuccess'))
