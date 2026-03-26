@@ -384,9 +384,38 @@
   },
   "about": {
     "title": "About",
-    "productIntro": "AI Chat Notes is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge.",
     "tagline": "Chat to Create, Converse to Accumulate",
-    "backToAbout": "Back",
+    "productIntro": {
+      "title": "Product Introduction",
+      "content": "AI Chat Notes is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge. Manage multiple AI models through a unified interface, making every conversation a valuable knowledge asset."
+    },
+    "companyInfo": {
+      "title": "Company Information",
+      "companyName": "AI Chat Notes Team",
+      "foundedDate": "2024",
+      "mission": "Making every conversation a valuable knowledge asset"
+    },
+    "teamIntro": {
+      "title": "Team Introduction",
+      "content": "We are a team passionate about technology and products, dedicated to building the best AI knowledge management tool. We believe AI technology can help people work and learn more efficiently, making knowledge management simple and fun."
+    },
+    "contact": {
+      "title": "Contact",
+      "email": "Email",
+      "emailValue": "support@aichatnotes.com",
+      "github": "GitHub",
+      "githubValue": "github.com/aichatnotes"
+    },
+    "legal": {
+      "title": "Legal Information",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "version": {
+      "title": "Version Information",
+      "currentVersion": "Current Version",
+      "releaseDate": "Release Date"
+    },
     "help": {
       "title": "Help",
       "description": "Learn how to use the product",
@@ -480,19 +509,11 @@
         "in_progress": "In Progress",
         "completed": "Completed"
       }
-    },
-    "version": {
-      "title": "Version",
-      "description": "View version history",
-      "currentVersion": "Current Version",
-      "releaseDate": "Release Date",
-      "history": "Version History",
-      "noVersions": "No version history",
-      "changeTypes": {
-        "feature": "New",
-        "improvement": "Improved",
-        "fix": "Fixed"
-      }
     }
+  },
+  "helpFeedback": {
+    "title": "Help & Feedback",
+    "helpTab": "Help",
+    "feedbackTab": "Feedback"
   }
 }

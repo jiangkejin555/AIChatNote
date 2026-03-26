@@ -381,9 +381,38 @@
   },
   "about": {
     "title": "关于我们",
-    "productIntro": "AI Chat Notes 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。",
     "tagline": "聊天即生产，对话即沉淀",
-    "backToAbout": "返回",
+    "productIntro": {
+      "title": "产品介绍",
+      "content": "AI Chat Notes 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。通过统一的入口管理多个 AI 模型，让您的每一次对话都成为有价值的知识资产。"
+    },
+    "companyInfo": {
+      "title": "公司信息",
+      "companyName": "AI Chat Notes Team",
+      "foundedDate": "2024年",
+      "mission": "让每一次对话都成为有价值的知识资产"
+    },
+    "teamIntro": {
+      "title": "团队介绍",
+      "content": "我们是一支热爱技术和产品的团队，致力于打造最好的 AI 知识管理工具。我们相信 AI 技术能够帮助人们更高效地工作和学习，让知识管理变得简单而有趣。"
+    },
+    "contact": {
+      "title": "联系方式",
+      "email": "邮箱",
+      "emailValue": "support@aichatnotes.com",
+      "github": "GitHub",
+      "githubValue": "github.com/aichatnotes"
+    },
+    "legal": {
+      "title": "法律信息",
+      "termsOfService": "服务条款",
+      "privacyPolicy": "隐私政策"
+    },
+    "version": {
+      "title": "版本信息",
+      "currentVersion": "当前版本",
+      "releaseDate": "发布日期"
+    },
     "help": {
       "title": "帮助",
       "description": "了解产品使用方法",
@@ -477,19 +506,11 @@
         "in_progress": "开发中",
         "completed": "已上线"
       }
-    },
-    "version": {
-      "title": "版本",
-      "description": "查看版本更新记录",
-      "currentVersion": "当前版本",
-      "releaseDate": "发布日期",
-      "history": "历史版本",
-      "noVersions": "暂无版本记录",
-      "changeTypes": {
-        "feature": "新增",
-        "improvement": "优化",
-        "fix": "修复"
-      }
     }
+  },
+  "helpFeedback": {
+    "title": "帮助与反馈",
+    "helpTab": "帮助",
+    "feedbackTab": "反馈"
   }
 }

@@ -75,6 +75,11 @@ func Migrate() error {
 		&models.Folder{},
 		&models.RefreshToken{},
 		&models.NoteTag{},
+		&models.Feedback{},
+		&models.SatisfactionRating{},
+		&models.Version{},
+		&models.FeatureRequest{},
+		&models.FeatureVote{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)

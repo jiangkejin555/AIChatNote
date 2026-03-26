@@ -22,6 +22,7 @@ import {
   Check,
   X,
   Info,
+  HelpCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -31,6 +32,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -462,11 +464,19 @@ export function Sidebar() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
+              <Link href="/help" className="flex items-center w-full">
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>{t('helpFeedback.title')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
               <Link href="/about" className="flex items-center w-full">
                 <Info className="mr-2 h-4 w-4" />
                 <span>{t('about.title')}</span>
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t('sidebar.logout')}</span>

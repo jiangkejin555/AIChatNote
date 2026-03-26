@@ -45,7 +45,7 @@ func (h *FeatureHandler) List(c *gin.Context) {
 		return
 	}
 
-	var response []FeatureResponse
+	response := make([]FeatureResponse, 0)
 	for _, f := range features {
 		voteCount, _ := h.repo.GetVoteCount(f.ID)
 		hasVoted, _ := h.repo.HasUserVoted(userID, f.ID)
