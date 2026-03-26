@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useTranslations } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Star, ThumbsUp, MessageSquare, Send, History, HelpCircle, Sparkles, Rocket, CheckCircle, Lightbulb } from 'lucide-react'
+import { Star, ThumbsUp, MessageSquare, Send, History, HelpCircle, Sparkles, Rocket, CheckCircle, Lightbulb } from 'lucide-react'
 import { feedbackApi, SatisfactionRating, Feedback, FeatureRequest } from '@/lib/api/feedback'
 import { toast } from 'sonner'
 
@@ -143,35 +142,32 @@ export default function HelpFeedbackPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background sticky top-0 z-10 shrink-0">
-        <div className="flex items-center justify-center gap-4 p-4 max-w-4xl mx-auto relative">
-          <Link href="/" className="absolute left-4">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('common.back')}
-            </Button>
-          </Link>
+        <div className="flex items-center justify-center gap-4 p-4 max-w-4xl mx-auto">
           <h1 className="text-xl font-semibold">{t('helpFeedback.title')}</h1>
         </div>
       </div>
 
-      <div className="border-b bg-background">
-        <div className="flex gap-1 p-1 max-w-4xl mx-auto">
-          <Button
-            variant={activeTab === 'help' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('help')}
-            className="flex-1"
-          >
-            <HelpCircle className="h-4 w-4 mr-2" />
-            {t('helpFeedback.helpTab')}
-          </Button>
-          <Button
-            variant={activeTab === 'feedback' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('feedback')}
-            className="flex-1"
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            {t('helpFeedback.feedbackTab')}
-          </Button>
+      <div className="bg-background">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex gap-1 p-1">
+            <Button
+              variant={activeTab === 'help' ? 'default' : 'ghost'}
+              onClick={() => setActiveTab('help')}
+              className="flex-1"
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              {t('helpFeedback.helpTab')}
+            </Button>
+            <Button
+              variant={activeTab === 'feedback' ? 'default' : 'ghost'}
+              onClick={() => setActiveTab('feedback')}
+              className="flex-1"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              {t('helpFeedback.feedbackTab')}
+            </Button>
+          </div>
+          <div className="border-b" />
         </div>
       </div>
 

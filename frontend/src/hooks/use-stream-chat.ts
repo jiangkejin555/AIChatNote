@@ -22,7 +22,7 @@ export function useStreamChat({
 }: UseStreamChatOptions) {
   const [isStreaming, setIsStreaming] = useState(false)
   const { token } = useAuthStore()
-  const { setIsStreaming: setGlobalStreaming } = useChatStore()
+  const { startStreaming, stopStreaming, isConversationStreaming } = useChatStore()
   const stopRef = useRef(false)
 
   // Use refs to store callbacks to avoid stale closure issues
@@ -40,24 +40,29 @@ export function useStreamChat({
     onErrorRef.current = onError
   }, [onMessageStart, onMessageChunk, onMessageEnd, onError])
 
-  const stopStreaming = useCallback(() => {
+  const stopStreamingCallback = useCallback(() => {
     stopRef.current = true
     setIsStreaming(false)
-    setGlobalStreaming(false)
-  }, [setGlobalStreaming])
+    if (conversationId) {
+      stopStreaming(conversationId)
+    }
+  }, [conversationId, stopStreaming])
 
   const streamMessage = useCallback(
     async (content: string, overrideConversationId?: number, requestId?: string) => {
-      if (isStreaming) return
-
       const targetConversationId = overrideConversationId || conversationId
       if (!targetConversationId) {
         onErrorRef.current?.(new Error('No conversation ID'))
         return
       }
 
+      // Check if this specific conversation is already streaming
+      if (isConversationStreaming(targetConversationId)) {
+        return
+      }
+
       setIsStreaming(true)
-      setGlobalStreaming(true)
+      startStreaming(targetConversationId)
       stopRef.current = false
 
       try {
@@ -155,15 +160,17 @@ export function useStreamChat({
         }
       } finally {
         setIsStreaming(false)
-        setGlobalStreaming(false)
+        if (targetConversationId) {
+          stopStreaming(targetConversationId)
+        }
       }
     },
-    [isStreaming, token, conversationId, setGlobalStreaming]
+    [isConversationStreaming, startStreaming, stopStreaming, token, conversationId]
   )
 
   return {
     isStreaming,
     streamMessage,
-    stopStreaming,
+    stopStreaming: stopStreamingCallback,
   }
 }

@@ -1,4 +1,4 @@
-# AI Chat Notes - 新功能实施计划
+# AI Chat Note - 新功能实施计划
 
 ## 📋 概述
 

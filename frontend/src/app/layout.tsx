@@ -15,23 +15,23 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'AI Chat Notes',
-    template: '%s | AI Chat Notes',
+    default: 'AI Chat Note',
+    template: '%s | AI Chat Note',
   },
   description: 'AI 聊天聚合与知识库管理平台，支持多模型对话、智能笔记生成、知识库管理',
   keywords: ['AI', 'Chat', 'Notes', 'Knowledge Base', 'LLM', 'GPT', 'Claude'],
-  authors: [{ name: 'AI Chat Notes' }],
-  creator: 'AI Chat Notes',
+  authors: [{ name: 'AI Chat Note' }],
+  creator: 'AI Chat Note',
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
-    title: 'AI Chat Notes',
+    title: 'AI Chat Note',
     description: 'AI 聊天聚合与知识库管理平台',
-    siteName: 'AI Chat Notes',
+    siteName: 'AI Chat Note',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Chat Notes',
+    title: 'AI Chat Note',
     description: 'AI 聊天聚合与知识库管理平台',
   },
   robots: {

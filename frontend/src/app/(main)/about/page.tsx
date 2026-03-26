@@ -59,23 +59,9 @@ export default function AboutPage() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-4 py-8">
-            <h2 className="text-3xl font-bold">AI Chat Notes</h2>
+            <h2 className="text-3xl font-bold">AI Chat Note</h2>
             <p className="text-xl text-muted-foreground">{t('about.tagline')}</p>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                {t('about.productIntro.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('about.productIntro.content')}
-              </p>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>
@@ -87,7 +73,7 @@ export default function AboutPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('about.companyInfo.companyName')}</span>
-                <span className="font-medium">AI Chat Notes Team</span>
+                <span className="font-medium">AI Chat Note Team</span>
               </div>
               <Separator />
               <div className="flex justify-between">

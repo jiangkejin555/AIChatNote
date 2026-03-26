@@ -1,4 +1,4 @@
-# AI Chat Notes Backend Configuration
+# AI Chat Note Backend Configuration
 
 server:
   port: "8080"

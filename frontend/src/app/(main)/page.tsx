@@ -17,19 +17,19 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from '@/i18n'
 import type { Message, ProviderModel } from '@/types'
 
-// Streaming state per conversation to avoid cross-conversation pollution
-interface ConversationStreamingState {
-  content: string
-  optimisticMessages: Message[]
-  isThinking: boolean
-  isTimeout: boolean
-  lastUserMessage: string
-  requestId: string | null
-}
-
 export default function ChatPage() {
   const t = useTranslations()
-  const { currentConversationId, setCurrentConversation, isPendingNewChat, setIsPendingNewChat } = useChatStore()
+  const {
+    currentConversationId,
+    setCurrentConversation,
+    isPendingNewChat,
+    setIsPendingNewChat,
+    streamingStates,
+    updateStreamingState,
+    clearStreamingState,
+    getStreamingState,
+    streamingConversationIds,
+  } = useChatStore()
   const { data: conversations } = useConversations()
   const { data: providers } = useProviders()
   const createConversation = useCreateConversation()
@@ -38,8 +38,6 @@ export default function ChatPage() {
   const updateConversationModel = useUpdateConversationModel()
   const queryClient = useQueryClient()
   const [selectedModelId, setSelectedModelId] = useState<string | undefined>()
-  // Per-conversation streaming state to prevent cross-conversation pollution
-  const [streamingStates, setStreamingStates] = useState<Record<number, ConversationStreamingState>>({})
   const [saveNoteDialogOpen, setSaveNoteDialogOpen] = useState(false)
   const [modelSwitchDialogOpen, setModelSwitchDialogOpen] = useState(false)
   const [pendingModelId, setPendingModelId] = useState<string | null>(null)
@@ -48,41 +46,14 @@ export default function ChatPage() {
   // Get current conversation's streaming state (with defaults)
   const currentStreamingState = useMemo(() => {
     if (!currentConversationId) return null
-    return streamingStates[currentConversationId] || {
-      content: '',
-      optimisticMessages: [],
-      isThinking: false,
-      isTimeout: false,
-      lastUserMessage: '',
-      requestId: null,
-    }
-  }, [currentConversationId, streamingStates])
+    return getStreamingState(currentConversationId)
+  }, [currentConversationId, getStreamingState, streamingStates])
 
-  // Helper to update streaming state for a specific conversation
-  const updateStreamingState = useCallback((conversationId: number, updates: Partial<ConversationStreamingState>) => {
-    setStreamingStates(prev => ({
-      ...prev,
-      [conversationId]: {
-        ...prev[conversationId] || {
-          content: '',
-          optimisticMessages: [],
-          isThinking: false,
-          isTimeout: false,
-          lastUserMessage: '',
-          requestId: null,
-        },
-        ...updates,
-      },
-    }))
-  }, [])
-
-  // Helper to clear streaming state for a specific conversation
-  const clearStreamingState = useCallback((conversationId: number) => {
-    setStreamingStates(prev => {
-      const { [conversationId]: _, ...rest } = prev
-      return rest
-    })
-  }, [])
+  // Check if current conversation is streaming
+  const isCurrentConversationStreaming = useMemo(() => {
+    if (!currentConversationId) return false
+    return streamingConversationIds.has(currentConversationId)
+  }, [currentConversationId, streamingConversationIds])
 
   // Track the actual conversation ID being streamed (to avoid stale closure issues)
   const streamingConversationIdRef = useRef<number | null>(null)
@@ -97,25 +68,14 @@ export default function ChatPage() {
       const convId = streamingConversationIdRef.current
       if (!convId) return
 
+      // Get current state for this conversation
+      const currentState = getStreamingState(convId)
+
       // Update streaming content for the specific conversation
-      setStreamingStates(prev => {
-        const currentState = prev[convId] || {
-          content: '',
-          optimisticMessages: [],
-          isThinking: true,
-          isTimeout: false,
-          lastUserMessage: '',
-          requestId: null,
-        }
-        return {
-          ...prev,
-          [convId]: {
-            ...currentState,
-            // Clear thinking state when we receive actual content
-            isThinking: content ? false : currentState.isThinking,
-            content: currentState.content + content,
-          },
-        }
+      updateStreamingState(convId, {
+        // Clear thinking state when we receive actual content
+        isThinking: content ? false : currentState?.isThinking,
+        content: (currentState?.content || '') + content,
       })
     },
     onMessageEnd: (message) => {
@@ -296,7 +256,7 @@ export default function ChatPage() {
         }
 
         // Get existing optimistic messages for this conversation
-        const existingState = streamingStates[currentConversationId]
+        const existingState = getStreamingState(currentConversationId)
         const existingOptimisticMessages = existingState?.optimisticMessages || []
 
         updateStreamingState(currentConversationId, {
@@ -314,7 +274,7 @@ export default function ChatPage() {
         streamMessage(content, currentConversationId, requestId)
       }
     },
-    [currentConversationId, selectedModelId, createConversation, setCurrentConversation, streamMessage, modelStatus.isDeleted, isPendingNewChat, setIsPendingNewChat, updateStreamingState, streamingStates, t]
+    [currentConversationId, selectedModelId, createConversation, setCurrentConversation, streamMessage, modelStatus.isDeleted, isPendingNewChat, setIsPendingNewChat, updateStreamingState, getStreamingState, t]
   )
 
   // Retry handler - resend the last user message with the same request_id
@@ -411,12 +371,13 @@ export default function ChatPage() {
               <ModelSelector
                 value={selectedModelId}
                 onChange={handleModelChange}
+                isNewChat={isPendingNewChat}
               />
             </div>
             {/* Start Page */}
             <ChatStartPage
               onSend={handleSendMessage}
-              isLoading={isStreaming}
+              isLoading={isCurrentConversationStreaming}
               disabled={!selectedModelId}
             />
           </>
@@ -429,6 +390,7 @@ export default function ChatPage() {
                 onChange={handleModelChange}
                 isModelDeleted={modelStatus.isDeleted}
                 deletedModelId={modelStatus.deletedModelId}
+                isNewChat={false}
               />
               <SaveNoteButton
                 onClick={handleSaveNote}
@@ -438,7 +400,7 @@ export default function ChatPage() {
 
             {/* Messages */}
             <MessageList
-              streamingContent={isStreaming && currentStreamingState ? currentStreamingState.content : undefined}
+              streamingContent={isCurrentConversationStreaming && currentStreamingState ? currentStreamingState.content : undefined}
               optimisticMessages={currentStreamingState?.optimisticMessages || []}
               isThinking={currentStreamingState?.isThinking && !currentStreamingState?.content}
               isTimeout={currentStreamingState?.isTimeout}
@@ -448,7 +410,7 @@ export default function ChatPage() {
             {/* Input */}
             <MessageInput
               onSend={handleSendMessage}
-              isLoading={isStreaming}
+              isLoading={isCurrentConversationStreaming}
               disabled={modelStatus.isDeleted || !selectedModelId}
             />
           </>

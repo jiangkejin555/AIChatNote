@@ -23,13 +23,16 @@ interface ModelSelectorProps {
   // For displaying deleted model info
   deletedModelId?: string // model_id snapshot when provider_model_id is null
   isModelDeleted?: boolean // indicates if the current model is deleted
+  // Only auto-select default model when creating new chat, not during conversation switch
+  isNewChat?: boolean
 }
 
 export function ModelSelector({
   value,
   onChange,
   deletedModelId,
-  isModelDeleted
+  isModelDeleted,
+  isNewChat = false
 }: ModelSelectorProps) {
   const { data: providers, isLoading } = useProviders()
   const t = useTranslations()
@@ -62,12 +65,13 @@ export function ModelSelector({
 
   const currentValue = value || defaultModel?.id || allModels[0]?.id
 
-  // Sync default value to parent when value is not set
+  // Sync default value to parent ONLY when creating new chat
+  // This prevents triggering during conversation switch transitions
   useEffect(() => {
-    if (!value && currentValue && onChange && !isModelDeleted) {
+    if (!value && currentValue && onChange && !isModelDeleted && isNewChat) {
       onChange(currentValue)
     }
-  }, [value, currentValue, onChange, isModelDeleted])
+  }, [value, currentValue, onChange, isModelDeleted, isNewChat])
 
   if (isLoading) {
     return <Skeleton className="h-9 w-48" />

@@ -12,8 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Sun, Moon, Menu, LogOut, Settings } from 'lucide-react'
-import Link from 'next/link'
+import { Sun, Moon, Menu, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/i18n'
 
@@ -75,13 +74,6 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href="/settings/models" className="flex items-center">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>{t('header.settings')}</span>
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />

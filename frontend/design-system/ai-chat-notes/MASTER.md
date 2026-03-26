@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** AI Chat Notes
+**Project:** AI Chat Note
 **Generated:** 2026-03-22 14:10:14
 **Category:** SaaS (General)
 

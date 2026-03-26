@@ -1,4 +1,4 @@
-# AI Chat Notes - 产品设计文档
+# AI Chat Note - 产品设计文档
 
 ## 1. 项目概述
 

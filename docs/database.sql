@@ -1,4 +1,4 @@
--- AI Chat Notes - 数据库定义
+-- AI Chat Note - 数据库定义
 -- PostgreSQL 15+
 
 -- ============================================
@@ -12,138 +12,162 @@ CREATE TABLE users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_email ON users (email);
 
 -- ============================================
 -- 2. AI 提供商表
 -- ============================================
 CREATE TABLE providers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,              -- 显示名称，如 "OpenAI (个人)"
-    type VARCHAR(50) NOT NULL,               -- 提供商类型: openai, volcengine, deepseek, anthropic, google, moonshot, zhipu, custom
-    api_base VARCHAR(500) NOT NULL,          -- API 基础地址
-    api_key_encrypted TEXT,                  -- API Key（加密存储）
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL, -- 显示名称，如 "OpenAI (个人)"
+    type VARCHAR(50) NOT NULL, -- 提供商类型: openai, volcengine, deepseek, anthropic, google, moonshot, zhipu, custom
+    api_base VARCHAR(500) NOT NULL, -- API 基础地址
+    api_key_encrypted TEXT, -- API Key（加密存储）
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT chk_provider_type CHECK (type IN ('openai', 'volcengine', 'deepseek', 'anthropic', 'google', 'moonshot', 'zhipu', 'custom'))
+    CONSTRAINT chk_provider_type CHECK (
+        type IN (
+            'openai',
+            'volcengine',
+            'deepseek',
+            'anthropic',
+            'google',
+            'moonshot',
+            'zhipu',
+            'custom'
+        )
+    )
 );
 
-CREATE INDEX idx_providers_user_id ON providers(user_id);
+CREATE INDEX idx_providers_user_id ON providers (user_id);
+
 CREATE INDEX idx_providers_type ON providers(type);
 
 -- ============================================
 -- 3. 提供商模型表
 -- ============================================
 CREATE TABLE provider_models (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    provider_id UUID NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
-    model_id VARCHAR(255) NOT NULL,          -- API 返回的模型标识，如 gpt-4o
-    display_name VARCHAR(255) NOT NULL,      -- 用户友好的显示名称
-    is_default BOOLEAN DEFAULT FALSE,        -- 是否为该提供商的默认模型
-    enabled BOOLEAN DEFAULT TRUE,            -- 是否启用
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    provider_id UUID NOT NULL REFERENCES providers (id) ON DELETE CASCADE,
+    model_id VARCHAR(255) NOT NULL, -- API 返回的模型标识，如 gpt-4o
+    display_name VARCHAR(255) NOT NULL, -- 用户友好的显示名称
+    is_default BOOLEAN DEFAULT FALSE, -- 是否为该提供商的默认模型
+    enabled BOOLEAN DEFAULT TRUE, -- 是否启用
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE(provider_id, model_id)
+    UNIQUE (provider_id, model_id)
 );
 
-CREATE INDEX idx_provider_models_provider_id ON provider_models(provider_id);
-CREATE INDEX idx_provider_models_is_default ON provider_models(provider_id, is_default) WHERE is_default = TRUE;
+CREATE INDEX idx_provider_models_provider_id ON provider_models (provider_id);
+
+CREATE INDEX idx_provider_models_is_default ON provider_models (provider_id, is_default)
+WHERE
+    is_default = TRUE;
 
 -- ============================================
 -- 4. 刷新令牌表
 -- ============================================
 CREATE TABLE refresh_tokens (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token_hash VARCHAR(255) UNIQUE NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens (user_id);
+
+CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens (token_hash);
 
 -- ============================================
 -- 5. 对话表
 -- ============================================
 CREATE TABLE conversations (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    provider_model_id UUID REFERENCES provider_models(id) ON DELETE SET NULL,  -- 关联提供商模型
-    title VARCHAR(500),                      -- 对话标题
-    is_saved BOOLEAN DEFAULT FALSE,          -- 是否已转为笔记
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    provider_model_id UUID REFERENCES provider_models (id) ON DELETE SET NULL, -- 关联提供商模型
+    title VARCHAR(500), -- 对话标题
+    is_saved BOOLEAN DEFAULT FALSE, -- 是否已转为笔记
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_conversations_user_id ON conversations(user_id);
-CREATE INDEX idx_conversations_provider_model_id ON conversations(provider_model_id);
-CREATE INDEX idx_conversations_created_at ON conversations(created_at DESC);
-CREATE INDEX idx_conversations_is_saved ON conversations(is_saved);
-CREATE INDEX idx_conversations_user_id_id ON conversations(user_id, id);  -- 复合索引用于数据隔离
+CREATE INDEX idx_conversations_user_id ON conversations (user_id);
+
+CREATE INDEX idx_conversations_provider_model_id ON conversations (provider_model_id);
+
+CREATE INDEX idx_conversations_created_at ON conversations (created_at DESC);
+
+CREATE INDEX idx_conversations_is_saved ON conversations (is_saved);
+
+CREATE INDEX idx_conversations_user_id_id ON conversations (user_id, id);
+-- 复合索引用于数据隔离
 
 -- ============================================
 -- 6. 消息表
 -- ============================================
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
-    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    conversation_id INTEGER NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
     role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
-CREATE INDEX idx_messages_created_at ON messages(conversation_id, created_at);
+CREATE INDEX idx_messages_conversation_id ON messages (conversation_id);
+
+CREATE INDEX idx_messages_created_at ON messages (conversation_id, created_at);
 
 -- ============================================
 -- 7. 文件夹表
 -- ============================================
 CREATE TABLE folders (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    parent_id INTEGER REFERENCES folders(id) ON DELETE SET NULL,  -- 支持嵌套结构
+    parent_id INTEGER REFERENCES folders (id) ON DELETE SET NULL, -- 支持嵌套结构
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_folders_user_id ON folders(user_id);
-CREATE INDEX idx_folders_parent_id ON folders(parent_id);
+CREATE INDEX idx_folders_user_id ON folders (user_id);
+
+CREATE INDEX idx_folders_parent_id ON folders (parent_id);
 
 -- ============================================
 -- 8. 笔记表
 -- ============================================
 CREATE TABLE notes (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    folder_id INTEGER REFERENCES folders(id) ON DELETE SET NULL,
-    source_conversation_id INTEGER REFERENCES conversations(id) ON DELETE SET NULL,  -- 来源对话
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    folder_id INTEGER REFERENCES folders (id) ON DELETE SET NULL,
+    source_conversation_id INTEGER REFERENCES conversations (id) ON DELETE SET NULL, -- 来源对话
     title VARCHAR(500) NOT NULL,
-    content TEXT NOT NULL,                   -- HTML 格式内容
+    content TEXT NOT NULL, -- HTML 格式内容
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_notes_user_id ON notes(user_id);
-CREATE INDEX idx_notes_folder_id ON notes(folder_id);
-CREATE INDEX idx_notes_source_conversation_id ON notes(source_conversation_id);
-CREATE INDEX idx_notes_created_at ON notes(created_at DESC);
+CREATE INDEX idx_notes_user_id ON notes (user_id);
+
+CREATE INDEX idx_notes_folder_id ON notes (folder_id);
+
+CREATE INDEX idx_notes_source_conversation_id ON notes (source_conversation_id);
+
+CREATE INDEX idx_notes_created_at ON notes (created_at DESC);
 
 -- ============================================
 -- 9. 笔记标签表 (多对多)
 -- ============================================
 CREATE TABLE note_tags (
-    note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    note_id INTEGER NOT NULL REFERENCES notes (id) ON DELETE CASCADE,
     tag VARCHAR(100) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (note_id, tag)
 );
 
-CREATE INDEX idx_note_tags_tag ON note_tags(tag);
+CREATE INDEX idx_note_tags_tag ON note_tags (tag);
 
 -- ============================================
 -- 10. 全文搜索支持
@@ -153,7 +177,7 @@ CREATE INDEX idx_note_tags_tag ON note_tags(tag);
 ALTER TABLE notes ADD COLUMN search_vector tsvector;
 
 -- 创建全文搜索索引
-CREATE INDEX idx_notes_search ON notes USING GIN(search_vector);
+CREATE INDEX idx_notes_search ON notes USING GIN (search_vector);
 
 -- 更新搜索向量的触发器函数
 CREATE OR REPLACE FUNCTION update_notes_search_vector()
@@ -177,31 +201,34 @@ CREATE TRIGGER notes_search_update
 -- ============================================
 CREATE TABLE conversation_summaries (
     id SERIAL PRIMARY KEY,
-    conversation_id INTEGER UNIQUE NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-    summary TEXT NOT NULL,                    -- 摘要内容
-    end_message_id INTEGER NOT NULL,          -- 摘要覆盖到的最后一条消息 ID
+    conversation_id INTEGER UNIQUE NOT NULL REFERENCES conversations (id) ON DELETE CASCADE,
+    summary TEXT NOT NULL, -- 摘要内容
+    end_message_id INTEGER NOT NULL, -- 摘要覆盖到的最后一条消息 ID
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_conversation_summaries_conversation_id ON conversation_summaries(conversation_id);
+CREATE INDEX idx_conversation_summaries_conversation_id ON conversation_summaries (conversation_id);
 
 -- ============================================
 -- 10.6 用户设置表
 -- ============================================
 CREATE TABLE user_settings (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    context_mode VARCHAR(20) DEFAULT 'simple',  -- 上下文处理模式: summary | simple
-    memory_level VARCHAR(20) DEFAULT 'normal',  -- 记忆等级: short | normal | long
+    user_id INTEGER UNIQUE NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    context_mode VARCHAR(20) DEFAULT 'simple', -- 上下文处理模式: summary | simple
+    memory_level VARCHAR(20) DEFAULT 'normal', -- 记忆等级: short | normal | long
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT chk_context_mode CHECK (context_mode IN ('summary', 'simple')),
-    CONSTRAINT chk_memory_level CHECK (memory_level IN ('short', 'normal', 'long'))
+    CONSTRAINT chk_context_mode CHECK (
+        context_mode IN ('summary', 'simple')
+    ),
+    CONSTRAINT chk_memory_level CHECK (
+        memory_level IN ('short', 'normal', 'long')
+    )
 );
 
-CREATE INDEX idx_user_settings_user_id ON user_settings(user_id);
+CREATE INDEX idx_user_settings_user_id ON user_settings (user_id);
 
 -- ============================================
 -- 11. 更新时间触发器
@@ -260,13 +287,12 @@ CREATE TRIGGER update_user_settings_updated_at
 -- ============================================
 
 CREATE VIEW user_tag_stats AS
-SELECT
-    n.user_id,
-    t.tag as name,
-    COUNT(*) as count
+SELECT n.user_id, t.tag as name, COUNT(*) as count
 FROM note_tags t
-JOIN notes n ON t.note_id = n.id
-GROUP BY n.user_id, t.tag
+    JOIN notes n ON t.note_id = n.id
+GROUP BY
+    n.user_id,
+    t.tag
 ORDER BY count DESC;
 
 -- ============================================
@@ -274,13 +300,12 @@ ORDER BY count DESC;
 -- ============================================
 
 CREATE VIEW folder_note_counts AS
-SELECT
-    f.id as folder_id,
-    f.user_id,
-    COUNT(n.id) as note_count
+SELECT f.id as folder_id, f.user_id, COUNT(n.id) as note_count
 FROM folders f
-LEFT JOIN notes n ON f.id = n.folder_id
-GROUP BY f.id, f.user_id;
+    LEFT JOIN notes n ON f.id = n.folder_id
+GROUP BY
+    f.id,
+    f.user_id;
 
 -- ============================================
 -- 14. 视图：提供商模型完整信息
@@ -299,8 +324,9 @@ SELECT
     p.name as provider_name,
     p.type as provider_type,
     p.api_base
-FROM provider_models pm
-JOIN providers p ON pm.provider_id = p.id;
+FROM
+    provider_models pm
+    JOIN providers p ON pm.provider_id = p.id;
 
 -- ============================================
 -- 15. 函数：确保每个提供商只有一个默认模型

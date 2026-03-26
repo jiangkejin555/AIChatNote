@@ -1,10 +1,10 @@
-# AI Chat Notes - Backend 设计文档
+# AI Chat Note - Backend 设计文档
 
 ## 1. 项目概述
 
 ### 1.1 背景
 
-AI Chat Notes 后端是一个 RESTful API 服务，为前端提供：
+AI Chat Note 后端是一个 RESTful API 服务，为前端提供：
 
 - 用户认证与管理
 - AI 提供商与模型配置管理

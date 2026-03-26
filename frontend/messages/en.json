@@ -12,6 +12,7 @@
     "regenerate": "Regenerate",
     "me": "Me",
     "ai": "AI",
+    "back": "Back",
     "operationFailed": "Operation failed"
   },
   "sidebar": {
@@ -19,7 +20,7 @@
     "chat": "Chat",
     "knowledgeBase": "My Notes",
     "modelManagement": "Model Management",
-    "settings": "Settings",
+    "settings": "System Settings",
     "logout": "Log Out"
   },
   "header": {
@@ -28,9 +29,10 @@
     "logout": "Log Out"
   },
   "settings": {
-    "title": "Settings",
+    "title": "System Settings",
     "appearance": "Appearance",
     "appearanceDesc": "Customize how the app looks and displays",
+    "systemDesc": "Customize how the app looks and displays",
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
@@ -405,11 +407,11 @@
     "tagline": "Chat to Create, Converse to Accumulate",
     "productIntro": {
       "title": "Product Introduction",
-      "content": "AI Chat Notes is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge. Manage multiple AI models through a unified interface, making every conversation a valuable knowledge asset."
+      "content": "AI Chat Note is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge. Manage multiple AI models through a unified interface, making every conversation a valuable knowledge asset."
     },
     "companyInfo": {
       "title": "Company Information",
-      "companyName": "AI Chat Notes Team",
+      "companyName": "AI Chat Note Team",
       "foundedDate": "2024",
       "mission": "Making every conversation a valuable knowledge asset"
     },
@@ -438,7 +440,7 @@
       "title": "Help",
       "description": "Learn how to use the product",
       "overview": "Product Overview",
-      "overviewContent": "AI Chat Notes is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge. Manage multiple AI models through a unified interface, making every conversation a valuable knowledge asset.",
+      "overviewContent": "AI Chat Note is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge. Manage multiple AI models through a unified interface, making every conversation a valuable knowledge asset.",
       "features": "Core Features",
       "featuresList": {
         "multiModel": {

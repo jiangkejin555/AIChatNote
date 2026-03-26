@@ -128,7 +128,6 @@ export function Sidebar() {
   const navItems = [
     { href: '/notes', label: t('sidebar.knowledgeBase'), icon: FileText },
     { href: '/models', label: t('sidebar.modelManagement'), icon: Cpu },
-    { href: '/settings', label: t('sidebar.settings'), icon: Settings },
   ]
 
   // Sort conversations by updated_at (most recent first)
@@ -227,7 +226,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 shrink-0">
         {!sidebarCollapsed && (
           <h1 className="text-lg font-semibold text-sidebar-foreground">
-            AI Chat Notes
+            AI Chat Note
           </h1>
         )}
         <Button
@@ -469,7 +468,6 @@ export function Sidebar() {
                 <span>{t('helpFeedback.title')}</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Link href="/about" className="flex items-center w-full">
                 <Info className="mr-2 h-4 w-4" />

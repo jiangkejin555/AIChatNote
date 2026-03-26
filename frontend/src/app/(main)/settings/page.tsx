@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import { Sun, Moon, Monitor, Settings, Languages, Type, CaseSensitive, Brain, Info } from 'lucide-react'
 import { useI18n, localeNames } from '@/i18n'
@@ -107,219 +106,229 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="flex flex-col items-center justify-start h-full p-4 overflow-auto">
-      <Card className="w-full max-w-md mb-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            {t('settings.title')}
-          </CardTitle>
-          <CardDescription>
-            {t('settings.appearanceDesc')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Theme Selection - Compact Button Group */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4 text-muted-foreground" />
-              <Label>{t('settings.theme')}</Label>
-            </div>
-            <div className="flex border rounded-lg p-1 gap-1">
-              {themeOptions.map((option) => {
-                const Icon = option.icon
-                const isActive = theme === option.value
-                return (
+    <div className="flex flex-col h-full">
+      <div className="border-b bg-background sticky top-0 z-10 shrink-0">
+        <div className="flex items-center justify-center p-4 max-w-4xl mx-auto">
+          <h1 className="text-xl font-semibold">{t('header.settings')}</h1>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex flex-col items-center">
+          <Card className="w-full max-w-md mb-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                {t('settings.title')}
+              </CardTitle>
+              <CardDescription>
+                {t('settings.systemDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Theme Selection - Compact Button Group */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  <Label>{t('settings.theme')}</Label>
+                </div>
+                <div className="flex border rounded-lg p-1 gap-1">
+                  {themeOptions.map((option) => {
+                    const Icon = option.icon
+                    const isActive = theme === option.value
+                    return (
+                      <Button
+                        key={option.value}
+                        variant={isActive ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setTheme(option.value)}
+                        className={cn(
+                          'gap-1.5',
+                          !isActive && 'hover:bg-accent'
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="hidden sm:inline">{option.label}</span>
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Language Selection - Compact */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Languages className="h-4 w-4 text-muted-foreground" />
+                  <Label>{t('settings.interfaceLanguage')}</Label>
+                </div>
+                <Select value={locale} onValueChange={handleLanguageChange}>
+                  <SelectTrigger className="w-[100px]">
+                    {locale ? localeNames[locale as keyof typeof localeNames] : t('settings.selectLanguage')}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="zh">{localeNames.zh}</SelectItem>
+                    <SelectItem value="en">{localeNames.en}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Font Size Selection */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Type className="h-4 w-4 text-muted-foreground" />
+                  <Label>{t('settings.fontSize')}</Label>
+                </div>
+                <div className="flex border rounded-lg p-1 gap-1">
+                  {fontSizeOptions.map((option) => {
+                    const isActive = fontSize === option.value
+                    return (
+                      <Button
+                        key={option.value}
+                        variant={isActive ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setFontSize(option.value as FontSize)}
+                        className={cn(
+                          'px-3',
+                          !isActive && 'hover:bg-accent'
+                        )}
+                      >
+                        {option.label}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Font Family Selection */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CaseSensitive className="h-4 w-4 text-muted-foreground" />
+                  <Label>{t('settings.fontFamily')}</Label>
+                </div>
+                <Select value={fontFamily} onValueChange={handleFontFamilyChange}>
+                  <SelectTrigger className="w-[160px]">
+                    {FONT_OPTIONS.find(opt => opt.value === fontFamily)?.label || t('settings.fontFamily')}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Session Memory Settings Card */}
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                {t('settings.memoryTitle')}
+              </CardTitle>
+              <CardDescription>
+                {t('settings.memoryDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Context Mode Selection */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label>{t('settings.contextMode')}</Label>
+                  <Dialog>
+                    <DialogTrigger
+                      render={<Button variant="ghost" size="icon" className="h-5 w-5" />}
+                    >
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>{t('settings.contextModeInfoTitle')}</DialogTitle>
+                        <DialogDescription className="pt-4 text-left block">
+                          <span className="block">
+                            <strong>{t('settings.summaryMode')}:</strong>
+                            <span className="block text-muted-foreground mt-1">{t('settings.summaryModeDesc')}</span>
+                          </span>
+                          <span className="block mt-3">
+                            <strong>{t('settings.simpleMode')}:</strong>
+                            <span className="block text-muted-foreground mt-1">{t('settings.simpleModeDesc')}</span>
+                          </span>
+                        </DialogDescription>
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex border rounded-lg p-1 gap-1">
                   <Button
-                    key={option.value}
-                    variant={isActive ? 'default' : 'ghost'}
+                    variant={settings.context_mode === 'summary' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setTheme(option.value)}
-                    className={cn(
-                      'gap-1.5',
-                      !isActive && 'hover:bg-accent'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{option.label}</span>
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Language Selection - Compact */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Languages className="h-4 w-4 text-muted-foreground" />
-              <Label>{t('settings.interfaceLanguage')}</Label>
-            </div>
-            <Select value={locale} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-[100px]">
-                {locale ? localeNames[locale as keyof typeof localeNames] : t('settings.selectLanguage')}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="zh">{localeNames.zh}</SelectItem>
-                <SelectItem value="en">{localeNames.en}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Font Size Selection */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Type className="h-4 w-4 text-muted-foreground" />
-              <Label>{t('settings.fontSize')}</Label>
-            </div>
-            <div className="flex border rounded-lg p-1 gap-1">
-              {fontSizeOptions.map((option) => {
-                const isActive = fontSize === option.value
-                return (
-                  <Button
-                    key={option.value}
-                    variant={isActive ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setFontSize(option.value as FontSize)}
-                    className={cn(
-                      'px-3',
-                      !isActive && 'hover:bg-accent'
-                    )}
-                  >
-                    {option.label}
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Font Family Selection */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CaseSensitive className="h-4 w-4 text-muted-foreground" />
-              <Label>{t('settings.fontFamily')}</Label>
-            </div>
-            <Select value={fontFamily} onValueChange={handleFontFamilyChange}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder={t('settings.fontFamily')} />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {t(option.labelKey)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Session Memory Settings Card */}
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            {t('settings.memoryTitle')}
-          </CardTitle>
-          <CardDescription>
-            {t('settings.memoryDesc')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Context Mode Selection */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Label>{t('settings.contextMode')}</Label>
-              <Dialog>
-                <DialogTrigger
-                  render={<Button variant="ghost" size="icon" className="h-5 w-5" />}
-                >
-                  <Info className="h-4 w-4 text-muted-foreground" />
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>{t('settings.contextModeInfoTitle')}</DialogTitle>
-                    <DialogDescription className="pt-4 text-left space-y-3">
-                      <div>
-                        <strong>{t('settings.summaryMode')}:</strong>
-                        <p className="text-muted-foreground mt-1">{t('settings.summaryModeDesc')}</p>
-                      </div>
-                      <div>
-                        <strong>{t('settings.simpleMode')}:</strong>
-                        <p className="text-muted-foreground mt-1">{t('settings.simpleModeDesc')}</p>
-                      </div>
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <div className="flex border rounded-lg p-1 gap-1">
-              <Button
-                variant={settings.context_mode === 'summary' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handleContextModeChange('summary')}
-                disabled={loading}
-                className="px-3"
-              >
-                {t('settings.summaryMode')}
-              </Button>
-              <Button
-                variant={settings.context_mode === 'simple' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handleContextModeChange('simple')}
-                disabled={loading}
-                className="px-3"
-              >
-                {t('settings.simpleMode')}
-              </Button>
-            </div>
-          </div>
-
-          {/* Memory Level Selection */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Label>{t('settings.memoryLevel')}</Label>
-            </div>
-            <div className="flex border rounded-lg p-1 gap-1">
-              {memoryLevelOptions.map((option) => {
-                const isActive = settings.memory_level === option.value
-                return (
-                  <Button
-                    key={option.value}
-                    variant={isActive ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handleMemoryLevelChange(option.value as 'short' | 'normal' | 'long')}
+                    onClick={() => handleContextModeChange('summary')}
                     disabled={loading}
-                    className={cn(
-                      'px-3',
-                      !isActive && 'hover:bg-accent'
-                    )}
+                    className="px-3"
                   >
-                    {option.label}
+                    {t('settings.summaryMode')}
                   </Button>
-                )
-              })}
-            </div>
-          </div>
+                  <Button
+                    variant={settings.context_mode === 'simple' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleContextModeChange('simple')}
+                    disabled={loading}
+                    className="px-3"
+                  >
+                    {t('settings.simpleMode')}
+                  </Button>
+                </div>
+              </div>
 
-          {/* Current Settings Description */}
-          <div className="text-sm text-muted-foreground">
-            {settings.context_mode === 'simple' ? (
-              <p>
-                {settings.memory_level === 'short' && t('settings.simpleShortDesc')}
-                {settings.memory_level === 'normal' && t('settings.simpleNormalDesc')}
-                {settings.memory_level === 'long' && t('settings.simpleLongDesc')}
-              </p>
-            ) : (
-              <p>
-                {settings.memory_level === 'short' && t('settings.summaryShortDesc')}
-                {settings.memory_level === 'normal' && t('settings.summaryNormalDesc')}
-                {settings.memory_level === 'long' && t('settings.summaryLongDesc')}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {/* Memory Level Selection */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label>{t('settings.memoryLevel')}</Label>
+                </div>
+                <div className="flex border rounded-lg p-1 gap-1">
+                  {memoryLevelOptions.map((option) => {
+                    const isActive = settings.memory_level === option.value
+                    return (
+                      <Button
+                        key={option.value}
+                        variant={isActive ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => handleMemoryLevelChange(option.value as 'short' | 'normal' | 'long')}
+                        disabled={loading}
+                        className={cn(
+                          'px-3',
+                          !isActive && 'hover:bg-accent'
+                        )}
+                      >
+                        {option.label}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Current Settings Description */}
+              <div className="text-sm text-muted-foreground">
+                {settings.context_mode === 'simple' ? (
+                  <p>
+                    {settings.memory_level === 'short' && t('settings.simpleShortDesc')}
+                    {settings.memory_level === 'normal' && t('settings.simpleNormalDesc')}
+                    {settings.memory_level === 'long' && t('settings.simpleLongDesc')}
+                  </p>
+                ) : (
+                  <p>
+                    {settings.memory_level === 'short' && t('settings.summaryShortDesc')}
+                    {settings.memory_level === 'normal' && t('settings.summaryNormalDesc')}
+                    {settings.memory_level === 'long' && t('settings.summaryLongDesc')}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

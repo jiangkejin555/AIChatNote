@@ -5,16 +5,14 @@ export type FontSize = 'small' | 'medium' | 'large'
 
 export interface FontOption {
   value: string
-  labelKey: string // Translation key for the label
+  label: string // Direct label for display
 }
 
 export const FONT_OPTIONS: FontOption[] = [
-  { value: 'system-ui, -apple-system, sans-serif', labelKey: 'settings.fontSystem' },
-  { value: 'Inter, system-ui, sans-serif', labelKey: 'settings.fontInter' },
-  { value: 'Roboto, system-ui, sans-serif', labelKey: 'settings.fontRoboto' },
-  { value: '"Noto Sans SC", system-ui, sans-serif', labelKey: 'settings.fontNotoSans' },
-  { value: '"PingFang SC", system-ui, sans-serif', labelKey: 'settings.fontPingFang' },
-  { value: 'Georgia, serif', labelKey: 'settings.fontGeorgia' },
+  { value: 'system-ui, -apple-system, sans-serif', label: 'System Default' },
+  { value: '"Noto Sans SC", system-ui, sans-serif', label: 'Noto Sans SC' },
+  { value: '"PingFang SC", system-ui, sans-serif', label: 'PingFang SC' },
+  { value: 'Georgia, serif', label: 'Georgia' },
 ]
 
 export const FONT_SIZE_MAP: Record<FontSize, string> = {
