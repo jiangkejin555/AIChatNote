@@ -21,6 +21,7 @@ import {
   Trash2,
   Check,
   X,
+  Info,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -458,6 +459,12 @@ export function Sidebar() {
               <Link href="/settings" className="flex items-center w-full">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>{t('sidebar.settings')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/about" className="flex items-center w-full">
+                <Info className="mr-2 h-4 w-4" />
+                <span>{t('about.title')}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>

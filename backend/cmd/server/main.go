@@ -64,6 +64,12 @@ func main() {
 	folderHandler := handlers.NewFolderHandler()
 	tagHandler := handlers.NewTagHandler()
 
+	// Initialize feedback handlers
+	satisfactionHandler := handlers.NewSatisfactionHandler()
+	feedbackHandler := handlers.NewFeedbackHandler()
+	featureHandler := handlers.NewFeatureHandler()
+	versionHandler := handlers.NewVersionHandler()
+
 	// Setup router
 	r := gin.New()
 	r.Use(middleware.Recovery())
@@ -171,6 +177,40 @@ func main() {
 		tags.Use(middleware.Auth(jwtService))
 		{
 			tags.GET("", tagHandler.List)
+		}
+
+		// Satisfaction routes
+		satisfaction := api.Group("/feedback/satisfaction")
+		satisfaction.Use(middleware.Auth(jwtService))
+		{
+			satisfaction.GET("", satisfactionHandler.Get)
+			satisfaction.POST("", satisfactionHandler.CreateOrUpdate)
+		}
+
+		// Feedback routes
+		feedbacks := api.Group("/feedbacks")
+		feedbacks.Use(middleware.Auth(jwtService))
+		{
+			feedbacks.GET("", feedbackHandler.List)
+			feedbacks.POST("", feedbackHandler.Create)
+			feedbacks.GET("/:id", feedbackHandler.Get)
+			feedbacks.PUT("/:id", feedbackHandler.Update)
+		}
+
+		// Feature routes
+		features := api.Group("/features")
+		features.Use(middleware.Auth(jwtService))
+		{
+			features.GET("", featureHandler.List)
+			features.POST("/:id/vote", featureHandler.Vote)
+			features.DELETE("/:id/vote", featureHandler.Unvote)
+		}
+
+		// Version routes
+		versions := api.Group("/versions")
+		{
+			versions.GET("", versionHandler.List)
+			versions.GET("/current", versionHandler.GetCurrent)
 		}
 	}
 

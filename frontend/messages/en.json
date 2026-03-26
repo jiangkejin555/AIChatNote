@@ -354,11 +354,6 @@
       "fileNameWhitespace": "File name cannot be only whitespace",
       "name": "Name",
       "nameRequired": "Name cannot be empty"
-    },
-    "tags": {
-      "filter": "Filter by tag",
-      "clearFilter": "Clear filter",
-      "noTags": "No tags available"
     }
   },
   "auth": {
@@ -386,5 +381,118 @@
     "registerFailed": "Registration failed, please try again later",
     "loginSuccess": "Login successful (Mock Mode)",
     "loginFailed": "Login failed"
+  },
+  "about": {
+    "title": "About",
+    "productIntro": "AI Chat Notes is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge.",
+    "tagline": "Chat to Create, Converse to Accumulate",
+    "backToAbout": "Back",
+    "help": {
+      "title": "Help",
+      "description": "Learn how to use the product",
+      "overview": "Product Overview",
+      "overviewContent": "AI Chat Notes is a multi-model AI chat application that converts conversations into structured notes, helping you accumulate knowledge. Manage multiple AI models through a unified interface, making every conversation a valuable knowledge asset.",
+      "features": "Core Features",
+      "featuresList": {
+        "multiModel": {
+          "title": "Multi-Model Chat",
+          "desc": "Supports OpenAI, Claude, DeepSeek, Gemini and more. Switch freely with context reuse"
+        },
+        "noteSave": {
+          "title": "Note Saving",
+          "desc": "Convert conversations to structured notes with AI-generated titles, summaries, and tag suggestions"
+        },
+        "knowledgeBase": {
+          "title": "Knowledge Base",
+          "desc": "Folder organization, tag filtering, full-text search - manage your knowledge assets easily"
+        },
+        "export": {
+          "title": "Data Export",
+          "desc": "Export to Markdown format, your data belongs to you"
+        }
+      },
+      "quickStart": "Quick Start",
+      "quickStartSteps": {
+        "step1": "Configure Model: Go to Model Management and add your API Key",
+        "step2": "Start Chatting: Select a model and enter your question",
+        "step3": "Save Note: Click 'Save as Note' for AI-powered summarization"
+      },
+      "faq": "FAQ",
+      "faqList": {
+        "q1": {
+          "q": "How to add a new AI model?",
+          "a": "Go to Model Management, click Add Provider, select the provider type and enter your API Key, then choose the models you want to use."
+        },
+        "q2": {
+          "q": "Where are my notes stored?",
+          "a": "Notes are stored in the cloud database. You can view and manage them in 'My Notes' page. You can also export them as Markdown files."
+        },
+        "q3": {
+          "q": "Which AI models are supported?",
+          "a": "All OpenAI-compatible API format models are supported, including OpenAI GPT series, Claude, DeepSeek, Gemini, Moonshot, Zhipu AI, and more."
+        },
+        "q4": {
+          "q": "Is my data secure?",
+          "a": "Your API Key is encrypted with AES, passwords are hashed with bcrypt. Data is stored in cloud database with export capability."
+        }
+      }
+    },
+    "feedback": {
+      "title": "Feedback",
+      "description": "Submit issues and suggestions",
+      "satisfaction": "Satisfaction Rating",
+      "satisfactionDesc": "How satisfied are you with our product?",
+      "satisfactionPlaceholder": "Any thoughts? (optional)",
+      "submitRating": "Submit Rating",
+      "updateRating": "Update Rating",
+      "ratingSuccess": "Rating submitted successfully",
+      "ratingFailed": "Failed to submit rating",
+      "submitFeedback": "Submit Feedback",
+      "feedbackHistory": "Feedback History",
+      "noFeedback": "No feedback yet",
+      "featureVoting": "Feature Voting",
+      "bugReport": "Bug Report",
+      "featureSuggestion": "Feature Suggestion",
+      "other": "Other",
+      "feedbackType": "Feedback Type",
+      "title_placeholder": "Enter title",
+      "description_placeholder": "Describe your issue or suggestion in detail",
+      "contact_placeholder": "Optional, for us to contact you",
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "feedbackSuccess": "Feedback submitted successfully",
+      "feedbackFailed": "Failed to submit feedback",
+      "vote": "Vote",
+      "unvote": "Unvote",
+      "votes": "votes",
+      "voteSuccess": "Voted successfully",
+      "unvoteSuccess": "Vote removed",
+      "voteFailed": "Failed to vote",
+      "noFeatures": "No features to vote for",
+      "status": {
+        "pending": "Pending",
+        "in_progress": "In Progress",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "featureStatus": {
+        "planned": "Planned",
+        "in_progress": "In Progress",
+        "completed": "Completed"
+      }
+    },
+    "version": {
+      "title": "Version",
+      "description": "View version history",
+      "currentVersion": "Current Version",
+      "releaseDate": "Release Date",
+      "history": "Version History",
+      "noVersions": "No version history",
+      "changeTypes": {
+        "feature": "New",
+        "improvement": "Improved",
+        "fix": "Fixed"
+      }
+    }
   }
 }

@@ -378,5 +378,118 @@
     "registerFailed": "注册失败，请稍后重试",
     "loginSuccess": "登录成功 (Mock 模式)",
     "loginFailed": "登录失败"
+  },
+  "about": {
+    "title": "关于我们",
+    "productIntro": "AI Chat Notes 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。",
+    "tagline": "聊天即生产，对话即沉淀",
+    "backToAbout": "返回",
+    "help": {
+      "title": "帮助",
+      "description": "了解产品使用方法",
+      "overview": "产品概述",
+      "overviewContent": "AI Chat Notes 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。通过统一的入口管理多个 AI 模型，让您的每一次对话都成为有价值的知识资产。",
+      "features": "核心功能",
+      "featuresList": {
+        "multiModel": {
+          "title": "多模型聊天",
+          "desc": "支持 OpenAI、Claude、DeepSeek、Gemini 等多种模型，自由切换，上下文复用"
+        },
+        "noteSave": {
+          "title": "笔记保存",
+          "desc": "将对话转化为结构化笔记，AI 自动生成标题、总结和标签建议"
+        },
+        "knowledgeBase": {
+          "title": "知识库管理",
+          "desc": "文件夹分类、标签筛选、全文搜索，轻松管理您的知识资产"
+        },
+        "export": {
+          "title": "数据导出",
+          "desc": "支持 Markdown 格式导出，数据完全归您所有"
+        }
+      },
+      "quickStart": "快速入门",
+      "quickStartSteps": {
+        "step1": "配置模型：进入模型管理，添加您的 API Key",
+        "step2": "开始对话：选择模型，输入问题开始聊天",
+        "step3": "保存笔记：点击「保存为笔记」，AI 自动总结"
+      },
+      "faq": "常见问题",
+      "faqList": {
+        "q1": {
+          "q": "如何添加新的 AI 模型？",
+          "a": "进入模型管理页面，点击添加提供商，选择提供商类型并填写 API Key，然后选择要使用的模型即可。"
+        },
+        "q2": {
+          "q": "笔记保存在哪里？",
+          "a": "笔记保存在云端数据库中，您可以在「我的笔记」页面查看和管理。同时支持导出为 Markdown 文件到本地。"
+        },
+        "q3": {
+          "q": "支持哪些 AI 模型？",
+          "a": "支持所有 OpenAI 兼容 API 格式的模型，包括 OpenAI GPT 系列、Claude、DeepSeek、Gemini、月之暗面、智谱 AI 等。"
+        },
+        "q4": {
+          "q": "数据安全吗？",
+          "a": "您的 API Key 采用 AES 加密存储，密码使用 bcrypt 加密。数据存储在云端数据库，支持随时导出。"
+        }
+      }
+    },
+    "feedback": {
+      "title": "反馈",
+      "description": "提交问题和建议",
+      "satisfaction": "满意度评分",
+      "satisfactionDesc": "您对我们产品的整体满意度如何？",
+      "satisfactionPlaceholder": "有什么想说的？（可选）",
+      "submitRating": "提交评分",
+      "updateRating": "更新评分",
+      "ratingSuccess": "评分提交成功",
+      "ratingFailed": "评分提交失败",
+      "submitFeedback": "提交反馈",
+      "feedbackHistory": "反馈记录",
+      "noFeedback": "暂无反馈记录",
+      "featureVoting": "功能投票",
+      "bugReport": "Bug 报告",
+      "featureSuggestion": "功能建议",
+      "other": "其他",
+      "feedbackType": "反馈类型",
+      "title_placeholder": "请输入标题",
+      "description_placeholder": "请详细描述您的问题或建议",
+      "contact_placeholder": "选填，方便我们联系您",
+      "submit": "提交",
+      "cancel": "取消",
+      "feedbackSuccess": "反馈提交成功",
+      "feedbackFailed": "反馈提交失败",
+      "vote": "投票",
+      "unvote": "取消投票",
+      "votes": "票",
+      "voteSuccess": "投票成功",
+      "unvoteSuccess": "已取消投票",
+      "voteFailed": "投票失败",
+      "noFeatures": "暂无可投票的功能",
+      "status": {
+        "pending": "待处理",
+        "in_progress": "处理中",
+        "resolved": "已解决",
+        "closed": "已关闭"
+      },
+      "featureStatus": {
+        "planned": "计划中",
+        "in_progress": "开发中",
+        "completed": "已上线"
+      }
+    },
+    "version": {
+      "title": "版本",
+      "description": "查看版本更新记录",
+      "currentVersion": "当前版本",
+      "releaseDate": "发布日期",
+      "history": "历史版本",
+      "noVersions": "暂无版本记录",
+      "changeTypes": {
+        "feature": "新增",
+        "improvement": "优化",
+        "fix": "修复"
+      }
+    }
   }
 }

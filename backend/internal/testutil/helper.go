@@ -121,6 +121,14 @@ func SetupTestDB(t *testing.T) func() {
 			created_at DATETIME,
 			updated_at DATETIME
 		)`,
+		`CREATE TABLE conversation_summaries (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			conversation_id INTEGER UNIQUE NOT NULL,
+			summary TEXT NOT NULL,
+			end_message_id INTEGER NOT NULL,
+			created_at DATETIME,
+			updated_at DATETIME
+		)`,
 	}
 
 	for _, table := range tables {
@@ -480,6 +488,21 @@ func AssertError(t *testing.T, response map[string]interface{}) {
 // GenerateTestUUID generates a UUID for testing.
 func GenerateTestUUID() uuid.UUID {
 	return uuid.New()
+}
+
+// CreateTestConversationSummary creates a test conversation summary and returns it.
+func CreateTestConversationSummary(t *testing.T, conversationID uint, summary string, endMessageID uint) *models.ConversationSummary {
+	t.Helper()
+
+	cs := &models.ConversationSummary{
+		ConversationID: conversationID,
+		Summary:        summary,
+		EndMessageID:   endMessageID,
+	}
+	if err := database.DB.Create(cs).Error; err != nil {
+		t.Fatalf("failed to create test conversation summary: %v", err)
+	}
+	return cs
 }
 
 // StringsToReader converts a string to an io.Reader.

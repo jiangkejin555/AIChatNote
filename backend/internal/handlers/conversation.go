@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
 	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/services"
 	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,27 +22,29 @@ import (
 )
 
 type ConversationHandler struct {
-	convRepo            *repository.ConversationRepository
-	msgRepo             *repository.MessageRepository
-	providerRepo        *repository.ProviderRepository
-	modelRepo           *repository.ProviderModelRepository
-	requestRepo         *repository.MessageRequestRepository
-	aesCrypto           *crypto.AESCrypto
-	mockEnabled         bool
-	titleGeneratorCfg   config.TitleGeneratorConfig
+	convRepo       *repository.ConversationRepository
+	msgRepo        *repository.MessageRepository
+	providerRepo   *repository.ProviderRepository
+	modelRepo      *repository.ProviderModelRepository
+	requestRepo    *repository.MessageRequestRepository
+	summaryService *services.SummaryService
+	aesCrypto      *crypto.AESCrypto
+	// mockEnabled       bool
+	titleGeneratorCfg config.TitleGeneratorConfig
 }
 
 const mockResponse = "这是 Mock AI 的回复。如果你需要测试真实 AI 功能，请配置相应的 API Key。\n\n你可以继续与我对话，我会一直返回这个 Mock 响应。"
 
 func NewConversationHandler(cfg *config.Config, aesCrypto *crypto.AESCrypto) *ConversationHandler {
 	return &ConversationHandler{
-		convRepo:          repository.NewConversationRepository(),
-		msgRepo:           repository.NewMessageRepository(),
-		providerRepo:      repository.NewProviderRepository(),
-		modelRepo:         repository.NewProviderModelRepository(),
-		requestRepo:       repository.NewMessageRequestRepository(),
-		aesCrypto:         aesCrypto,
-		mockEnabled:       cfg.Mock.Enabled,
+		convRepo:       repository.NewConversationRepository(),
+		msgRepo:        repository.NewMessageRepository(),
+		providerRepo:   repository.NewProviderRepository(),
+		modelRepo:      repository.NewProviderModelRepository(),
+		requestRepo:    repository.NewMessageRequestRepository(),
+		summaryService: services.NewSummaryService(),
+		aesCrypto:      aesCrypto,
+		// mockEnabled:       cfg.Mock.Enabled,
 		titleGeneratorCfg: cfg.TitleGenerator,
 	}
 }
@@ -267,11 +271,12 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 	if req.RequestID != "" {
 		msgReq, isNewRequest, err = h.handleRequestDeduplication(c, conv.ID, req.RequestID, 0)
 		if err != nil {
-			// Error already sent to client
+			utils.LogOperationError("ConversationHandler", "SendMessage", err, "step", "request_deduplication")
 			return
 		}
 		if msgReq != nil && !isNewRequest {
 			// Existing request (completed or processing), response already sent
+			utils.LogOperationSuccess("ConversationHandler", "SendMessage", "requestID", msgReq.ID, "stream", req.Stream, "requestID", msgReq.RequestID)
 			return
 		}
 		// New request (isNewRequest=true), continue with normal processing
@@ -299,16 +304,16 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		}
 	}
 
-	// Handle mock mode
-	if h.mockEnabled {
-		utils.LogInfo("ConversationHandler", "SendMessage", "mock_mode", true, "convID", convID)
-		if req.Stream {
-			h.handleMockStreamResponse(c, conv, msgReq)
-		} else {
-			h.handleMockNonStreamResponse(c, conv, msgReq)
-		}
-		return
-	}
+	// // Handle mock mode
+	// if h.mockEnabled {
+	// 	utils.LogInfo("ConversationHandler", "SendMessage", "mock_mode", true, "convID", convID)
+	// 	if req.Stream {
+	// 		h.handleMockStreamResponse(c, conv, msgReq)
+	// 	} else {
+	// 		h.handleMockNonStreamResponse(c, conv, msgReq)
+	// 	}
+	// 	return
+	// }
 
 	// Get provider model and provider info
 	if conv.CurrentProviderModelID == nil {
@@ -348,23 +353,28 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	// Build OpenAI messages
-	chatMessages := make([]openai.ChatCompletionMessage, len(messages))
-	for i, msg := range messages {
-		role := openai.ChatMessageRoleUser
-		if msg.Role == models.RoleAssistant {
-			role = openai.ChatMessageRoleAssistant
-		}
-		chatMessages[i] = openai.ChatCompletionMessage{
-			Role:    role,
-			Content: msg.Content,
-		}
+	// Create OpenAI client
+	clientConfig := openai.DefaultConfig(apiKey)
+	clientConfig.BaseURL = provider.APIBase
+	client := openai.NewClientWithConfig(clientConfig)
+
+	// Build context messages with sliding window + summary support
+	chatMessages, summaryUpdated, buildErr := h.buildContextMessages(
+		c.Request.Context(),
+		conv,
+		messages,
+		client,
+		providerModel.ModelID,
+	)
+	if buildErr != nil {
+		utils.LogOperationError("ConversationHandler", "SendMessage", buildErr, "step", "build_context_messages", "convID", conv.ID)
+		// Fallback: use all messages without summary
+		chatMessages = h.messagesToChatMessages(messages)
 	}
 
-	// Create OpenAI client
-	config := openai.DefaultConfig(apiKey)
-	config.BaseURL = provider.APIBase
-	client := openai.NewClientWithConfig(config)
+	if summaryUpdated {
+		utils.LogInfo("ConversationHandler", "SendMessage", "convID", conv.ID, "summaryUpdated", true)
+	}
 
 	if req.Stream {
 		// Streaming response
@@ -531,93 +541,6 @@ func (h *ConversationHandler) handleNonStreamResponse(c *gin.Context, client *op
 	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
 }
 
-// handleMockStreamResponse handles mock streaming response
-func (h *ConversationHandler) handleMockStreamResponse(c *gin.Context, conv *models.Conversation, msgReq *models.MessageRequest) {
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-
-	// Stream response character by character
-	for i, char := range mockResponse {
-		chunk := map[string]interface{}{
-			"id":      fmt.Sprintf("mock-%d", i),
-			"object":  "chat.completion.chunk",
-			"created": time.Now().Unix(),
-			"model":   "mock-model",
-			"choices": []map[string]interface{}{
-				{
-					"index": 0,
-					"delta": map[string]string{
-						"content": string(char),
-					},
-					"finish_reason": nil,
-				},
-			},
-		}
-		data, _ := json.Marshal(chunk)
-		fmt.Fprintf(c.Writer, "data: %s\n\n", string(data))
-		c.Writer.Flush()
-	}
-
-	// Save assistant message with model attribution
-	assistantMsg := &models.Message{
-		ConversationID:  conv.ID,
-		Role:            models.RoleAssistant,
-		Content:         mockResponse,
-		ProviderModelID: conv.CurrentProviderModelID,
-		ModelID:         conv.ModelID,
-	}
-	err := h.msgRepo.Create(assistantMsg)
-	if err != nil {
-		utils.LogOperationError("ConversationHandler", "MockStreamResponse", err, "step", "create_message", "convID", conv.ID)
-		return
-	}
-	// Update request status to completed
-	if msgReq != nil && msgReq.ID > 0 {
-		if err := h.requestRepo.SetCompleted(msgReq.ID, assistantMsg.ID); err != nil {
-			utils.LogOperationError("ConversationHandler", "MockStreamResponse", err, "step", "set_request_completed", "requestID", msgReq.ID)
-		}
-	}
-
-	// Update conversation timestamp
-	h.convRepo.Update(conv)
-
-	fmt.Fprintf(c.Writer, "data: [DONE]\n\n")
-	c.Writer.Flush()
-}
-
-// handleMockNonStreamResponse handles mock non-streaming response
-func (h *ConversationHandler) handleMockNonStreamResponse(c *gin.Context, conv *models.Conversation, msgReq *models.MessageRequest) {
-	assistantMsg := &models.Message{
-		ConversationID:  conv.ID,
-		Role:            models.RoleAssistant,
-		Content:         mockResponse,
-		ProviderModelID: conv.CurrentProviderModelID,
-		ModelID:         conv.ModelID,
-		CreatedAt:       time.Now(),
-	}
-	if err := h.msgRepo.Create(assistantMsg); err != nil {
-		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
-		// Mark request as failed
-		if msgReq != nil && msgReq.ID > 0 {
-			h.requestRepo.SetFailed(msgReq.ID)
-		}
-		return
-	}
-
-	// Update request status to completed
-	if msgReq != nil && msgReq.ID > 0 {
-		if err := h.requestRepo.SetCompleted(msgReq.ID, assistantMsg.ID); err != nil {
-			utils.LogOperationError("ConversationHandler", "MockNonStreamResponse", err, "step", "set_request_completed", "requestID", msgReq.ID)
-		}
-	}
-
-	// Update conversation timestamp
-	h.convRepo.Update(conv)
-
-	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
-}
-
 // Regenerate regenerates the last assistant response
 func (h *ConversationHandler) Regenerate(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -654,20 +577,20 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 		return
 	}
 
-	// Handle mock mode
-	if h.mockEnabled {
-		assistantMsg := &models.Message{
-			ConversationID: conv.ID,
-			Role:           models.RoleAssistant,
-			Content:        mockResponse,
-		}
-		if err := h.msgRepo.Create(assistantMsg); err != nil {
-			utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
-		return
-	}
+	// // Handle mock mode
+	// if h.mockEnabled {
+	// 	assistantMsg := &models.Message{
+	// 		ConversationID: conv.ID,
+	// 		Role:           models.RoleAssistant,
+	// 		Content:        mockResponse,
+	// 	}
+	// 	if err := h.msgRepo.Create(assistantMsg); err != nil {
+	// 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
+	// 		return
+	// 	}
+	// 	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
+	// 	return
+	// }
 
 	// Get provider info
 	if conv.CurrentProviderModelID == nil {
@@ -825,6 +748,136 @@ func (h *ConversationHandler) handleRequestDeduplication(c *gin.Context, convID 
 	return newReq, true, nil
 }
 
+// buildContextMessages builds the context messages for LLM with sliding window and summary support
+// Returns: chatMessages, summaryWasUpdated, error
+func (h *ConversationHandler) buildContextMessages(
+	ctx context.Context,
+	conv *models.Conversation,
+	messages []models.Message,
+	client *openai.Client,
+	model string,
+) ([]openai.ChatCompletionMessage, bool, error) {
+	totalMessages := len(messages)
+
+	// If within window size, use all messages directly
+	if totalMessages <= services.WindowAutoSize {
+		return h.messagesToChatMessages(messages), false, nil
+	}
+
+	// Get existing summary
+	summary, err := h.summaryService.GetSummary(conv.ID)
+	if err != nil && !errors.Is(err, repository.ErrSummaryNotFound) {
+		return nil, false, fmt.Errorf("failed to get summary: %w", err)
+	}
+
+	// Check if we need to generate or update summary
+	shouldUpdate := h.summaryService.ShouldGenerateSummary(totalMessages, summary)
+
+	var summaryWasUpdated bool
+	if shouldUpdate {
+		summaryWasUpdated = true
+
+		// Determine messages to summarize
+		var messagesToSummarize []models.Message
+		var newEndMessageID uint
+
+		if summary == nil {
+			// Initial summary: summarize messages before the recent ones
+			keepFrom := totalMessages - services.KeepRecentCount
+			if keepFrom < 0 {
+				keepFrom = 0
+			}
+			messagesToSummarize = messages[:keepFrom]
+			newEndMessageID = messages[keepFrom-1].ID
+		} else {
+			// Incremental update: get messages after the summary's end
+			startIdx := 0
+			for i, msg := range messages {
+				if msg.ID == summary.EndMessageID {
+					startIdx = i + 1
+					break
+				}
+			}
+			// Include messages up to (total - keepRecentCount)
+			endIdx := totalMessages - services.KeepRecentCount
+			if endIdx > startIdx {
+				messagesToSummarize = messages[startIdx:endIdx]
+				newEndMessageID = messages[endIdx-1].ID
+			}
+		}
+
+		if len(messagesToSummarize) > 0 {
+			// Generate summary
+			summaryText, genErr := h.summaryService.GenerateSummary(ctx, messagesToSummarize, summary, client, model)
+			if genErr != nil {
+				utils.LogOperationError("ConversationHandler", "buildContextMessages", genErr, "step", "generate_summary", "convID", conv.ID)
+				// Fallback: use all messages without summary
+				utils.LogWarn("ConversationHandler", "buildContextMessages", "convID", conv.ID, "fallback", "using_full_history")
+				return h.messagesToChatMessages(messages), false, nil
+			}
+
+			// Save/update summary
+			newSummary := &models.ConversationSummary{
+				ConversationID: conv.ID,
+				Summary:        summaryText,
+				EndMessageID:   newEndMessageID,
+			}
+
+			if err := h.summaryService.SaveSummary(newSummary); err != nil {
+				utils.LogOperationError("ConversationHandler", "buildContextMessages", err, "step", "save_summary", "convID", conv.ID)
+			}
+
+			summary = newSummary
+		}
+	}
+
+	// Build final messages: [summary as system message] + [recent raw messages]
+	result := []openai.ChatCompletionMessage{}
+
+	if summary != nil {
+		result = append(result, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: fmt.Sprintf("以下是之前对话的摘要：\n\n%s", summary.Summary),
+		})
+	}
+
+	// Add recent raw messages
+	keepFrom := totalMessages - services.KeepRecentCount
+	if keepFrom < 0 {
+		keepFrom = 0
+	}
+	// Find the starting index based on EndMessageID if summary exists
+	if summary != nil {
+		for i, msg := range messages {
+			if msg.ID == summary.EndMessageID {
+				keepFrom = i + 1
+				break
+			}
+		}
+	}
+
+	recentMessages := messages[keepFrom:]
+	result = append(result, h.messagesToChatMessages(recentMessages)...)
+
+	return result, summaryWasUpdated, nil
+}
+
+// messagesToChatMessages converts models.Message slice to openai.ChatCompletionMessage slice
+func (h *ConversationHandler) messagesToChatMessages(messages []models.Message) []openai.ChatCompletionMessage {
+	result := make([]openai.ChatCompletionMessage, len(messages))
+	for i, msg := range messages {
+		role := openai.ChatMessageRoleUser
+		if msg.Role == models.RoleAssistant {
+			role = openai.ChatMessageRoleAssistant
+		}
+		result[i] = openai.ChatCompletionMessage{
+			Role:    role,
+			Content: msg.Content,
+		}
+	}
+	return result
+}
+
 // GenerateTitle generates a title for the conversation based on the first user message
 func (h *ConversationHandler) GenerateTitle(c *gin.Context) {
 	userID := middleware.GetUserID(c)
@@ -877,10 +930,10 @@ func fallbackTitle(firstMessage string) string {
 
 // generateTitleWithAI calls AI to generate a title based on the first message
 func (h *ConversationHandler) generateTitleWithAI(_ *models.Conversation, firstMessage string) (string, error) {
-	// Handle mock mode - use fallback
-	if h.mockEnabled {
-		return fallbackTitle(firstMessage), nil
-	}
+	// // Handle mock mode - use fallback
+	// if h.mockEnabled {
+	// 	return fallbackTitle(firstMessage), nil
+	// }
 
 	// Check if title generator is enabled and properly configured
 	cfg := h.titleGeneratorCfg
