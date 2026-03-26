@@ -27,19 +27,16 @@ func setupUserSettingsTest(t *testing.T) (*gin.Engine, *config.Config, *services
 		Summary: config.ContextSummaryConfig{
 			MaxTokens: 300,
 			Short: config.ContextSummaryParams{
-				WindowAutoSize:         10,
-				KeepRecentCount:        5,
-				SummaryUpdateFrequency: 3,
+				WindowAutoSize:  10,
+				KeepRecentCount: 5,
 			},
 			Normal: config.ContextSummaryParams{
-				WindowAutoSize:         20,
-				KeepRecentCount:        10,
-				SummaryUpdateFrequency: 5,
+				WindowAutoSize:  20,
+				KeepRecentCount: 10,
 			},
 			Long: config.ContextSummaryParams{
-				WindowAutoSize:         40,
-				KeepRecentCount:        20,
-				SummaryUpdateFrequency: 10,
+				WindowAutoSize:  40,
+				KeepRecentCount: 20,
 			},
 		},
 		Simple: config.ContextSimpleConfig{

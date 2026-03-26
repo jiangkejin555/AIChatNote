@@ -44,22 +44,18 @@ context:
   default_level: "normal"     # short | normal | long
 
   # Summary mode: sliding window + compression
-  # WindowAutoSize: trigger summary when messages exceed this count
+  # WindowAutoSize: trigger summary when messages >= this count
   # KeepRecentCount: keep this many recent messages as raw
-  # SummaryUpdateFrequency: update summary every N new messages
   summary:
     short:
       window_auto_size: 10
       keep_recent_count: 5
-      summary_update_frequency: 3
     normal:
       window_auto_size: 20
       keep_recent_count: 10
-      summary_update_frequency: 5
     long:
       window_auto_size: 40
       keep_recent_count: 20
-      summary_update_frequency: 10
     max_tokens: 300  # Maximum tokens for summary generation
 
   # Simple mode: direct pass of recent messages

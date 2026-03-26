@@ -88,9 +88,8 @@ type ContextSummaryConfig struct {
 
 // ContextSummaryParams holds individual level parameters for summary mode
 type ContextSummaryParams struct {
-	WindowAutoSize         int `yaml:"window_auto_size"`
-	KeepRecentCount        int `yaml:"keep_recent_count"`
-	SummaryUpdateFrequency int `yaml:"summary_update_frequency"`
+	WindowAutoSize  int `yaml:"window_auto_size"`
+	KeepRecentCount int `yaml:"keep_recent_count"`
 }
 
 // ContextSimpleConfig holds parameters for simple mode
@@ -235,23 +234,20 @@ func setContextDefaults(cfg *Config) {
 	// Set default summary params for each level
 	if cfg.Context.Summary.Short.WindowAutoSize == 0 {
 		cfg.Context.Summary.Short = ContextSummaryParams{
-			WindowAutoSize:         10,
-			KeepRecentCount:        5,
-			SummaryUpdateFrequency: 3,
+			WindowAutoSize:  10,
+			KeepRecentCount: 5,
 		}
 	}
 	if cfg.Context.Summary.Normal.WindowAutoSize == 0 {
 		cfg.Context.Summary.Normal = ContextSummaryParams{
-			WindowAutoSize:         20,
-			KeepRecentCount:        10,
-			SummaryUpdateFrequency: 5,
+			WindowAutoSize:  20,
+			KeepRecentCount: 10,
 		}
 	}
 	if cfg.Context.Summary.Long.WindowAutoSize == 0 {
 		cfg.Context.Summary.Long = ContextSummaryParams{
-			WindowAutoSize:         40,
-			KeepRecentCount:        20,
-			SummaryUpdateFrequency: 10,
+			WindowAutoSize:  40,
+			KeepRecentCount: 20,
 		}
 	}
 

@@ -231,10 +231,10 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2">
               <Label>{t('settings.contextMode')}</Label>
               <Dialog>
-                <DialogTrigger>
-                  <Button variant="ghost" size="icon" className="h-5 w-5">
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+                <DialogTrigger
+                  render={<Button variant="ghost" size="icon" className="h-5 w-5" />}
+                >
+                  <Info className="h-4 w-4 text-muted-foreground" />
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>

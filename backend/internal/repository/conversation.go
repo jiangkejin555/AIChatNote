@@ -175,3 +175,30 @@ func (r *MessageRepository) GetFirstUserMessage(convID uint) (*models.Message, e
 	}
 	return &msg, nil
 }
+
+// FindByIDRange 查询指定ID范围内的消息（用于摘要模式）
+// 返回 ID > startID 且 ID <= endID 的消息，按创建时间升序排列
+func (r *MessageRepository) FindByIDRange(convID uint, startID uint, endID uint) ([]models.Message, error) {
+	var messages []models.Message
+	query := database.DB.Where("conversation_id = ?", convID)
+	if startID > 0 {
+		query = query.Where("id > ?", startID)
+	}
+	if endID > 0 {
+		query = query.Where("id <= ?", endID)
+	}
+	err := query.Order("created_at ASC").Find(&messages).Error
+	return messages, err
+}
+
+// GetLatestMessageID 获取会话最新消息ID
+func (r *MessageRepository) GetLatestMessageID(convID uint) (uint, error) {
+	var msg models.Message
+	err := database.DB.Where("conversation_id = ?", convID).
+		Order("id DESC").
+		First(&msg).Error
+	if err != nil {
+		return 0, err
+	}
+	return msg.ID, nil
+}

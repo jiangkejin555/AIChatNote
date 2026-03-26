@@ -392,8 +392,8 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		)
 		if err != nil {
 			utils.LogOperationError("ConversationHandler", "SendMessage", err, "step", "build_context_messages", "convID", conv.ID)
-			// Fallback: get recent messages
-			messages, fallbackErr := h.msgRepo.FindRecentByConversationID(conv.ID, contextParams.KeepRecentCount)
+			// Fallback: get recent messages (use WindowAutoSize as limit for enough context)
+			messages, fallbackErr := h.msgRepo.FindRecentByConversationID(conv.ID, contextParams.WindowAutoSize)
 			if fallbackErr != nil {
 				utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", fallbackErr)
 				return
@@ -778,8 +778,8 @@ func (h *ConversationHandler) handleRequestDeduplication(c *gin.Context, convID 
 	return newReq, true, nil
 }
 
-// buildContextMessagesWithSummary builds the context messages for LLM with sliding window and summary support
-// Uses dynamic parameters from ContextParams
+// buildContextMessagesWithSummary builds the context messages for LLM with summary support
+// New algorithm: based on summary's EndMessageID, dynamically calculate messages to fetch
 // Returns: chatMessages, summaryWasUpdated, error
 func (h *ConversationHandler) buildContextMessagesWithSummary(
 	ctx context.Context,
@@ -788,70 +788,48 @@ func (h *ConversationHandler) buildContextMessagesWithSummary(
 	client *openai.Client,
 	model string,
 ) ([]openai.ChatCompletionMessage, bool, error) {
-	// Get messages - fetch enough for window size + recent count
-	totalNeeded := params.WindowAutoSize + params.KeepRecentCount + params.SummaryUpdateFrequency
-	messages, err := h.msgRepo.FindRecentByConversationID(conv.ID, totalNeeded)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to fetch messages: %w", err)
-	}
-
-	totalMessages := len(messages)
-
-	// If within window size, use all messages directly
-	if totalMessages <= params.WindowAutoSize {
-		return h.messagesToChatMessages(messages), false, nil
-	}
-
-	// Get existing summary
+	// 1. Get existing summary
 	summary, err := h.summaryService.GetSummary(conv.ID)
 	if err != nil && !errors.Is(err, repository.ErrSummaryNotFound) {
 		return nil, false, fmt.Errorf("failed to get summary: %w", err)
 	}
 
-	// Check if we need to generate or update summary
+	// 2. Determine the starting point for message query
 	var summaryEndID uint
 	if summary != nil {
 		summaryEndID = summary.EndMessageID
 	}
-	shouldUpdate := h.contextConfigSvc.ShouldGenerateSummary(totalMessages, params, summaryEndID)
 
-	var summaryWasUpdated bool
-	if shouldUpdate {
-		summaryWasUpdated = true
+	// 3. Get the latest message ID
+	latestMsgID, err := h.msgRepo.GetLatestMessageID(conv.ID)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to get latest message ID: %w", err)
+	}
 
-		// Determine messages to summarize
+	// 4. Query all new messages since the summary (or all messages if no summary)
+	messages, err := h.msgRepo.FindByIDRange(conv.ID, summaryEndID, latestMsgID)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to fetch messages: %w", err)
+	}
+
+	// 5. Check if we need to update the summary
+	if len(messages) >= params.WindowAutoSize {
+		// Need to update summary
+		keepFrom := len(messages) - params.KeepRecentCount
+		if keepFrom < 0 {
+			keepFrom = 0
+		}
+
 		var messagesToSummarize []models.Message
 		var newEndMessageID uint
 
-		if summary == nil {
-			// Initial summary: summarize messages before the recent ones
-			keepFrom := totalMessages - params.KeepRecentCount
-			if keepFrom < 0 {
-				keepFrom = 0
-			}
-			if keepFrom > 0 {
-				messagesToSummarize = messages[:keepFrom]
-				newEndMessageID = messages[keepFrom-1].ID
-			}
-		} else {
-			// Incremental update: get messages after the summary's end
-			startIdx := 0
-			for i, msg := range messages {
-				if msg.ID == summary.EndMessageID {
-					startIdx = i + 1
-					break
-				}
-			}
-			// Include messages up to (total - keepRecentCount)
-			endIdx := totalMessages - params.KeepRecentCount
-			if endIdx > startIdx {
-				messagesToSummarize = messages[startIdx:endIdx]
-				newEndMessageID = messages[endIdx-1].ID
-			}
+		if keepFrom > 0 {
+			messagesToSummarize = messages[:keepFrom]
+			newEndMessageID = messages[keepFrom-1].ID
 		}
 
 		if len(messagesToSummarize) > 0 {
-			// Generate summary
+			// Generate new summary
 			summaryText, genErr := h.summaryService.GenerateSummary(ctx, messagesToSummarize, summary, client, model, params.SummaryMaxTokens)
 			if genErr != nil {
 				utils.LogOperationError("ConversationHandler", "buildContextMessages", genErr, "step", "generate_summary", "convID", conv.ID)
@@ -859,12 +837,12 @@ func (h *ConversationHandler) buildContextMessagesWithSummary(
 				utils.LogWarn("ConversationHandler", "buildContextMessages", "convID", conv.ID, "fallback", "using_recent_only")
 				recentMsgs := messages
 				if len(messages) > params.KeepRecentCount {
-					recentMsgs = messages[totalMessages-params.KeepRecentCount:]
+					recentMsgs = messages[keepFrom:]
 				}
 				return h.messagesToChatMessages(recentMsgs), false, nil
 			}
 
-			// Save/update summary
+			// Save summary
 			newSummary := &models.ConversationSummary{
 				ConversationID: conv.ID,
 				Summary:        summaryText,
@@ -877,37 +855,38 @@ func (h *ConversationHandler) buildContextMessagesWithSummary(
 
 			summary = newSummary
 		}
-	}
 
-	// Build final messages: [summary as system message] + [recent raw messages]
-	result := []openai.ChatCompletionMessage{}
-
-	if summary != nil {
-		result = append(result, openai.ChatCompletionMessage{
-			Role:    openai.ChatMessageRoleSystem,
-			Content: fmt.Sprintf("以下是之前对话的摘要：\n\n%s", summary.Summary),
-		})
-	}
-
-	// Add recent raw messages
-	keepFrom := totalMessages - params.KeepRecentCount
-	if keepFrom < 0 {
-		keepFrom = 0
-	}
-	// Find the starting index based on EndMessageID if summary exists
-	if summary != nil {
-		for i, msg := range messages {
-			if msg.ID == summary.EndMessageID {
-				keepFrom = i + 1
-				break
-			}
+		// If summary is still nil (edge case: no messages to summarize), return messages directly
+		if summary == nil {
+			return h.messagesToChatMessages(messages), true, nil
 		}
+
+		// Return: [new summary] + [recent KeepRecentCount messages]
+		result := h.buildSummaryMessage(summary.Summary)
+		result = append(result, h.messagesToChatMessages(messages[keepFrom:])...)
+		return result, true, nil
 	}
 
-	recentMessages := messages[keepFrom:]
-	result = append(result, h.messagesToChatMessages(recentMessages)...)
+	// No need to update summary
+	// If no summary exists: return all messages directly
+	// If summary exists: return [summary] + [all new messages]
+	if summary == nil {
+		return h.messagesToChatMessages(messages), false, nil
+	}
 
-	return result, summaryWasUpdated, nil
+	result := h.buildSummaryMessage(summary.Summary)
+	result = append(result, h.messagesToChatMessages(messages)...)
+	return result, false, nil
+}
+
+// buildSummaryMessage creates a system message with the summary content
+func (h *ConversationHandler) buildSummaryMessage(summaryText string) []openai.ChatCompletionMessage {
+	return []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: fmt.Sprintf("以下是之前对话的摘要：\n\n%s", summaryText),
+		},
+	}
 }
 
 // messagesToChatMessages converts models.Message slice to openai.ChatCompletionMessage slice

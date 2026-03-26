@@ -7,13 +7,12 @@ import (
 
 // ContextParams holds all parameters needed for context processing
 type ContextParams struct {
-	Mode                   models.ContextMode
-	MemoryLevel            models.MemoryLevel
-	WindowAutoSize         int // Summary mode: trigger summary when messages exceed this
-	KeepRecentCount        int // Summary mode: keep this many recent messages as raw
-	SummaryUpdateFrequency int // Summary mode: update summary every N new messages
-	HistoryLimit           int // Simple mode: number of messages to pass to LLM
-	SummaryMaxTokens       int // Summary mode: max tokens for summary generation
+	Mode             models.ContextMode
+	MemoryLevel      models.MemoryLevel
+	WindowAutoSize   int // Summary mode: trigger summary when messages >= this
+	KeepRecentCount  int // Summary mode: keep this many recent messages as raw
+	HistoryLimit     int // Simple mode: number of messages to pass to LLM
+	SummaryMaxTokens int // Summary mode: max tokens for summary generation
 }
 
 // ContextConfigService provides context processing configuration
@@ -49,13 +48,11 @@ func (s *ContextConfigService) GetContextParams(mode models.ContextMode, level m
 		}
 		params.WindowAutoSize = summaryParams.WindowAutoSize
 		params.KeepRecentCount = summaryParams.KeepRecentCount
-		params.SummaryUpdateFrequency = summaryParams.SummaryUpdateFrequency
 		params.HistoryLimit = 0 // Not used in summary mode
 
 	case models.ContextModeSimple:
 		params.WindowAutoSize = 0 // Not used in simple mode
 		params.KeepRecentCount = 0
-		params.SummaryUpdateFrequency = 0
 		var simpleParams config.ContextSimpleParams
 		switch level {
 		case models.MemoryLevelShort:
@@ -84,21 +81,11 @@ func (s *ContextConfigService) GetDefaultLevel() models.MemoryLevel {
 }
 
 // ShouldGenerateSummary determines if a summary needs to be generated or updated
-func (s *ContextConfigService) ShouldGenerateSummary(totalMessages int, params *ContextParams, summaryEndMessageID uint) bool {
+// In the new algorithm, this is based on: len(messages) >= WindowAutoSize
+// This method is kept for backward compatibility but the logic is simplified
+func (s *ContextConfigService) ShouldGenerateSummary(newMessagesCount int, params *ContextParams) bool {
 	if params.Mode != models.ContextModeSummary {
 		return false
 	}
-
-	if totalMessages <= params.WindowAutoSize {
-		return false
-	}
-
-	if summaryEndMessageID == 0 {
-		// No summary exists, need to create one
-		return true
-	}
-
-	// Check if enough new messages have been added since last summary
-	messagesSinceSummary := totalMessages - int(summaryEndMessageID)
-	return messagesSinceSummary >= params.SummaryUpdateFrequency
+	return newMessagesCount >= params.WindowAutoSize
 }
