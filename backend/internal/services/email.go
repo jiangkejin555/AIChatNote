@@ -28,7 +28,7 @@ func (s *EmailService) SendVerificationCode(to, code string) error {
 		return errors.New("SMTP service is not enabled")
 	}
 
-	subject := "您的验证码 - AI Chat Notes"
+	subject := "您的验证码 - AI Chat Note"
 	body := s.buildVerificationCodeEmail(code)
 
 	return s.SendEmail(to, subject, body)
@@ -46,7 +46,7 @@ func (s *EmailService) SendEmail(to, subject, body string) error {
 
 	fromName := s.config.FromName
 	if fromName == "" {
-		fromName = "AI Chat Notes"
+		fromName = "AI Chat Note"
 	}
 
 	msg := s.buildMessage(from, fromName, to, subject, body)
@@ -198,7 +198,7 @@ func (s *EmailService) buildVerificationCodeEmail(code string) string {
     <div class="container">
         <h2>验证码通知</h2>
         <p>您好！</p>
-        <p>您正在登录 <strong>AI Chat Notes</strong>，您的验证码是：</p>
+        <p>您正在登录 <strong>AI Chat Note</strong>，您的验证码是：</p>
         
         <div class="code-box">
             <span class="code">%s</span>
@@ -217,7 +217,7 @@ func (s *EmailService) buildVerificationCodeEmail(code string) string {
         
         <div class="footer">
             <p>此邮件由系统自动发送，请勿直接回复。</p>
-            <p>&copy; %d AI Chat Notes. All rights reserved.</p>
+            <p>&copy; %d AI Chat Note. All rights reserved.</p>
         </div>
     </div>
 </body>

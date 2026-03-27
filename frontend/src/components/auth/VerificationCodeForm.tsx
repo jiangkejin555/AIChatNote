@@ -8,7 +8,6 @@ import { useAuthStore } from '@/stores'
 import { authApi } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { useTranslations } from '@/i18n'
@@ -92,7 +91,7 @@ export default function VerificationCodeForm({ onSuccess }: VerificationCodeForm
 
       login(response.user, response.token)
       toast.success(t('auth.loginSuccess'))
-      
+
       if (onSuccess) {
         onSuccess()
       } else {
@@ -108,13 +107,16 @@ export default function VerificationCodeForm({ onSuccess }: VerificationCodeForm
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="verification-email">{t('auth.email')}</Label>
+        <label htmlFor="verification-email" className="text-sm font-medium">
+          {t('auth.email')}
+        </label>
         <Input
           id="verification-email"
           type="email"
           placeholder="your@email.com"
+          className="h-11"
           {...register('email', {
             required: t('auth.emailRequired'),
             pattern: {
@@ -129,13 +131,16 @@ export default function VerificationCodeForm({ onSuccess }: VerificationCodeForm
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="verification-code">{t('auth.verificationCode.code')}</Label>
-        <div className="flex gap-2">
+        <label htmlFor="verification-code" className="text-sm font-medium">
+          {t('auth.verificationCode.code')}
+        </label>
+        <div className="flex gap-3">
           <Input
             id="verification-code"
             type="text"
             maxLength={6}
             placeholder={t('auth.verificationCode.codePlaceholder')}
+            className="h-11 flex-1"
             {...register('code', {
               required: t('auth.verificationCode.codeRequired'),
               pattern: {
@@ -143,14 +148,13 @@ export default function VerificationCodeForm({ onSuccess }: VerificationCodeForm
                 message: t('auth.verificationCode.codeInvalid'),
               },
             })}
-            className="flex-1"
           />
           <Button
             type="button"
             variant="outline"
             disabled={isSendingCode || countdown > 0}
             onClick={handleSendCode}
-            className="whitespace-nowrap min-w-[100px]"
+            className="h-11 px-4 font-medium whitespace-nowrap"
           >
             {isSendingCode ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -166,9 +170,19 @@ export default function VerificationCodeForm({ onSuccess }: VerificationCodeForm
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {t('auth.verificationCode.login')}
+      <Button
+        type="submit"
+        className="w-full h-11 font-medium"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {t('common.loading')}
+          </>
+        ) : (
+          t('auth.verificationCode.login')
+        )}
       </Button>
     </form>
   )

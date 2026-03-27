@@ -109,11 +109,11 @@ export const termsEn = `# Terms of Service
 
 ## 1. Acceptance of Terms
 
-By accessing and using AI Chat Notes ("the Service"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service. We reserve the right to modify these terms at any time, and your continued use of the Service constitutes acceptance of those changes.
+By accessing and using AI Chat Note ("the Service"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service. We reserve the right to modify these terms at any time, and your continued use of the Service constitutes acceptance of those changes.
 
 ## 2. Description of Service
 
-AI Chat Notes is a multi-model AI chat application that enables users to interact with various AI models and convert conversations into structured notes. The Service includes features such as:
+AI Chat Note is a multi-model AI chat application that enables users to interact with various AI models and convert conversations into structured notes. The Service includes features such as:
 
 - AI model management
 - Conversation storage
@@ -144,7 +144,7 @@ You agree to use the Service only for lawful purposes and in accordance with the
 
 ## 5. Intellectual Property
 
-The content, features, and functionality of the Service are owned by AI Chat Notes and are protected by copyright, trademark, and other intellectual property laws.
+The content, features, and functionality of the Service are owned by AI Chat Note and are protected by copyright, trademark, and other intellectual property laws.
 
 - Your conversations and notes remain your property
 - By using the Service, you grant us a limited license to process your content solely to provide the Service
@@ -170,7 +170,7 @@ Your use of these third-party services is subject to their respective terms of s
 
 ## 8. Limitation of Liability
 
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, AI CHAT NOTES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO:
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, AI Chat Note SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO:
 
 - Loss of profits
 - Loss of data
@@ -335,7 +335,7 @@ export const privacyEn = `# Privacy Policy
 
 ## 1. Introduction
 
-AI Chat Notes ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service. Please read this policy carefully. By using the Service, you consent to the data practices described in this policy.
+AI Chat Note ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service. Please read this policy carefully. By using the Service, you consent to the data practices described in this policy.
 
 ## 2. Information We Collect
 

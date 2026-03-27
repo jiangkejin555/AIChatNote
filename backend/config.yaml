@@ -75,6 +75,6 @@ smtp:
   username: ""          # SMTP username (usually your email)
   password: ""          # SMTP password or app-specific password
   from: ""              # Sender email address
-  from_name: "AI Chat Notes"  # Sender display name
+  from_name: "AI Chat Note"  # Sender display name
   use_tls: true         # Use TLS for secure connection
   enabled: false        # Enable/disable email verification feature

@@ -36,25 +36,22 @@ export default function OAuthCallbackPage() {
 
   const handleCallback = async () => {
     try {
-    setIsProcessing(true)
-    setError(null)
+      setIsProcessing(true)
+      setError(null)
 
-    const response = await authApi.handleOAuthCallback(provider, {
-      code: code!,
-      state: state!,
-    })
+      const response = await authApi.handleOAuthCallback(provider, code!, state!)
 
-    login(response.user, response.token)
-    toast.success(t('auth.loginSuccess'))
-    router.push(decodeURIComponent(redirect))
-  } catch (err: {
-    console.error('OAuth callback error:', err)
-    const errorMessage = err instanceof Error ? err.message : t('auth.oauth.callbackFailed')
-    setError(errorMessage)
-    toast.error(errorMessage)
-  } finally {
-    setIsProcessing(false)
-  }
+      login(response.user, response.token)
+      toast.success(t('auth.loginSuccess'))
+      router.push(decodeURIComponent(redirect))
+    } catch (err) {
+      console.error('OAuth callback error:', err)
+      const errorMessage = err instanceof Error ? err.message : t('auth.oauth.callbackFailed')
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const handleRetry = () => {

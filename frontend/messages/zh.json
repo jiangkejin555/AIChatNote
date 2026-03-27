@@ -446,11 +446,11 @@
     "tagline": "聊天即生产，对话即沉淀",
     "productIntro": {
       "title": "产品介绍",
-      "content": "AI Chat Notes 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。通过统一的入口管理多个 AI 模型，让您的每一次对话都成为有价值的知识资产。"
+      "content": "AI Chat Note 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。通过统一的入口管理多个 AI 模型，让您的每一次对话都成为有价值的知识资产。"
     },
     "companyInfo": {
       "title": "公司信息",
-      "companyName": "AI Chat Notes Team",
+      "companyName": "AI Chat Note Team",
       "foundedDate": "2024年",
       "mission": "让每一次对话都成为有价值的知识资产"
     },
@@ -479,7 +479,7 @@
       "title": "帮助",
       "description": "了解产品使用方法",
       "overview": "产品概述",
-      "overviewContent": "AI Chat Notes 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。通过统一的入口管理多个 AI 模型，让您的每一次对话都成为有价值的知识资产。",
+      "overviewContent": "AI Chat Note 是一个聚合多模型的 AI 聊天应用，支持将对话转化为结构化笔记，帮助您沉淀知识。通过统一的入口管理多个 AI 模型，让您的每一次对话都成为有价值的知识资产。",
       "features": "核心功能",
       "featuresList": {
         "multiModel": {
