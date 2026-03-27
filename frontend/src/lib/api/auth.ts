@@ -29,7 +29,7 @@ export interface ChangePasswordResponse {
 }
 
 export interface DeleteAccountRequest {
-  password?: string
+  code: string
 }
 
 export interface DeleteAccountResponse {
@@ -84,7 +84,7 @@ export const authApi = {
     return response.data
   },
 
-  deleteAccount: async (data?: DeleteAccountRequest): Promise<DeleteAccountResponse> => {
+  deleteAccount: async (data: DeleteAccountRequest): Promise<DeleteAccountResponse> => {
     const response = await apiClient.delete<DeleteAccountResponse>('/auth/account', { data })
     return response.data
   },
