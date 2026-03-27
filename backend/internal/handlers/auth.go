@@ -297,7 +297,7 @@ type VerifyCodeAndLoginRequest struct {
 }
 
 type DeleteAccountRequest struct {
-	Password string `json:"password"`
+	Code string `json:"code" binding:"required,len=6"`
 }
 
 type DeleteAccountResponse struct {
@@ -426,25 +426,19 @@ func (h *AuthHandler) DeleteAccount(c *gin.Context) {
 	}
 
 	userID := middleware.GetUserID(c)
+	currentEmail := middleware.GetEmail(c)
+
+	if !h.verificationCodeSvc.VerifyCode(currentEmail, req.Code) {
+		utils.LogAuthEvent("delete_account", false, "userID", userID, "reason", "invalid_code")
+		utils.SendError(c, http.StatusUnauthorized, "invalid_code", "Invalid or expired verification code")
+		return
+	}
 
 	user, err := h.userRepo.FindByID(userID)
 	if err != nil {
 		utils.LogOperationError("AuthHandler", "DeleteAccount", err, "userID", userID, "step", "find_user")
 		utils.SendErrorWithErr(c, http.StatusNotFound, "user_not_found", "User not found", err)
 		return
-	}
-
-	if user.PasswordHash != "" {
-		if req.Password == "" {
-			utils.LogAuthEvent("delete_account", false, "userID", userID, "reason", "password_required")
-			utils.SendError(c, http.StatusBadRequest, "password_required", "Password is required for email login users")
-			return
-		}
-		if !crypto.CheckPassword(req.Password, user.PasswordHash) {
-			utils.LogAuthEvent("delete_account", false, "userID", userID, "reason", "invalid_password")
-			utils.SendError(c, http.StatusUnauthorized, "invalid_password", "Invalid password")
-			return
-		}
 	}
 
 	if err := h.accountDeletionRepo.DeleteAllUserData(userID); err != nil {
