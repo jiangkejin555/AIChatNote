@@ -114,7 +114,7 @@ export default function AboutPage() {
                   <Mail className="h-4 w-4" />
                   {t('about.contact.email')}
                 </span>
-                <a href="mailto:support@aichatnotes.com" className="text-primary hover:underline">
+                <a href="mailto:aichatnote.service@gmail.com" className="text-primary hover:underline">
                   {t('about.contact.emailValue')}
                 </a>
               </div>

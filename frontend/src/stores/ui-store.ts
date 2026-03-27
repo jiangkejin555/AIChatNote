@@ -9,10 +9,16 @@ export interface FontOption {
 }
 
 export const FONT_OPTIONS: FontOption[] = [
-  { value: 'system-ui, -apple-system, sans-serif', label: 'System Default' },
-  { value: '"Noto Sans SC", system-ui, sans-serif', label: 'Noto Sans SC' },
-  { value: '"PingFang SC", system-ui, sans-serif', label: 'PingFang SC' },
-  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'system', label: 'System Default' },
+  { value: 'georgia', label: 'Georgia' },
+  { value: 'lora', label: 'Lora' },
+  { value: 'playfair', label: 'Playfair Display' },
+  { value: 'crimson', label: 'Crimson Text' },
+  { value: 'source-serif', label: 'Source Serif 4' },
+  // Chinese artistic fonts
+  { value: 'noto-serif-sc', label: '思源宋体' },
+  { value: 'long-cang', label: '龙藏行书' },
+  { value: 'ma-shan-zheng', label: '马善政楷书' },
 ]
 
 export const FONT_SIZE_MAP: Record<FontSize, string> = {
@@ -40,7 +46,7 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: false,
       sidebarCollapsed: false,
       fontSize: 'medium',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontFamily: 'system',
       toggleSidebar: () =>
         set((state) => ({
           sidebarOpen: !state.sidebarOpen,

@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { useUIStore, useAuthStore, useChatStore } from '@/stores'
-import { useTranslations } from '@/i18n'
+import { useTranslations, useI18n, localeNames } from '@/i18n'
 import { useConversations, useCreateConversation, useDeleteConversation, useUpdateConversation, useProviders, useSearchConversations } from '@/hooks'
 import {
   MessageSquare,
@@ -14,7 +15,6 @@ import {
   PanelLeft,
   Plus,
   Cpu,
-  ChevronUp,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -25,6 +25,12 @@ import {
   Search,
   Loader2,
   User,
+  Sun,
+  Moon,
+  Monitor,
+  Languages,
+  LogOut,
+  ChevronUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -48,10 +54,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'sonner'
 import type { Conversation } from '@/types'
-import AccountManagementDialog from '@/components/auth/account-management-dialog'
 
 // Helper function to format time
 function formatTime(dateString: string): string {
@@ -107,6 +112,229 @@ function groupConversationsByDate(conversations: Conversation[]): { label: strin
     .map(([label, conversations]) => ({ label, conversations }))
 }
 
+// Theme and Language configuration
+const themeOptions = [
+  { value: 'light', labelKey: 'settings.themeLight', icon: Sun },
+  { value: 'dark', labelKey: 'settings.themeDark', icon: Moon },
+  { value: 'system', labelKey: 'settings.themeSystem', icon: Monitor },
+] as const
+
+// User Dropdown Menu Component
+interface UserDropdownMenuProps {
+  user: { email: string } | null
+  initials: string
+  sidebarCollapsed: boolean
+  onLogout: () => void
+}
+
+function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDropdownMenuProps) {
+  const t = useTranslations()
+  const { locale, setLocale } = useI18n()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  return (
+    <div className="border-t border-sidebar-border/60 p-3 shrink-0">
+      <DropdownMenu>
+        <DropdownMenuTrigger className="w-full">
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-xl p-2 transition-all duration-200',
+              'hover:bg-sidebar-accent/80 hover:shadow-sm',
+              'cursor-pointer group',
+              sidebarCollapsed && 'justify-center'
+            )}
+          >
+            <div className="relative">
+              <Avatar className="h-9 w-9 ring-2 ring-sidebar-border/50 group-hover:ring-primary/30 transition-all duration-200">
+                <AvatarFallback className="text-xs bg-gradient-to-br from-primary/80 to-primary text-primary-foreground font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-sidebar" />
+            </div>
+            {!sidebarCollapsed && (
+              <>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                    {user?.email?.split('@')[0]}
+                  </p>
+                  <p className="text-xs text-sidebar-foreground/50 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+                <ChevronUp className="h-4 w-4 text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors" />
+              </>
+            )}
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          side="top"
+          align={sidebarCollapsed ? 'center' : 'end'}
+          sideOffset={8}
+          className={cn(
+            'w-72 p-2 rounded-xl',
+            'bg-popover/95 backdrop-blur-xl',
+            'border border-border/50 shadow-xl shadow-black/5 dark:shadow-black/20',
+            'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
+          )}
+        >
+          {/* User Info Header */}
+          <div className="px-3 py-3 mb-1">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                <AvatarFallback className="text-sm bg-gradient-to-br from-primary/80 to-primary text-primary-foreground font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-popover-foreground truncate">
+                  {user?.email?.split('@')[0]}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DropdownMenuSeparator className="my-1 bg-border/50" />
+
+          {/* Theme Selection */}
+          <div className="px-2 py-1.5">
+            <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2 px-1">
+              {t('settings.theme')}
+            </p>
+            <div className="grid grid-cols-3 gap-1">
+              {themeOptions.map((opt) => {
+                const Icon = opt.icon
+                const isActive = mounted && theme === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTheme(opt.value)}
+                    className={cn(
+                      'flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-lg transition-all duration-200',
+                      'hover:bg-accent/60',
+                      isActive && 'bg-primary/10 text-primary ring-1 ring-primary/20'
+                    )}
+                  >
+                    <Icon className={cn('h-4 w-4', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                    <span className={cn('text-[11px] font-medium', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                      {t(opt.labelKey)}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <DropdownMenuSeparator className="my-1.5 bg-border/50" />
+
+          {/* Language Selection */}
+          <div className="px-2 py-1.5">
+            <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2 px-1">
+              {t('settings.language')}
+            </p>
+            <div className="grid grid-cols-2 gap-1">
+              {Object.entries(localeNames).map(([code, name]) => {
+                const isActive = locale === code
+                return (
+                  <button
+                    key={code}
+                    onClick={() => setLocale(code as 'zh' | 'en')}
+                    className={cn(
+                      'flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all duration-200',
+                      'hover:bg-accent/60',
+                      isActive && 'bg-primary/10 text-primary ring-1 ring-primary/20'
+                    )}
+                  >
+                    <Languages className={cn('h-3.5 w-3.5', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                    <span className={cn('text-xs font-medium', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                      {name}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <DropdownMenuSeparator className="my-1.5 bg-border/50" />
+
+          {/* Menu Items */}
+          <div className="py-1">
+            <Link
+              href="/settings"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                'transition-all duration-200 hover:bg-accent/60',
+                'text-sm text-popover-foreground'
+              )}
+            >
+              <Settings className="h-4 w-4 text-muted-foreground" />
+              <span>{t('sidebar.settings')}</span>
+            </Link>
+            <Link
+              href="/account"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                'transition-all duration-200 hover:bg-accent/60',
+                'text-sm text-popover-foreground'
+              )}
+            >
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>{t('accountManagement.title')}</span>
+            </Link>
+            <Link
+              href="/help"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                'transition-all duration-200 hover:bg-accent/60',
+                'text-sm text-popover-foreground'
+              )}
+            >
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              <span>{t('helpFeedback.title')}</span>
+            </Link>
+            <Link
+              href="/about"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                'transition-all duration-200 hover:bg-accent/60',
+                'text-sm text-popover-foreground'
+              )}
+            >
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <span>{t('about.title')}</span>
+            </Link>
+          </div>
+
+          <DropdownMenuSeparator className="my-1 bg-border/50" />
+
+          {/* Logout */}
+          <div className="pt-1">
+            <button
+              onClick={onLogout}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                'transition-all duration-200',
+                'text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/10'
+              )}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>{t('sidebar.logout')}</span>
+            </button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -132,9 +360,6 @@ export function Sidebar() {
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { results: searchResults, isSearching, clearResults } = useSearchConversations(searchQuery)
-
-  // Account management state
-  const [showAccountManagement, setShowAccountManagement] = useState(false)
 
   const navItems = [
     { href: '/notes', label: t('sidebar.knowledgeBase'), icon: FileText },
@@ -604,60 +829,12 @@ export function Sidebar() {
       )}
 
       {/* User Area at Bottom */}
-      <div className="border-t border-sidebar-border p-3 shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-full">
-            <div
-              className={cn(
-                'flex items-center gap-3 rounded-lg p-2 transition-colors',
-                'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                'cursor-pointer',
-                sidebarCollapsed && 'justify-center'
-              )}
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              {!sidebarCollapsed && (
-                <>
-                  <span className="flex-1 truncate text-sm text-sidebar-foreground text-left">
-                    {user?.email}
-                  </span>
-                  <ChevronUp className="h-4 w-4 text-sidebar-foreground" />
-                </>
-              )}
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            side="top"
-            align={sidebarCollapsed ? 'center' : 'end'}
-            className="w-56"
-          >
-            <DropdownMenuItem>
-              <Link href="/settings" className="flex items-center w-full">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>{t('sidebar.settings')}</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/help" className="flex items-center w-full">
-                <HelpCircle className="mr-2 h-4 w-4" />
-                <span>{t('helpFeedback.title')}</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/about" className="flex items-center w-full">
-                <Info className="mr-2 h-4 w-4" />
-                <span>{t('about.title')}</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowAccountManagement(true)}>
-              <User className="mr-2 h-4 w-4" />
-              {t('accountManagement.title')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <UserDropdownMenu
+        user={user}
+        initials={initials}
+        sidebarCollapsed={sidebarCollapsed}
+        onLogout={handleLogout}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -676,12 +853,6 @@ export function Sidebar() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Account Management Dialog */}
-      <AccountManagementDialog
-        open={showAccountManagement}
-        onOpenChange={setShowAccountManagement}
-      />
     </aside>
   )
 }

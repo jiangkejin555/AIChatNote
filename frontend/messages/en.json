@@ -31,8 +31,6 @@
   "settings": {
     "title": "System Settings",
     "deleteAccount": "Delete Account",
-    "appearance": "Appearance",
-    "appearanceDesc": "Customize how the app looks and displays",
     "systemDesc": "Customize how the app looks and displays",
     "theme": "Theme",
     "themeLight": "Light",
@@ -484,7 +482,7 @@
     "contact": {
       "title": "Contact",
       "email": "Email",
-      "emailValue": "support@aichatnotes.com",
+      "emailValue": "aichatnote.service@gmail.com",
       "github": "GitHub",
       "githubValue": "github.com/aichatnotes"
     },
@@ -600,12 +598,21 @@
   },
   "accountManagement": {
     "title": "Account Management",
+    "description": "Manage your account settings and security",
     "email": "Email",
     "changePassword": "Change Password",
+    "changePasswordDesc": "Update your login password to secure your account",
+    "change": "Change",
     "logout": "Logout",
+    "logoutDesc": "Sign out of your current session",
     "logoutConfirm": "Are you sure you want to logout?",
     "deleteAccount": "Delete Account",
-    "deleteAccountWarning": "This action will permanently delete your account and all data, and cannot be undone"
+    "deleteAccountDesc": "Permanently remove your account and all associated data",
+    "deleteAccountWarning": "This action will permanently delete your account and all data, and cannot be undone",
+    "delete": "Delete",
+    "securityActions": "Security Actions",
+    "securityDesc": "Manage account security and login status",
+    "dangerZoneWarning": "Deleting your account will permanently remove your account, conversations, notes, and all settings. This action cannot be undone. Please proceed with caution."
   },
   "changePassword": {
     "title": "Change Password",

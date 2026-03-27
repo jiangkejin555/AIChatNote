@@ -179,6 +179,44 @@
   --font-size-base: 18px;
 }
 
+/* Font family settings */
+[data-font-family="system"] {
+  --font-family-base: system-ui, -apple-system, sans-serif;
+}
+
+[data-font-family="georgia"] {
+  --font-family-base: Georgia, serif;
+}
+
+[data-font-family="lora"] {
+  --font-family-base: "Lora", Georgia, serif;
+}
+
+[data-font-family="playfair"] {
+  --font-family-base: "Playfair Display", Georgia, serif;
+}
+
+[data-font-family="crimson"] {
+  --font-family-base: "Crimson Text", Georgia, serif;
+}
+
+[data-font-family="source-serif"] {
+  --font-family-base: "Source Serif 4", Georgia, serif;
+}
+
+/* Chinese artistic fonts */
+[data-font-family="noto-serif-sc"] {
+  --font-family-base: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+}
+
+[data-font-family="long-cang"] {
+  --font-family-base: "Long Cang", cursive, serif;
+}
+
+[data-font-family="ma-shan-zheng"] {
+  --font-family-base: "Ma Shan Zheng", cursive, serif;
+}
+
 /* TipTap Editor Styles - consistent with MarkdownContent */
 .tiptap,
 .note-viewer {
