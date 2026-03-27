@@ -85,7 +85,10 @@ export const authApi = {
   },
 
   deleteAccount: async (data: DeleteAccountRequest): Promise<DeleteAccountResponse> => {
-    const response = await apiClient.delete<DeleteAccountResponse>('/auth/account', { data })
+    const response = await apiClient.delete<DeleteAccountResponse>('/auth/account', {
+      data,
+      skipAuthRedirect: true, // Don't auto-logout on 401 (wrong code)
+    })
     return response.data
   },
 }

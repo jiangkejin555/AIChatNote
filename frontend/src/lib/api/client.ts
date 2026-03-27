@@ -3,6 +3,13 @@ import { useAuthStore } from '@/stores/auth-store'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
 
+// Extend config type to support skipAuthRedirect
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    skipAuthRedirect?: boolean
+  }
+}
+
 export const apiClient = axios.create({
   baseURL: API_URL,
   timeout: 30000,
@@ -29,7 +36,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Skip auto logout for specific requests (like delete account with wrong code)
+    const skipRedirect = error.config?.skipAuthRedirect
+
+    if (error.response?.status === 401 && !skipRedirect) {
       // Clear auth state and redirect to login
       useAuthStore.getState().logout()
 

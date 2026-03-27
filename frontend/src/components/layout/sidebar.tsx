@@ -132,10 +132,16 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
   const { locale, setLocale } = useI18n()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleLogoutConfirm = () => {
+    onLogout()
+    setShowLogoutConfirm(false)
+  }
 
   return (
     <div className="border-t border-sidebar-border/60 p-3 shrink-0">
@@ -318,7 +324,7 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
           {/* Logout */}
           <div className="pt-1">
             <button
-              onClick={onLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
                 'transition-all duration-200',
@@ -331,6 +337,24 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('accountManagement.logout')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('accountManagement.logoutConfirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogoutConfirm}>
+              {t('accountManagement.logout')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

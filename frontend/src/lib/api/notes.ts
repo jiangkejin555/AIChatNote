@@ -83,7 +83,8 @@ export const notesApi = {
   generate: async (data: GenerateNoteRequest): Promise<GenerateNoteResponse> => {
     const response = await apiClient.post<ApiResponse<GenerateNoteResponse>>(
       '/notes/generate',
-      data
+      data,
+      { timeout: 120000 } // AI 生成需要较长时间，设置 2 分钟超时
     )
     return response.data.data
   },

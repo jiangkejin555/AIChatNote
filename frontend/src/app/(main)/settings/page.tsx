@@ -149,7 +149,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <Label className="font-medium">{t('settings.theme')}</Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('settings.appearanceDesc')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('settings.systemDesc')}</p>
                     </div>
                   </div>
                   <div className="flex bg-muted/50 rounded-xl p-1 gap-1">
@@ -206,7 +206,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <Label className="font-medium">{t('settings.fontSize')}</Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('settings.appearanceDesc')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('settings.systemDesc')}</p>
                     </div>
                   </div>
                   <div className="flex bg-muted/50 rounded-xl p-1 gap-1">
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <Label className="font-medium">{t('settings.fontFamily')}</Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('settings.appearanceDesc')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('settings.systemDesc')}</p>
                     </div>
                   </div>
                   <Select value={fontFamily} onValueChange={handleFontFamilyChange}>
