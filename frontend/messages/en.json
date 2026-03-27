@@ -631,5 +631,30 @@
     "failed": "Failed to change password",
     "codeError": "Verification code is invalid or expired",
     "noPasswordForOAuth": "OAuth users have no password, please use OAuth login"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "unread",
+    "empty": "No notifications",
+    "emptyDesc": "New notifications will appear here",
+    "viewAll": "View all notifications",
+    "markAllRead": "Mark all read",
+    "clearAll": "Clear all",
+    "clear": "Clear",
+    "clearConfirmTitle": "Confirm Clear",
+    "clearConfirmDesc": "Are you sure you want to clear all notifications? This action cannot be undone.",
+    "clearConfirmDescType": "Are you sure you want to clear all \"{type}\" notifications? This action cannot be undone.",
+    "allRead": "All marked as read",
+    "markReadFailed": "Failed to mark as read",
+    "deleteSuccess": "Notification deleted",
+    "deleteFailed": "Failed to delete",
+    "clearSuccess": "Notifications cleared",
+    "clearFailed": "Failed to clear",
+    "types": {
+      "all": "All",
+      "system": "System",
+      "aiTask": "AI Task",
+      "error": "Error"
+    }
   }
 }

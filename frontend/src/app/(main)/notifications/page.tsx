@@ -139,7 +139,7 @@ export default function NotificationsPage() {
             <AlertDialogDescription>
               {activeType === 'all'
                 ? t('notifications.clearConfirmDesc')
-                : t('notifications.clearConfirmDescType', { type: typeTabs.find(t => t.value === activeType)?.label })}
+                : t('notifications.clearConfirmDescType', { type: typeTabs.find(tab => tab.value === activeType)?.label ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

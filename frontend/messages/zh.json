@@ -627,5 +627,29 @@
     "failed": "密码修改失败",
     "codeError": "验证码错误或已过期",
     "noPasswordForOAuth": "OAuth 登录用户无密码，请使用 OAuth 登录"
+  },
+  "notifications": {
+    "title": "消息中心",
+    "unread": "条未读",
+    "empty": "暂无消息",
+    "emptyDesc": "新消息将会显示在这里",
+    "markAllRead": "全部已读",
+    "clearAll": "清空全部",
+    "clear": "清空",
+    "clearConfirmTitle": "确认清空",
+    "clearConfirmDesc": "确定要清空所有消息吗？此操作不可撤销。",
+    "clearConfirmDescType": "确定要清空所有「{type}」类型的消息吗？此操作不可撤销",
+    "allRead": "已全部标记为已读",
+    "markReadFailed": "标记已读失败",
+    "deleteSuccess": "消息已删除",
+    "deleteFailed": "删除失败",
+    "clearSuccess": "消息已清空",
+    "clearFailed": "清空失败",
+    "types": {
+      "all": "全部",
+      "system": "系统",
+      "aiTask": "AI 任务",
+      "error": "错误"
+    }
   }
 }
