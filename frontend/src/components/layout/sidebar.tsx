@@ -653,7 +653,7 @@ export function Sidebar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowAccountManagement(true)}>
               <User className="mr-2 h-4 w-4" />
-              <span>{t('accountManagement.title')}</span>
+              {t('accountManagement.title')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

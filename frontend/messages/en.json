@@ -114,7 +114,8 @@
     "matchedInContent": "Content",
     "aiAssistantReady": "AI Assistant Ready",
     "startChattingDesc": "Start a conversation with AI, explore endless possibilities, and capture your inspiration efficiently",
-    "sendHint": "Press Enter to send · Shift + Enter for new line"
+    "sendHint": "Press Enter to send · Shift + Enter for new line",
+    "newMessages": "New messages"
   },
   "saveNote": {
     "title": "Save as Note",

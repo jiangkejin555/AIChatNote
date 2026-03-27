@@ -58,8 +58,8 @@ function FolderTreeItem({
       <div
         className={cn(
           'flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors duration-150',
-          'hover:bg-accent',
-          isSelected && 'bg-primary/10 text-primary'
+          'hover:bg-blue-100 dark:hover:bg-blue-900/30',
+          isSelected && 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={handleSelect}
@@ -89,7 +89,7 @@ function FolderTreeItem({
 
         {/* Folder Icon */}
         {isSelected ? (
-          <FolderOpen className="h-4 w-4 text-primary shrink-0" />
+          <FolderOpen className="h-4 w-4 text-blue-500 shrink-0" />
         ) : (
           <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
         )}
@@ -171,8 +171,8 @@ export function FolderTreeSelector({
           <div
             className={cn(
               'flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors duration-150',
-              'hover:bg-accent',
-              isRootSelected && 'bg-primary/10 text-primary'
+              'hover:bg-blue-100 dark:hover:bg-blue-900/30',
+              isRootSelected && 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
             )}
             onClick={() => handleSelect(null)}
             role="treeitem"
@@ -198,7 +198,7 @@ export function FolderTreeSelector({
               )}
             </button>
             {isRootSelected ? (
-              <FolderOpen className="h-4 w-4 text-primary shrink-0" />
+              <FolderOpen className="h-4 w-4 text-blue-500 shrink-0" />
             ) : (
               <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
             )}
