@@ -73,8 +73,8 @@ smtp:
   host: "smtp.gmail.com"              # SMTP server host, e.g., "smtp.gmail.com"
   port: 587             # SMTP server port, typically 587 for TLS
   username: "aichatnote.service@gmail.com"          # SMTP username (usually your email)
-  password: "Kejin123.."          # SMTP password or app-specific password
+  password: "cixqdaqxvquojqel"          # SMTP password or app-specific password
   from: "aichatnote.service@gmail.com"              # Sender email address
-  from_name: "AI Chat Note"  # Sender display name
+  from_name: "AI Chat Note"  # sender display name
   use_tls: true         # Use TLS for secure connection
   enabled: true        # Enable/disable email verification feature

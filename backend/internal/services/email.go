@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/smtp"
@@ -72,60 +71,9 @@ func (s *EmailService) sendViaSMTP(from, to string, msg []byte) error {
 		auth = smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)
 	}
 
-	if s.config.UseTLS {
-		return s.sendWithTLS(addr, auth, from, to, msg)
-	}
-
+	// For port 587 (STARTTLS), use smtp.SendMail which handles STARTTLS automatically
+	// For port 465 (TLS), we would need a different approach
 	return smtp.SendMail(addr, auth, from, []string{to}, msg)
-}
-
-func (s *EmailService) sendWithTLS(addr string, auth smtp.Auth, from, to string, msg []byte) error {
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: false,
-		ServerName:         s.config.Host,
-	}
-
-	conn, err := tls.Dial("tcp", addr, tlsConfig)
-	if err != nil {
-		return fmt.Errorf("TLS connection failed: %w", err)
-	}
-	defer conn.Close()
-
-	client, err := smtp.NewClient(conn, s.config.Host)
-	if err != nil {
-		return fmt.Errorf("failed to create SMTP client: %w", err)
-	}
-	defer client.Close()
-
-	if auth != nil {
-		if err := client.Auth(auth); err != nil {
-			return fmt.Errorf("SMTP authentication failed: %w", err)
-		}
-	}
-
-	if err := client.Mail(from); err != nil {
-		return fmt.Errorf("failed to set sender: %w", err)
-	}
-
-	if err := client.Rcpt(to); err != nil {
-		return fmt.Errorf("failed to set recipient: %w", err)
-	}
-
-	w, err := client.Data()
-	if err != nil {
-		return fmt.Errorf("failed to get data writer: %w", err)
-	}
-
-	_, err = w.Write(msg)
-	if err != nil {
-		return fmt.Errorf("failed to write message: %w", err)
-	}
-
-	if err := w.Close(); err != nil {
-		return fmt.Errorf("failed to close writer: %w", err)
-	}
-
-	return client.Quit()
 }
 
 func (s *EmailService) buildMessage(from, fromName, to, subject, body string) string {

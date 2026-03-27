@@ -52,12 +52,12 @@ export const authApi = {
   },
 
   sendVerificationCode: async (data: SendVerificationCodeRequest): Promise<SendVerificationCodeResponse> => {
-    const response = await apiClient.post<SendVerificationCodeResponse>('/auth/send-verification-code', data)
+    const response = await apiClient.post<SendVerificationCodeResponse>('/auth/email/code', data)
     return response.data
   },
 
   verifyCodeAndLogin: async (data: VerifyCodeAndLoginRequest): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/verify-code-login', data)
+    const response = await apiClient.post<AuthResponse>('/auth/email/login', data)
     return response.data
   },
 }
