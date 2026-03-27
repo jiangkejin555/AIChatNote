@@ -70,11 +70,11 @@ context:
 
 # SMTP configuration for email verification
 smtp:
-  host: ""              # SMTP server host, e.g., "smtp.gmail.com"
+  host: "smtp.gmail.com"              # SMTP server host, e.g., "smtp.gmail.com"
   port: 587             # SMTP server port, typically 587 for TLS
-  username: ""          # SMTP username (usually your email)
-  password: ""          # SMTP password or app-specific password
-  from: ""              # Sender email address
+  username: "aichatnote.service@gmail.com"          # SMTP username (usually your email)
+  password: "Kejin123.."          # SMTP password or app-specific password
+  from: "aichatnote.service@gmail.com"              # Sender email address
   from_name: "AI Chat Note"  # Sender display name
   use_tls: true         # Use TLS for secure connection
-  enabled: false        # Enable/disable email verification feature
+  enabled: true        # Enable/disable email verification feature

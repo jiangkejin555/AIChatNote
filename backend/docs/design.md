@@ -313,6 +313,21 @@ type RefreshToken struct {
 | POST | /auth/refresh | 刷新 Token | 否 (需 Refresh Token) |
 | GET | /auth/me | 获取当前用户 | 是 |
 
+#### 注册请求
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "code": "123456"
+}
+```
+
+**字段说明**:
+- `email`: 用户邮箱（必填，需为有效邮箱格式）
+- `password`: 用户密码（必填，至少8位）
+- `code`: 验证码（必填，6位数字，需先调用发送验证码接口获取）
+
 #### 登录响应
 
 ```json

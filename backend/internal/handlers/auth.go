@@ -34,6 +34,7 @@ func NewAuthHandler(jwtService *crypto.JWTService, verificationCodeSvc *services
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
+	Code     string `json:"code" binding:"required,len=6"`
 }
 
 type LoginRequest struct {
@@ -59,14 +60,23 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Check if user exists
+	if !services.IsValidEmail(req.Email) {
+		utils.SendError(c, http.StatusBadRequest, "invalid_email", "Invalid email format")
+		return
+	}
+
+	if !h.verificationCodeSvc.VerifyCode(req.Email, req.Code) {
+		utils.LogAuthEvent("register", false, "email", req.Email, "reason", "invalid_code")
+		utils.SendError(c, http.StatusUnauthorized, "invalid_code", "Invalid or expired verification code")
+		return
+	}
+
 	if existingUser, _ := h.userRepo.FindByEmail(req.Email); existingUser != nil {
 		utils.LogAuthEvent("register", false, "email", req.Email, "reason", "email_exists")
 		utils.SendError(c, http.StatusConflict, "email_exists", "Email already registered")
 		return
 	}
 
-	// Hash password
 	passwordHash, err := crypto.HashPassword(req.Password)
 	if err != nil {
 		utils.LogOperationError("AuthHandler", "Register", err, "email", req.Email, "step", "password_hash")
@@ -74,7 +84,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Create user
 	user := &models.User{
 		Email:        req.Email,
 		PasswordHash: passwordHash,
@@ -85,7 +94,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Generate tokens
 	token, err := h.jwtService.GenerateToken(user)
 	if err != nil {
 		utils.LogOperationError("AuthHandler", "Register", err, "email", req.Email, "step", "generate_token")
@@ -100,7 +108,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Save refresh token
 	rt := &models.RefreshToken{
 		UserID:    user.ID,
 		TokenHash: refreshToken,

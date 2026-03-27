@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -10,17 +10,20 @@ import { useAuthStore } from '@/stores'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Check, X } from 'lucide-react'
 import { useTranslations } from '@/i18n'
 
 interface RegisterForm {
   email: string
+  code: string
   password: string
   confirmPassword: string
 }
 
 function RegisterFormContent() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login } = useAuthStore()
@@ -35,7 +38,60 @@ function RegisterFormContent() {
     formState: { errors },
   } = useForm<RegisterForm>()
 
+  const email = watch('email')
   const password = watch('password')
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown])
+
+  const handleSendCode = useCallback(async () => {
+    if (!email) {
+      toast.error(t('auth.verificationCode.emailRequired'))
+      return
+    }
+
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
+    if (!emailRegex.test(email)) {
+      toast.error(t('auth.emailInvalid'))
+      return
+    }
+
+    if (countdown > 0) return
+
+    setIsSendingCode(true)
+    try {
+      await authApi.sendVerificationCode({ email })
+      toast.success(t('auth.verificationCode.sendSuccess'))
+      setCountdown(60)
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>
+      const message = axiosError.response?.data?.message || t('auth.verificationCode.sendFailed')
+      toast.error(message)
+    } finally {
+      setIsSendingCode(false)
+    }
+  }, [email, countdown, t])
+
+  const getPasswordStrength = (pwd: string) => {
+    if (!pwd) return { score: 0, label: '', color: '' }
+    
+    let score = 0
+    if (pwd.length >= 8) score++
+    if (pwd.length >= 12) score++
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++
+    if (/\d/.test(pwd)) score++
+    if (/[^a-zA-Z0-9]/.test(pwd)) score++
+
+    if (score <= 2) return { score, label: t('auth.passwordStrength.weak'), color: 'text-red-500' }
+    if (score <= 3) return { score, label: t('auth.passwordStrength.medium'), color: 'text-yellow-500' }
+    return { score, label: t('auth.passwordStrength.strong'), color: 'text-green-500' }
+  }
+
+  const passwordStrength = getPasswordStrength(password)
 
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true)
@@ -43,6 +99,7 @@ function RegisterFormContent() {
       const response = await authApi.register({
         email: data.email,
         password: data.password,
+        code: data.code,
       })
       login(response.user, response.token)
       toast.success(t('auth.registerSuccess'))
@@ -92,6 +149,46 @@ function RegisterFormContent() {
         </div>
 
         <div className="space-y-2">
+          <label htmlFor="code" className="text-sm font-medium">
+            {t('auth.verificationCode.code')}
+          </label>
+          <div className="flex gap-3">
+            <Input
+              id="code"
+              type="text"
+              maxLength={6}
+              placeholder={t('auth.verificationCode.codePlaceholder')}
+              className="h-11 flex-1"
+              {...register('code', {
+                required: t('auth.registerPage.codeRequired'),
+                pattern: {
+                  value: /^\d{6}$/,
+                  message: t('auth.verificationCode.codeInvalid'),
+                },
+              })}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSendingCode || countdown > 0}
+              onClick={handleSendCode}
+              className="h-11 px-4 font-medium whitespace-nowrap"
+            >
+              {isSendingCode ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : countdown > 0 ? (
+                `${countdown}s`
+              ) : (
+                t('auth.registerPage.sendCode')
+              )}
+            </Button>
+          </div>
+          {errors.code && (
+            <p className="text-sm text-destructive">{errors.code.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium">
             {t('auth.password')}
           </label>
@@ -109,6 +206,12 @@ function RegisterFormContent() {
           />
           {errors.password && (
             <p className="text-sm text-destructive">{errors.password.message}</p>
+          )}
+          {password && !errors.password && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">{t('auth.passwordStrength.label')}:</span>
+              <span className={passwordStrength.color}>{passwordStrength.label}</span>
+            </div>
           )}
         </div>
 

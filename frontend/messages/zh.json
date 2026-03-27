@@ -399,8 +399,21 @@
     "registerDesc": "创建一个新账户",
     "registerSuccess": "注册成功",
     "registerFailed": "注册失败，请稍后重试",
-    "loginSuccess": "登录成功 (Mock 模式)",
+    "loginSuccess": "登录成功",
     "loginFailed": "登录失败",
+    "registerPage": {
+      "sendCode": "发送验证码",
+      "codePlaceholder": "请输入验证码",
+      "passwordMinLength": "密码至少需要8位",
+      "passwordMismatch": "两次密码不一致",
+      "codeRequired": "请输入验证码"
+    },
+    "passwordStrength": {
+      "label": "密码强度",
+      "weak": "弱",
+      "medium": "中",
+      "strong": "强"
+    },
     "oauth": {
       "title": "第三方登录",
       "or": "或",

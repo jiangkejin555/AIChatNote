@@ -406,6 +406,19 @@
     "registerFailed": "Registration failed, please try again later",
     "loginSuccess": "Login successful (Mock Mode)",
     "loginFailed": "Login failed",
+    "registerPage": {
+      "sendCode": "Send Code",
+      "codePlaceholder": "Please enter verification code",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "codeRequired": "Please enter verification code"
+    },
+    "passwordStrength": {
+      "label": "Password Strength",
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
     "oauth": {
       "title": "Third-party Login",
       "or": "Or",
