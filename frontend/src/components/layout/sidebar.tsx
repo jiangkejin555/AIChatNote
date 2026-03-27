@@ -229,22 +229,46 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex flex-col h-full border-r bg-sidebar transition-all duration-300',
+        'group relative flex flex-col h-full border-r transition-all duration-300 ease-out overflow-hidden',
+        'bg-sidebar',
         sidebarCollapsed ? 'w-16' : 'w-64'
       )}
     >
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-sidebar via-transparent to-sidebar/50 pointer-events-none opacity-60" />
+
+      {/* Subtle noise texture */}
+      <div
+        className="absolute inset-0 opacity-[0.015] pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
       {/* Header */}
-      <div className="flex items-center justify-between p-4 shrink-0">
+      <div className="relative flex items-center justify-between p-4 shrink-0">
         {!sidebarCollapsed && (
-          <h1 className="text-lg font-semibold text-sidebar-foreground">
-            AI Chat Note
-          </h1>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full scale-150" />
+              <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <MessageSquare className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+            <h1 className="text-lg font-semibold text-sidebar-foreground tracking-tight">
+              AI Chat Note
+            </h1>
+          </div>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebarCollapse}
-          className="ml-auto"
+          className={cn(
+            'relative rounded-lg transition-all duration-200',
+            'hover:bg-sidebar-accent/80 hover:scale-105 active:scale-95',
+            sidebarCollapsed ? 'ml-0 mx-auto' : 'ml-auto'
+          )}
         >
           {sidebarCollapsed ? (
             <PanelLeft className="h-4 w-4" />
@@ -254,25 +278,31 @@ export function Sidebar() {
         </Button>
       </div>
 
-      <Separator className="shrink-0" />
+      <Separator className="shrink-0 opacity-50" />
 
       {/* New Chat Button */}
-      <div className="p-3 shrink-0">
+      <div className="relative p-3 shrink-0">
         <Button
-          className={cn('w-full', sidebarCollapsed && 'px-2')}
+          className={cn(
+            'relative w-full overflow-hidden transition-all duration-200',
+            'hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]',
+            sidebarCollapsed ? 'px-2' : 'px-4'
+          )}
           onClick={handleNewConversation}
           disabled={createConversation.isPending}
         >
-          <Plus className="h-4 w-4" />
-          {!sidebarCollapsed && <span className="ml-2">{t('sidebar.newChat')}</span>}
+          {/* Subtle shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/newchat:translate-x-full transition-transform duration-700" />
+          <Plus className={cn('h-4 w-4 transition-transform duration-200 group-hover/newchat:rotate-90', !sidebarCollapsed && 'mr-2')} />
+          {!sidebarCollapsed && <span>{t('sidebar.newChat')}</span>}
         </Button>
       </div>
 
-      <Separator className="shrink-0" />
+      <Separator className="shrink-0 opacity-50" />
 
       {/* Navigation */}
-      <nav className="p-3 space-y-1 shrink-0">
-        {navItems.map((item) => {
+      <nav className="relative p-3 space-y-1.5 shrink-0">
+        {navItems.map((item, index) => {
           const Icon = item.icon
           const isActive = pathname === item.href ||
             (item.href !== '/' && pathname.startsWith(item.href))
@@ -282,15 +312,26 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
-                'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                'group/nav relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
+                'hover:bg-sidebar-accent/70 hover:translate-x-1',
                 isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground'
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm shadow-sidebar-accent/50'
+                  : 'text-sidebar-foreground/80 hover:text-sidebar-foreground'
               )}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!sidebarCollapsed && <span>{item.label}</span>}
+              {/* Active indicator */}
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full" />
+              )}
+              <Icon className={cn(
+                'h-4 w-4 shrink-0 transition-transform duration-200',
+                'group-hover/nav:scale-110',
+                isActive && 'text-primary'
+              )} />
+              {!sidebarCollapsed && (
+                <span className="font-medium">{item.label}</span>
+              )}
             </Link>
           )
         })}
@@ -299,19 +340,19 @@ export function Sidebar() {
       {/* Conversation History - only show on chat page when not collapsed */}
       {showConversationList && (
         <>
-          <Separator className="shrink-0" />
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <Separator className="shrink-0 opacity-50" />
+          <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
             {/* Search Header */}
-            <div className="px-3 py-2 flex items-center gap-2 shrink-0">
+            <div className="px-3 py-3 flex items-center gap-2 shrink-0">
               {searchExpanded ? (
                 <div className="flex-1 flex items-center gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-sidebar-foreground/50" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/40" />
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={t('chat.searchPlaceholder')}
-                      className="h-7 text-sm pl-7 pr-2 bg-background"
+                      className="h-8 text-sm pl-9 pr-3 bg-sidebar-accent/50 border-sidebar-border/50 focus:border-primary/50 rounded-lg"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
@@ -322,34 +363,34 @@ export function Sidebar() {
                       }}
                     />
                     {isSearching && (
-                      <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin text-sidebar-foreground/50" />
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-sidebar-foreground/40" />
                     )}
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0"
+                    className="h-8 w-8 shrink-0 rounded-lg hover:bg-sidebar-accent"
                     onClick={() => {
                       setSearchExpanded(false)
                       setSearchQuery('')
                       clearResults()
                     }}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
                 <>
-                  <span className="text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wider flex-1">
+                  <span className="text-[11px] font-semibold text-sidebar-foreground/40 uppercase tracking-widest flex-1">
                     {t('chat.conversationHistory')}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-7 w-7 rounded-lg hover:bg-sidebar-accent/50 transition-colors"
                     onClick={() => setSearchExpanded(true)}
                   >
-                    <Search className="h-3 w-3" />
+                    <Search className="h-3.5 w-3.5" />
                   </Button>
                 </>
               )}
@@ -361,22 +402,25 @@ export function Sidebar() {
                 // Search Results
                 <div className="p-2 space-y-1">
                   {isSearching ? (
-                    <div className="p-4 text-center text-sidebar-foreground/50 text-sm">
-                      {t('chat.searching')}
+                    <div className="p-6 text-center">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto text-sidebar-foreground/40" />
+                      <p className="text-xs text-sidebar-foreground/40 mt-2">{t('chat.searching')}</p>
                     </div>
                   ) : searchResults.length === 0 ? (
-                    <div className="p-4 text-center text-sidebar-foreground/50 text-sm">
-                      {t('chat.noSearchResults')}
+                    <div className="p-6 text-center">
+                      <Search className="h-6 w-6 mx-auto text-sidebar-foreground/20 mb-2" />
+                      <p className="text-xs text-sidebar-foreground/40">{t('chat.noSearchResults')}</p>
                     </div>
                   ) : (
-                    searchResults.map((result) => (
+                    searchResults.map((result, index) => (
                       <div
                         key={result.id}
                         className={cn(
-                          'group flex flex-col gap-1 p-2 rounded-lg cursor-pointer transition-colors',
-                          'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                          currentConversationId === result.id && 'bg-sidebar-accent text-sidebar-accent-foreground'
+                          'group/result flex flex-col gap-1.5 p-2.5 rounded-xl cursor-pointer transition-all duration-200',
+                          'hover:bg-sidebar-accent/60 hover:translate-x-1',
+                          currentConversationId === result.id && 'bg-sidebar-accent shadow-sm'
                         )}
+                        style={{ animationDelay: `${index * 30}ms` }}
                         onClick={() => {
                           setIsPendingNewChat(false)
                           setCurrentConversation(result.id)
@@ -388,18 +432,25 @@ export function Sidebar() {
                           }
                         }}
                       >
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4 shrink-0 text-sidebar-foreground/70" />
-                          <span className="truncate text-sm flex-1">
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn(
+                            'w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                            currentConversationId === result.id
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-sidebar-accent/50 text-sidebar-foreground/50 group-hover/result:bg-sidebar-accent group-hover/result:text-sidebar-foreground/70'
+                          )}>
+                            <MessageSquare className="h-3 w-3" />
+                          </div>
+                          <span className="truncate text-sm flex-1 font-medium">
                             {result.title || t('chat.newChat')}
                           </span>
-                          <span className="text-xs text-sidebar-foreground/50 shrink-0">
+                          <span className="text-[10px] text-sidebar-foreground/30 shrink-0 uppercase font-medium">
                             {result.matched_in === 'title' ? t('chat.matchedInTitle') : t('chat.matchedInContent')}
                           </span>
                         </div>
                         {result.snippet && (
                           <div
-                            className="text-xs text-sidebar-foreground/60 line-clamp-2 ml-6"
+                            className="text-xs text-sidebar-foreground/50 line-clamp-2 ml-[30px] leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: result.snippet }}
                           />
                         )}
@@ -409,30 +460,35 @@ export function Sidebar() {
                 </div>
               ) : conversationsLoading ? (
                 <div className="p-2 space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-12 bg-sidebar-accent/50 rounded animate-pulse" />
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-14 bg-sidebar-accent/30 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : groupedConversations.length === 0 ? (
-                <div className="p-4 text-center text-sidebar-foreground/50 text-sm">
-                  {t('chat.noConversations')}
+                <div className="p-6 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-sidebar-accent/30 flex items-center justify-center mx-auto mb-3">
+                    <MessageSquare className="h-5 w-5 text-sidebar-foreground/30" />
+                  </div>
+                  <p className="text-sm text-sidebar-foreground/40">{t('chat.noConversations')}</p>
+                  <p className="text-xs text-sidebar-foreground/30 mt-1">开始你的第一个对话吧</p>
                 </div>
               ) : (
-                <div className="p-2 space-y-3">
-                  {groupedConversations.map(({ label, conversations: groupItems }) => (
+                <div className="p-2 space-y-4">
+                  {groupedConversations.map(({ label, conversations: groupItems }, groupIndex) => (
                     <div key={label}>
-                      <div className="px-2 py-1 text-xs font-medium text-sidebar-foreground/50">
+                      <div className="px-2 py-1.5 text-[10px] font-semibold text-sidebar-foreground/35 uppercase tracking-widest">
                         {label}
                       </div>
                       <div className="space-y-1">
-                        {groupItems.map((conversation) => (
+                        {groupItems.map((conversation, index) => (
                           <div
                             key={conversation.id}
                             className={cn(
-                              'group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-                              'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                              currentConversationId === conversation.id && 'bg-sidebar-accent text-sidebar-accent-foreground'
+                              'group/conv flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all duration-200',
+                              'hover:bg-sidebar-accent/60 hover:translate-x-1',
+                              currentConversationId === conversation.id && 'bg-sidebar-accent shadow-sm'
                             )}
+                            style={{ animationDelay: `${(groupIndex * 5 + index) * 20}ms` }}
                             onClick={() => {
                               if (editingId !== conversation.id) {
                                 // Clear pending new chat state when switching to existing conversation
@@ -445,14 +501,21 @@ export function Sidebar() {
                               }
                             }}
                           >
-                            <MessageSquare className="h-4 w-4 shrink-0 text-sidebar-foreground/70" />
+                            <div className={cn(
+                              'w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                              currentConversationId === conversation.id
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-sidebar-accent/50 text-sidebar-foreground/50 group-hover/conv:bg-sidebar-accent group-hover/conv:text-sidebar-foreground/70'
+                            )}>
+                              <MessageSquare className="h-3 w-3" />
+                            </div>
 
                             {editingId === conversation.id ? (
                               <div className="flex-1 flex items-center gap-1">
                                 <Input
                                   value={editTitle}
                                   onChange={(e) => setEditTitle(e.target.value)}
-                                  className="h-7 text-sm bg-background"
+                                  className="h-7 text-sm bg-background border-sidebar-border"
                                   autoFocus
                                   onClick={(e) => e.stopPropagation()}
                                   onKeyDown={(e) => {
@@ -466,7 +529,7 @@ export function Sidebar() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6"
+                                  className="h-6 w-6 rounded-lg hover:bg-primary/10 hover:text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleSaveEdit()
@@ -477,7 +540,7 @@ export function Sidebar() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6"
+                                  className="h-6 w-6 rounded-lg hover:bg-destructive/10 hover:text-destructive"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleCancelEdit()
@@ -489,22 +552,23 @@ export function Sidebar() {
                             ) : (
                               <>
                                 <div className="flex-1 min-w-0">
-                                  <div className="truncate text-sm">
+                                  <div className="truncate text-sm font-medium">
                                     {conversation.title || t('chat.newChat')}
                                   </div>
-                                  <div className="text-xs text-sidebar-foreground/50 truncate">
+                                  <div className="text-[11px] text-sidebar-foreground/40 truncate mt-0.5">
                                     {formatTime(conversation.updated_at)}
                                   </div>
                                 </div>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger
-                                    className="h-6 w-6 flex items-center justify-center rounded hover:bg-sidebar-accent/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-sidebar-accent opacity-0 group-hover/conv:opacity-100 transition-all duration-200"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <MoreHorizontal className="h-3 w-3" />
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
+                                  <DropdownMenuContent align="end" className="rounded-xl">
                                     <DropdownMenuItem
+                                      className="rounded-lg"
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         handleStartEdit(conversation.id, conversation.title)
@@ -514,7 +578,7 @@ export function Sidebar() {
                                       {t('chat.rename')}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                      className="text-destructive"
+                                      className="rounded-lg text-destructive focus:text-destructive"
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         handleDeleteClick(conversation.id)

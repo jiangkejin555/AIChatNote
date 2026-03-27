@@ -109,7 +109,10 @@
     "searching": "搜索中...",
     "noSearchResults": "未找到相关会话",
     "matchedInTitle": "标题",
-    "matchedInContent": "内容"
+    "matchedInContent": "内容",
+    "aiAssistantReady": "AI 助手随时待命",
+    "startChattingDesc": "开始与 AI 对话，探索无限可能，让你的灵感高效记录",
+    "sendHint": "按 Enter 发送 · Shift + Enter 换行"
   },
   "saveNote": {
     "title": "保存为笔记",

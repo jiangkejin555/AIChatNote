@@ -111,7 +111,10 @@
     "searching": "Searching...",
     "noSearchResults": "No matching conversations found",
     "matchedInTitle": "Title",
-    "matchedInContent": "Content"
+    "matchedInContent": "Content",
+    "aiAssistantReady": "AI Assistant Ready",
+    "startChattingDesc": "Start a conversation with AI, explore endless possibilities, and capture your inspiration efficiently",
+    "sendHint": "Press Enter to send · Shift + Enter for new line"
   },
   "saveNote": {
     "title": "Save as Note",
