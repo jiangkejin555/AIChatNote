@@ -633,6 +633,7 @@
     "unread": "条未读",
     "empty": "暂无消息",
     "emptyDesc": "新消息将会显示在这里",
+    "viewAll": "查看全部消息",
     "markAllRead": "全部已读",
     "clearAll": "清空全部",
     "clear": "清空",
