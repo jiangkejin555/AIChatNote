@@ -126,7 +126,7 @@ export default function AccountManagementDialog({
       <DeleteAccountDialog
         open={showDeleteAccount}
         onOpenChange={setShowDeleteAccount}
-        isOAuthUser={isOAuthUser}
+        email={user?.email || ''}
       />
 
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>

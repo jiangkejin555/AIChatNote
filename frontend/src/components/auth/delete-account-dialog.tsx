@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { AxiosError } from 'axios'
 import { useAuthStore } from '@/stores'
@@ -25,29 +25,64 @@ import { useTranslations } from '@/i18n'
 interface DeleteAccountDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  isOAuthUser: boolean
+  email: string
 }
 
 export default function DeleteAccountDialog({
   open,
   onOpenChange,
-  isOAuthUser,
+  email,
 }: DeleteAccountDialogProps) {
-  const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const router = useRouter()
   const { logout } = useAuthStore()
   const t = useTranslations()
 
+  // Countdown timer
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown])
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setCode('')
+      setCountdown(0)
+    }
+  }, [open])
+
+  const handleSendCode = useCallback(async () => {
+    if (countdown > 0 || isSendingCode) return
+
+    setIsSendingCode(true)
+    try {
+      await authApi.sendVerificationCode({ email })
+      toast.success(t('auth.deleteAccount.codeSent'))
+      setCountdown(60)
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>
+      const message = axiosError.response?.data?.message || t('auth.deleteAccount.failed')
+      toast.error(message)
+    } finally {
+      setIsSendingCode(false)
+    }
+  }, [email, countdown, isSendingCode, t])
+
   const handleDeleteAccount = async () => {
-    if (!isOAuthUser && !password.trim()) {
-      toast.error(t('auth.deleteAccount.passwordRequired'))
+    if (!code.trim() || code.trim().length !== 6) {
+      toast.error(t('auth.deleteAccount.codePlaceholder'))
       return
     }
 
     setIsLoading(true)
     try {
-      await authApi.deleteAccount(isOAuthUser ? undefined : { password: password.trim() })
+      await authApi.deleteAccount({ code: code.trim() })
       toast.success(t('auth.deleteAccount.success'))
       logout()
       onOpenChange(false)
@@ -62,7 +97,8 @@ export default function DeleteAccountDialog({
   }
 
   const handleClose = () => {
-    setPassword('')
+    setCode('')
+    setCountdown(0)
     onOpenChange(false)
   }
 
@@ -87,22 +123,38 @@ export default function DeleteAccountDialog({
                 </li>
               </ul>
             </div>
-            {!isOAuthUser && (
-              <div className="space-y-2">
-                <label htmlFor="delete-password" className="text-sm font-medium text-foreground">
-                  {t('auth.deleteAccount.passwordRequired')}
-                </label>
+            <div className="space-y-2">
+              <label htmlFor="delete-code" className="text-sm font-medium text-foreground">
+                {t('auth.deleteAccount.codeLabel')}
+              </label>
+              <div className="flex gap-2">
                 <Input
-                  id="delete-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('auth.password')}
-                  className="h-10"
+                  id="delete-code"
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder={t('auth.deleteAccount.codePlaceholder')}
+                  className="h-10 flex-1"
                   disabled={isLoading}
+                  maxLength={6}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 shrink-0"
+                  onClick={handleSendCode}
+                  disabled={countdown > 0 || isSendingCode || isLoading}
+                >
+                  {isSendingCode ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : countdown > 0 ? (
+                    t('auth.deleteAccount.resendCode', { count: String(countdown) })
+                  ) : (
+                    t('auth.deleteAccount.sendCode')
+                  )}
+                </Button>
               </div>
-            )}
+            </div>
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -111,7 +163,7 @@ export default function DeleteAccountDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDeleteAccount}
-            disabled={isLoading || (!isOAuthUser && !password.trim())}
+            disabled={isLoading || code.trim().length !== 6}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isLoading ? (
