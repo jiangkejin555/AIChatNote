@@ -132,7 +132,7 @@ func (h *NoteHandler) Create(c *gin.Context) {
 			folderName = folder.Name
 		}
 	}
-	notificationRepo.CreateFromTemplate(
+	if _, err := notificationRepo.CreateFromTemplate(
 		userID,
 		"note_saved",
 		map[string]string{
@@ -143,7 +143,9 @@ func (h *NoteHandler) Create(c *gin.Context) {
 			ResourceType: "note",
 			ResourceID:   strconv.FormatUint(uint64(note.ID), 10),
 		},
-	)
+	); err != nil {
+		utils.LogOperationError("NoteHandler", "CreateNotification", err, "userID", userID, "noteID", note.ID)
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"data": note})
 }
