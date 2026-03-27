@@ -74,6 +74,9 @@ func main() {
 	tagHandler := handlers.NewTagHandler()
 	userSettingsHandler := handlers.NewUserSettingsHandler(contextConfigService)
 
+	// Initialize notification handler
+	notificationHandler := handlers.NewNotificationHandler()
+
 	// Initialize feedback handlers
 	satisfactionHandler := handlers.NewSatisfactionHandler()
 	feedbackHandler := handlers.NewFeedbackHandler()
@@ -200,6 +203,19 @@ func main() {
 		tags.Use(middleware.Auth(jwtService))
 		{
 			tags.GET("", tagHandler.List)
+		}
+
+		// Notification routes
+		notifications := api.Group("/notifications")
+		notifications.Use(middleware.Auth(jwtService))
+		{
+			notifications.GET("", notificationHandler.List)
+			notifications.GET("/unread-count", notificationHandler.GetUnreadCount)
+			notifications.PUT("/:id/read", notificationHandler.MarkAsRead)
+			notifications.PUT("/read-all", notificationHandler.MarkAllAsRead)
+			notifications.DELETE("/:id", notificationHandler.Delete)
+			notifications.DELETE("", notificationHandler.DeleteAll)
+			notifications.POST("/test", notificationHandler.CreateForTesting)
 		}
 
 		// Satisfaction routes
