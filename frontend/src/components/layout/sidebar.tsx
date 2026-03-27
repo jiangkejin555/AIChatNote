@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useUIStore, useAuthStore, useChatStore } from '@/stores'
 import { useTranslations } from '@/i18n'
-import { useConversations, useCreateConversation, useDeleteConversation, useUpdateConversation, useProviders } from '@/hooks'
+import { useConversations, useCreateConversation, useDeleteConversation, useUpdateConversation, useProviders, useSearchConversations } from '@/hooks'
 import {
   MessageSquare,
   FileText,
@@ -23,6 +23,8 @@ import {
   X,
   Info,
   HelpCircle,
+  Search,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -124,6 +126,11 @@ export function Sidebar() {
   const [editTitle, setEditTitle] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [conversationToDelete, setConversationToDelete] = useState<number | null>(null)
+
+  // Search state
+  const [searchExpanded, setSearchExpanded] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { results: searchResults, isSearching, clearResults } = useSearchConversations(searchQuery)
 
   const navItems = [
     { href: '/notes', label: t('sidebar.knowledgeBase'), icon: FileText },
@@ -290,11 +297,113 @@ export function Sidebar() {
         <>
           <Separator className="shrink-0" />
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="px-3 py-2 text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wider shrink-0">
-              {t('chat.conversationHistory')}
+            {/* Search Header */}
+            <div className="px-3 py-2 flex items-center gap-2 shrink-0">
+              {searchExpanded ? (
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-sidebar-foreground/50" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t('chat.searchPlaceholder')}
+                      className="h-7 text-sm pl-7 pr-2 bg-background"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setSearchExpanded(false)
+                          setSearchQuery('')
+                          clearResults()
+                        }
+                      }}
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin text-sidebar-foreground/50" />
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => {
+                      setSearchExpanded(false)
+                      setSearchQuery('')
+                      clearResults()
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wider flex-1">
+                    {t('chat.conversationHistory')}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setSearchExpanded(true)}
+                  >
+                    <Search className="h-3 w-3" />
+                  </Button>
+                </>
+              )}
             </div>
+
+            {/* Search Results or Normal List */}
             <ScrollArea className="flex-1 h-0">
-              {conversationsLoading ? (
+              {searchExpanded && searchQuery ? (
+                // Search Results
+                <div className="p-2 space-y-1">
+                  {isSearching ? (
+                    <div className="p-4 text-center text-sidebar-foreground/50 text-sm">
+                      {t('chat.searching')}
+                    </div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="p-4 text-center text-sidebar-foreground/50 text-sm">
+                      {t('chat.noSearchResults')}
+                    </div>
+                  ) : (
+                    searchResults.map((result) => (
+                      <div
+                        key={result.id}
+                        className={cn(
+                          'group flex flex-col gap-1 p-2 rounded-lg cursor-pointer transition-colors',
+                          'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                          currentConversationId === result.id && 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        )}
+                        onClick={() => {
+                          setIsPendingNewChat(false)
+                          setCurrentConversation(result.id)
+                          setSearchExpanded(false)
+                          setSearchQuery('')
+                          clearResults()
+                          if (pathname !== '/') {
+                            router.push('/')
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 shrink-0 text-sidebar-foreground/70" />
+                          <span className="truncate text-sm flex-1">
+                            {result.title || t('chat.newChat')}
+                          </span>
+                          <span className="text-xs text-sidebar-foreground/50 shrink-0">
+                            {result.matched_in === 'title' ? t('chat.matchedInTitle') : t('chat.matchedInContent')}
+                          </span>
+                        </div>
+                        {result.snippet && (
+                          <div
+                            className="text-xs text-sidebar-foreground/60 line-clamp-2 ml-6"
+                            dangerouslySetInnerHTML={{ __html: result.snippet }}
+                          />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : conversationsLoading ? (
                 <div className="p-2 space-y-2">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="h-12 bg-sidebar-accent/50 rounded animate-pulse" />

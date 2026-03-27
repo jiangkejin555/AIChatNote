@@ -22,6 +22,34 @@ export interface AuthResponse {
   user: User
 }
 
+export type OAuthProvider = 'google' | 'github' | 'microsoft'
+
+export interface OAuthAccount {
+  id: number
+  user_id: number
+  provider: OAuthProvider
+  provider_user_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface OAuthURLResponse {
+  auth_url: string
+}
+
+export interface OAuthCallbackRequest {
+  code: string
+  state: string
+}
+
+export interface LinkedAccountsResponse {
+  accounts: OAuthAccount[]
+}
+
+export interface DeleteAccountRequest {
+  password?: string
+}
+
 // Provider types
 export type ProviderType =
   | 'openai'
@@ -161,6 +189,15 @@ export interface Conversation {
   title: string
   is_saved: boolean
   created_at: string
+  updated_at: string
+}
+
+export interface ConversationSearchResult {
+  id: number
+  title: string
+  snippet: string
+  matched_in: 'title' | 'content'
+  rank: number
   updated_at: string
 }
 

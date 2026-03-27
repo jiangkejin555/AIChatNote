@@ -105,7 +105,12 @@
     "switchModel": "Switch Model",
     "switchModelDesc": "Switching to {model} will continue the conversation with the new model. Confirm?",
     "switchModelSuccess": "Model switched",
-    "switchModelFailed": "Failed to switch model"
+    "switchModelFailed": "Failed to switch model",
+    "searchPlaceholder": "Search conversations...",
+    "searching": "Searching...",
+    "noSearchResults": "No matching conversations found",
+    "matchedInTitle": "Title",
+    "matchedInContent": "Content"
   },
   "saveNote": {
     "title": "Save as Note",
@@ -400,7 +405,46 @@
     "registerSuccess": "Registration successful",
     "registerFailed": "Registration failed, please try again later",
     "loginSuccess": "Login successful (Mock Mode)",
-    "loginFailed": "Login failed"
+    "loginFailed": "Login failed",
+    "oauth": {
+      "title": "Third-party Login",
+      "or": "Or",
+      "loginWith": "Login with {provider}",
+      "failed": "OAuth login failed, please try again",
+      "processing": "Processing login...",
+      "callbackFailed": "Login failed, please try again",
+      "google": "Google",
+      "github": "GitHub",
+      "qq": "QQ"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "This action will permanently delete your account and all data, and cannot be recovered",
+      "warning": "Data to be deleted includes: conversation history, notes, folders, model configurations, and all other data",
+      "confirmLabel": "I understand the risks and confirm account deletion",
+      "confirmButton": "Confirm Deletion",
+      "cancelButton": "Cancel",
+      "passwordRequired": "Please enter password to confirm deletion",
+      "oauthRequired": "Please verify via {provider} to confirm deletion",
+      "success": "Account deleted successfully",
+      "failed": "Deletion failed, please try again later",
+      "confirmDialogTitle": "Confirm Account Deletion?",
+      "confirmDialogDescription": "This action cannot be undone. All your data will be permanently deleted."
+    },
+    "verificationCode": {
+      "passwordTab": "Email & Password",
+      "codeTab": "Verification Code",
+      "code": "Verification Code",
+      "codePlaceholder": "Enter 6-digit code",
+      "codeRequired": "Please enter verification code",
+      "codeInvalid": "Verification code must be 6 digits",
+      "sendCode": "Send Code",
+      "sendSuccess": "Verification code sent",
+      "sendFailed": "Failed to send verification code",
+      "emailRequired": "Please enter your email first",
+      "login": "Login",
+      "verifyFailed": "Verification code verification failed"
+    }
   },
   "about": {
     "title": "About",

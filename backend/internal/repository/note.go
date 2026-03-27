@@ -28,7 +28,11 @@ func (r *NoteRepository) FindByUserID(userID uint, filters map[string]interface{
 			Where("note_tags.tag = ?", tag)
 	}
 	if search, ok := filters["search"]; ok {
-		query = query.Where("search_vector @@ to_tsquery('simple', ?)", search)
+		// query = query.Where("search_vector @@ to_tsquery('simple', ?)", search)
+		// Use ILIKE for better Chinese text support
+		// PostgreSQL's 'simple' tsvector config doesn't properly segment Chinese text
+		searchPattern := "%" + search.(string) + "%"
+		query = query.Where("title ILIKE ? OR content ILIKE ?", searchPattern, searchPattern)
 	}
 
 	err := query.Preload("Tags").Order("updated_at DESC").Find(&notes).Error

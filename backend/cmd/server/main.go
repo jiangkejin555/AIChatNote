@@ -58,8 +58,14 @@ func main() {
 	// Initialize context config service
 	contextConfigService := services.NewContextConfigService(cfg)
 
+	// Initialize verification code service
+	verificationCodeService := services.NewVerificationCodeService()
+
+	// Initialize email service
+	emailService := services.NewEmailService(&cfg.SMTP)
+
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(jwtService)
+	authHandler := handlers.NewAuthHandler(jwtService, verificationCodeService, emailService)
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
 	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto, contextConfigService)
@@ -98,6 +104,8 @@ func main() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
+			auth.POST("/email/code", authHandler.SendVerificationCode)
+			auth.POST("/email/login", authHandler.VerifyCodeAndLogin)
 		}
 
 		// Auth routes (protected)
@@ -142,6 +150,7 @@ func main() {
 		conversations.Use(middleware.Auth(jwtService))
 		{
 			conversations.GET("", conversationHandler.List)
+			conversations.GET("/search", conversationHandler.Search)
 			conversations.POST("", conversationHandler.Create)
 			conversations.GET("/:id", conversationHandler.Get)
 			conversations.PUT("/:id", conversationHandler.Update)

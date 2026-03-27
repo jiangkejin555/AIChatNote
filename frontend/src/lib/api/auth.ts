@@ -1,6 +1,23 @@
 import apiClient from './client'
 import type { AuthResponse, LoginRequest, RegisterRequest, User } from '@/types'
 
+export interface OAuthAuthURLResponse {
+  auth_url: string
+}
+
+export interface SendVerificationCodeRequest {
+  email: string
+}
+
+export interface SendVerificationCodeResponse {
+  message: string
+}
+
+export interface VerifyCodeAndLoginRequest {
+  email: string
+  code: string
+}
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/login', data)
@@ -19,5 +36,28 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     await apiClient.post('/auth/logout')
+  },
+
+  getOAuthURL: async (provider: string): Promise<OAuthAuthURLResponse> => {
+    const response = await apiClient.get<OAuthAuthURLResponse>(`/oauth/${provider}/auth-url`)
+    return response.data
+  },
+
+  handleOAuthCallback: async (provider: string, code: string, state: string): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>(`/oauth/${provider}/callback`, {
+      code,
+      state,
+    })
+    return response.data
+  },
+
+  sendVerificationCode: async (data: SendVerificationCodeRequest): Promise<SendVerificationCodeResponse> => {
+    const response = await apiClient.post<SendVerificationCodeResponse>('/auth/send-verification-code', data)
+    return response.data
+  },
+
+  verifyCodeAndLogin: async (data: VerifyCodeAndLoginRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/verify-code-login', data)
+    return response.data
   },
 }

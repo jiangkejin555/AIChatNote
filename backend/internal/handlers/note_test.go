@@ -24,11 +24,12 @@ func setupNoteTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 
 	cfg := testutil.TestConfig()
 	jwtService := crypto.NewJWTService(cfg)
-	_ = cfg.Encryption.Key // aesCrypto not needed for these tests
+	_ = cfg.Encryption.Key
 
-	// Create handlers
-	authHandler := NewAuthHandler(jwtService)
-	aiService := services.NewAIService(true) // Mock mode
+	verificationCodeSvc := services.NewVerificationCodeService()
+	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
+	aiService := services.NewAIService(true)
 	noteHandler := NewNoteHandler(aiService)
 	folderHandler := NewFolderHandler()
 	tagHandler := NewTagHandler()

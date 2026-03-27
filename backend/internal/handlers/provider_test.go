@@ -10,6 +10,7 @@ import (
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/services"
 	"github.com/chat-note/backend/internal/testutil"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,7 +26,9 @@ func setupProviderTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	jwtService := crypto.NewJWTService(cfg)
 	aesCrypto, _ := crypto.NewAESCrypto(cfg.Encryption.Key)
 
-	authHandler := NewAuthHandler(jwtService)
+	verificationCodeSvc := services.NewVerificationCodeService()
+	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 	providerHandler := NewProviderHandler(aesCrypto)
 
 	router := gin.New()

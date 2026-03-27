@@ -245,6 +245,142 @@ func TestConversationRepository(t *testing.T) {
 	})
 }
 
+func TestConversationRepository_Search(t *testing.T) {
+	cleanup := testutil.SetupTestDB(t)
+	defer cleanup()
+
+	convRepo := NewConversationRepository()
+	msgRepo := NewMessageRepository()
+	userRepo := NewUserRepository()
+
+	// Create test user
+	user := &models.User{
+		Email:        "search_test@example.com",
+		PasswordHash: "hash",
+	}
+	require.NoError(t, userRepo.Create(user))
+
+	// Create another user for isolation test
+	otherUser := &models.User{
+		Email:        "other_search_test@example.com",
+		PasswordHash: "hash",
+	}
+	require.NoError(t, userRepo.Create(otherUser))
+
+	// Create test conversations with messages
+	conv1 := &models.Conversation{
+		UserID: user.ID,
+		Title:  "测试对话",
+	}
+	require.NoError(t, convRepo.Create(conv1))
+
+	msg1 := &models.Message{
+		ConversationID: conv1.ID,
+		Role:           models.RoleUser,
+		Content:        "这是一条测试消息",
+	}
+	require.NoError(t, msgRepo.Create(msg1))
+
+	conv2 := &models.Conversation{
+		UserID: user.ID,
+		Title:  "普通对话",
+	}
+	require.NoError(t, convRepo.Create(conv2))
+
+	msg2 := &models.Message{
+		ConversationID: conv2.ID,
+		Role:           models.RoleAssistant,
+		Content:        "这是另一个对话的回复",
+	}
+	require.NoError(t, msgRepo.Create(msg2))
+
+	// Conversation for other user (isolation test)
+	convOther := &models.Conversation{
+		UserID: otherUser.ID,
+		Title:  "测试其他用户",
+	}
+	require.NoError(t, convRepo.Create(convOther))
+
+	msgOther := &models.Message{
+		ConversationID: convOther.ID,
+		Role:           models.RoleUser,
+		Content:        "其他用户的内容",
+	}
+	require.NoError(t, msgRepo.Create(msgOther))
+
+	t.Run("Search_ByTitle", func(t *testing.T) {
+		results, err := convRepo.Search(user.ID, "测试", 10)
+
+		require.NoError(t, err)
+		assert.Len(t, results, 1)
+		assert.Equal(t, conv1.ID, results[0].ID)
+		assert.Equal(t, "测试对话", results[0].Title)
+		assert.Equal(t, "title", results[0].MatchedIn)
+		assert.Equal(t, float64(1), results[0].Rank)
+	})
+
+	t.Run("Search_ByContent", func(t *testing.T) {
+		results, err := convRepo.Search(user.ID, "测试消息", 10)
+
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, len(results), 1)
+		// Should find in content
+		found := false
+		for _, r := range results {
+			if r.ID == conv1.ID {
+				found = true
+				assert.Equal(t, "content", r.MatchedIn)
+			}
+		}
+		assert.True(t, found, "Should find conversation by content")
+	})
+
+	t.Run("Search_NoResults", func(t *testing.T) {
+		results, err := convRepo.Search(user.ID, "不存在的关键词xyz123", 10)
+
+		require.NoError(t, err)
+		assert.Len(t, results, 0)
+	})
+
+	t.Run("Search_UserIsolation", func(t *testing.T) {
+		// Search for "测试" should not return other user's conversation
+		results, err := convRepo.Search(user.ID, "其他用户", 10)
+
+		require.NoError(t, err)
+		// Should not find convOther which belongs to otherUser
+		for _, r := range results {
+			assert.NotEqual(t, convOther.ID, r.ID, "Should not return other user's conversations")
+		}
+	})
+
+	t.Run("Search_Limit", func(t *testing.T) {
+		// Create more conversations
+		for i := 0; i < 5; i++ {
+			conv := &models.Conversation{
+				UserID: user.ID,
+				Title:  "测试对话" + string(rune('0'+i)),
+			}
+			require.NoError(t, convRepo.Create(conv))
+		}
+
+		results, err := convRepo.Search(user.ID, "测试", 3)
+
+		require.NoError(t, err)
+		assert.LessOrEqual(t, len(results), 3)
+	})
+
+	t.Run("Search_TitleRankHigher", func(t *testing.T) {
+		// Title match should have higher rank than content match
+		results, err := convRepo.Search(user.ID, "测试", 10)
+
+		require.NoError(t, err)
+		if len(results) > 0 {
+			// First result should be title match with rank 1
+			assert.Equal(t, float64(1), results[0].Rank)
+		}
+	})
+}
+
 func TestMessageRepository(t *testing.T) {
 	cleanup := testutil.SetupTestDB(t)
 	defer cleanup()

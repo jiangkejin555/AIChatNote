@@ -103,7 +103,12 @@
     "switchModel": "切换模型",
     "switchModelDesc": "切换到 {model} 将使用新模型继续对话。是否确认切换？",
     "switchModelSuccess": "模型已切换",
-    "switchModelFailed": "切换模型失败"
+    "switchModelFailed": "切换模型失败",
+    "searchPlaceholder": "搜索会话...",
+    "searching": "搜索中...",
+    "noSearchResults": "未找到相关会话",
+    "matchedInTitle": "标题",
+    "matchedInContent": "内容"
   },
   "saveNote": {
     "title": "保存为笔记",
@@ -395,7 +400,46 @@
     "registerSuccess": "注册成功",
     "registerFailed": "注册失败，请稍后重试",
     "loginSuccess": "登录成功 (Mock 模式)",
-    "loginFailed": "登录失败"
+    "loginFailed": "登录失败",
+    "oauth": {
+      "title": "第三方登录",
+      "or": "或",
+      "loginWith": "使用 {provider} 登录",
+      "failed": "OAuth 登录失败，请重试",
+      "processing": "正在处理登录...",
+      "callbackFailed": "登录失败，请重试",
+      "google": "Google",
+      "github": "GitHub",
+      "qq": "QQ"
+    },
+    "deleteAccount": {
+      "title": "注销账户",
+      "description": "此操作将永久删除您的账户和所有数据，且不可恢复",
+      "warning": "删除的数据包括：会话记录、笔记、文件夹、模型配置等所有数据",
+      "confirmLabel": "我已了解风险，确认注销账户",
+      "confirmButton": "确认注销",
+      "cancelButton": "取消",
+      "passwordRequired": "请输入密码以确认注销",
+      "oauthRequired": "请通过 {provider} 验证以确认注销",
+      "success": "账户已注销",
+      "failed": "注销失败，请稍后重试",
+      "confirmDialogTitle": "确认注销账户？",
+      "confirmDialogDescription": "此操作不可撤销，您的所有数据将被永久删除。"
+    },
+    "verificationCode": {
+      "passwordTab": "邮箱密码登录",
+      "codeTab": "验证码登录",
+      "code": "验证码",
+      "codePlaceholder": "请输入6位验证码",
+      "codeRequired": "请输入验证码",
+      "codeInvalid": "验证码必须为6位数字",
+      "sendCode": "发送验证码",
+      "sendSuccess": "验证码已发送",
+      "sendFailed": "发送验证码失败",
+      "emailRequired": "请先输入邮箱",
+      "login": "登录",
+      "verifyFailed": "验证码验证失败"
+    }
   },
   "about": {
     "title": "关于我们",

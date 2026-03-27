@@ -76,6 +76,33 @@ func (h *ConversationHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": conversations})
 }
 
+// Search searches conversations by keyword
+// GET /api/conversations/search?q={keyword}&limit={limit}
+func (h *ConversationHandler) Search(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	query := c.Query("q")
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	// Return empty results if query is empty
+	if query == "" {
+		c.JSON(http.StatusOK, gin.H{"data": []interface{}{}})
+		return
+	}
+
+	results, err := h.convRepo.Search(userID, query, limit)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "search_error", "Failed to search conversations", err)
+		return
+	}
+
+	// Return empty array instead of null if no results
+	if results == nil {
+		results = []repository.SearchResult{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": results})
+}
+
 // Create creates a new conversation
 func (h *ConversationHandler) Create(c *gin.Context) {
 	userID := middleware.GetUserID(c)

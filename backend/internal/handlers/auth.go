@@ -1,27 +1,33 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/chat-note/backend/internal/crypto"
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
 	"github.com/chat-note/backend/internal/repository"
+	"github.com/chat-note/backend/internal/services"
 	"github.com/chat-note/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
-	userRepo         *repository.UserRepository
-	refreshTokenRepo *repository.RefreshTokenRepository
-	jwtService       *crypto.JWTService
+	userRepo              *repository.UserRepository
+	refreshTokenRepo      *repository.RefreshTokenRepository
+	jwtService            *crypto.JWTService
+	verificationCodeSvc   *services.VerificationCodeService
+	emailSvc              *services.EmailService
 }
 
-func NewAuthHandler(jwtService *crypto.JWTService) *AuthHandler {
+func NewAuthHandler(jwtService *crypto.JWTService, verificationCodeSvc *services.VerificationCodeService, emailSvc *services.EmailService) *AuthHandler {
 	return &AuthHandler{
-		userRepo:         repository.NewUserRepository(),
-		refreshTokenRepo: repository.NewRefreshTokenRepository(),
-		jwtService:       jwtService,
+		userRepo:              repository.NewUserRepository(),
+		refreshTokenRepo:      repository.NewRefreshTokenRepository(),
+		jwtService:            jwtService,
+		verificationCodeSvc:   verificationCodeSvc,
+		emailSvc:              emailSvc,
 	}
 }
 
@@ -265,4 +271,126 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 
 	utils.LogOperationSuccess("AuthHandler", "GetCurrentUser", "userID", user.ID, "email", user.Email)
 	c.JSON(http.StatusOK, user)
+}
+
+type SendVerificationCodeRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type SendVerificationCodeResponse struct {
+	Message    string `json:"message"`
+	RetryAfter int    `json:"retry_after,omitempty"`
+}
+
+type VerifyCodeAndLoginRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	Code  string `json:"code" binding:"required,len=6"`
+}
+
+func (h *AuthHandler) SendVerificationCode(c *gin.Context) {
+	var req SendVerificationCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	if !services.IsValidEmail(req.Email) {
+		utils.SendError(c, http.StatusBadRequest, "invalid_email", "Invalid email format")
+		return
+	}
+
+	if !h.emailSvc.IsEnabled() {
+		utils.SendError(c, http.StatusServiceUnavailable, "service_unavailable", "Email service is not configured")
+		return
+	}
+
+	if h.verificationCodeSvc.IsRateLimited(req.Email) {
+		remaining := h.verificationCodeSvc.GetRateLimitRemaining(req.Email)
+		utils.LogAuthEvent("send_verification_code", false, "email", req.Email, "reason", "rate_limited")
+		utils.SendError(c, http.StatusTooManyRequests, "rate_limited", fmt.Sprintf("Please wait %d seconds before requesting a new code", int(remaining.Seconds())))
+		return
+	}
+
+	code, err := h.verificationCodeSvc.GenerateCode(req.Email)
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "SendVerificationCode", err, "email", req.Email, "step", "generate_code")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "code_generation_error", "Failed to generate verification code", err)
+		return
+	}
+
+	if err := h.emailSvc.SendVerificationCode(req.Email, code); err != nil {
+		utils.LogOperationError("AuthHandler", "SendVerificationCode", err, "email", req.Email, "step", "send_email")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "email_send_error", "Failed to send verification code", err)
+		return
+	}
+
+	utils.LogAuthEvent("send_verification_code", true, "email", utils.MaskEmail(req.Email))
+	c.JSON(http.StatusOK, SendVerificationCodeResponse{
+		Message: "Verification code sent successfully",
+	})
+}
+
+func (h *AuthHandler) VerifyCodeAndLogin(c *gin.Context) {
+	var req VerifyCodeAndLoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	if !services.IsValidEmail(req.Email) {
+		utils.SendError(c, http.StatusBadRequest, "invalid_email", "Invalid email format")
+		return
+	}
+
+	if !h.verificationCodeSvc.VerifyCode(req.Email, req.Code) {
+		utils.LogAuthEvent("verify_code_login", false, "email", req.Email, "reason", "invalid_code")
+		utils.SendError(c, http.StatusUnauthorized, "invalid_code", "Invalid or expired verification code")
+		return
+	}
+
+	user, err := h.userRepo.FindByEmail(req.Email)
+	if err != nil {
+		user = &models.User{
+			Email:        req.Email,
+			PasswordHash: "",
+		}
+		if err := h.userRepo.Create(user); err != nil {
+			utils.LogOperationError("AuthHandler", "VerifyCodeAndLogin", err, "email", req.Email, "step", "create_user")
+			utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create user", err)
+			return
+		}
+		utils.LogOperationSuccess("AuthHandler", "VerifyCodeAndLogin", "action", "user_created", "userID", user.ID, "email", user.Email)
+	}
+
+	token, err := h.jwtService.GenerateToken(user)
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "VerifyCodeAndLogin", err, "email", req.Email, "step", "generate_token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate token", err)
+		return
+	}
+
+	refreshToken, expiresAt, err := h.jwtService.GenerateRefreshToken()
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "VerifyCodeAndLogin", err, "email", req.Email, "step", "generate_refresh_token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to generate refresh token", err)
+		return
+	}
+
+	rt := &models.RefreshToken{
+		UserID:    user.ID,
+		TokenHash: refreshToken,
+		ExpiresAt: expiresAt,
+	}
+	if err := h.refreshTokenRepo.Create(rt); err != nil {
+		utils.LogOperationError("AuthHandler", "VerifyCodeAndLogin", err, "email", req.Email, "step", "save_refresh_token")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "token_error", "Failed to save refresh token", err)
+		return
+	}
+
+	utils.LogAuthEvent("verify_code_login", true, "userID", user.ID, "email", user.Email)
+	c.JSON(http.StatusOK, AuthResponse{
+		Token:        token,
+		RefreshToken: refreshToken,
+		User:         user,
+	})
 }

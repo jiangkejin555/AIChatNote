@@ -1,6 +1,7 @@
 import apiClient from './client'
 import type {
   Conversation,
+  ConversationSearchResult,
   Message,
   CreateConversationRequest,
   SendMessageRequest,
@@ -10,6 +11,16 @@ import type {
 export const conversationsApi = {
   getAll: async (): Promise<Conversation[]> => {
     const response = await apiClient.get<ApiResponse<Conversation[]>>('/conversations')
+    return response.data.data
+  },
+
+  search: async (query: string, limit: number = 20): Promise<ConversationSearchResult[]> => {
+    if (!query.trim()) {
+      return []
+    }
+    const response = await apiClient.get<ApiResponse<ConversationSearchResult[]>>(
+      `/conversations/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    )
     return response.data.data
   },
 

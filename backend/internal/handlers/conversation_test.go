@@ -27,7 +27,9 @@ func setupConversationTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	aesCrypto, _ := crypto.NewAESCrypto(cfg.Encryption.Key)
 	contextConfigService := services.NewContextConfigService(cfg)
 
-	authHandler := NewAuthHandler(jwtService)
+	verificationCodeSvc := services.NewVerificationCodeService()
+	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 	convHandler := NewConversationHandler(cfg, aesCrypto, contextConfigService)
 
 	router := gin.New()
@@ -41,6 +43,7 @@ func setupConversationTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	protected.Use(middleware.Auth(jwtService))
 	{
 		protected.GET("/conversations", convHandler.List)
+		protected.GET("/conversations/search", convHandler.Search)
 		protected.POST("/conversations", convHandler.Create)
 		protected.GET("/conversations/:id", convHandler.Get)
 		protected.PUT("/conversations/:id", convHandler.Update)
@@ -483,5 +486,95 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 		require.NoError(t, result.Error)
 		assert.Equal(t, "temporary-model", retrievedConv.ModelID)
 		assert.Nil(t, retrievedConv.CurrentProviderModelID)
+	})
+}
+
+func TestConversationHandler_Search(t *testing.T) {
+	router, cfg, cleanup := setupConversationTest(t)
+	defer cleanup()
+
+	user := testutil.CreateTestUser(t, "search@example.com", "hash")
+	otherUser := testutil.CreateTestUser(t, "search_other@example.com", "hash")
+
+	// Create conversations with different titles
+	conv1 := testutil.CreateTestConversation(t, user.ID, "测试对话")
+	conv2 := testutil.CreateTestConversation(t, user.ID, "普通对话")
+	conv3 := testutil.CreateTestConversation(t, otherUser.ID, "其他用户的测试")
+
+	// Add messages to conv1
+	testutil.CreateTestMessage(t, conv1.ID, models.RoleUser, "这是一条测试消息内容")
+	testutil.CreateTestMessage(t, conv1.ID, models.RoleAssistant, "这是助手的回复")
+
+	// Add message to conv2
+	testutil.CreateTestMessage(t, conv2.ID, models.RoleUser, "普通消息内容")
+
+	t.Run("should return empty when query is empty", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/search", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.Empty(t, data)
+	})
+
+	t.Run("should search by title keyword", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/search?q=%E6%B5%8B%E8%AF%95", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.GreaterOrEqual(t, len(data), 1)
+
+		// First result should be title match
+		firstResult := data[0].(map[string]interface{})
+		assert.Equal(t, "测试对话", firstResult["title"])
+		assert.Equal(t, "title", firstResult["matched_in"])
+	})
+
+	t.Run("should search by content keyword", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/search?q=%E6%B6%88%E6%81%AF%E5%86%85%E5%AE%B9", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.GreaterOrEqual(t, len(data), 1)
+	})
+
+	t.Run("should not return other users conversations", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/search?q=%E6%B5%8B%E8%AF%95", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+
+		// Should not include conv3 (other user's conversation)
+		for _, item := range data {
+			result := item.(map[string]interface{})
+			assert.NotEqual(t, conv3.ID, uint(result["id"].(float64)))
+		}
+	})
+
+	t.Run("should return empty when no match", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/search?q=nonexistent_keyword_xyz123", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.Empty(t, data)
+	})
+
+	t.Run("should respect limit parameter", func(t *testing.T) {
+		w := testutil.MakeAuthenticatedRequest(router, "GET", "/api/conversations/search?q=%E5%AF%B9%E8%AF%9D&limit=1", nil, user.ID, cfg)
+
+		require.Equal(t, 200, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		data := response["data"].([]interface{})
+		assert.LessOrEqual(t, len(data), 1)
 	})
 }

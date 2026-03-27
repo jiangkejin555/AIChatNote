@@ -11,6 +11,7 @@ import (
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/services"
 	"github.com/chat-note/backend/internal/testutil"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,9 @@ func setupAuthTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 
 	cfg := testutil.TestConfig()
 	jwtService := crypto.NewJWTService(cfg)
-	authHandler := NewAuthHandler(jwtService)
+	verificationCodeSvc := services.NewVerificationCodeService()
+	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 
 	router := gin.New()
 	router.POST("/api/auth/register", authHandler.Register)

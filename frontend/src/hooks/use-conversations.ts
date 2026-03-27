@@ -1,11 +1,56 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { conversationsApi } from '@/lib/api'
 import { useChatStore } from '@/stores'
 import { toast } from 'sonner'
 import { getT } from '@/i18n'
-import type { CreateConversationRequest, SendMessageRequest } from '@/types'
+import type { CreateConversationRequest, SendMessageRequest, ConversationSearchResult } from '@/types'
+
+// Debounce hook for search
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
+// Search conversations hook with debounce
+export function useSearchConversations(query: string, debounceMs: number = 300) {
+  const debouncedQuery = useDebounce(query, debounceMs)
+  const [results, setResults] = useState<ConversationSearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    conversationsApi.search(debouncedQuery)
+      .then(setResults)
+      .catch(() => setResults([]))
+      .finally(() => setIsSearching(false))
+  }, [debouncedQuery])
+
+  const clearResults = useCallback(() => {
+    setResults([])
+  }, [])
+
+  return { results, isSearching, clearResults }
+}
 
 export function useConversations() {
   return useQuery({

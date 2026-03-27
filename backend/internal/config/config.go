@@ -20,6 +20,8 @@ type Config struct {
 	Mock           MockConfig           `yaml:"mock"`
 	TitleGenerator TitleGeneratorConfig `yaml:"title_generator"`
 	Context        ContextConfig        `yaml:"context"`
+	OAuth          OAuthConfig          `yaml:"oauth"`
+	SMTP           SMTPConfig           `yaml:"smtp"`
 }
 
 type ServerConfig struct {
@@ -206,6 +208,75 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("TITLE_GENERATOR_MAX_TOKENS"); v != "" {
 		cfg.TitleGenerator.MaxTokens = parseInt(v, cfg.TitleGenerator.MaxTokens)
+	}
+
+	// OAuth environment variables
+	// Google OAuth
+	if v := os.Getenv("GOOGLE_CLIENT_ID"); v != "" {
+		cfg.OAuth.Google.ClientID = v
+	}
+	if v := os.Getenv("GOOGLE_CLIENT_SECRET"); v != "" {
+		cfg.OAuth.Google.ClientSecret = v
+	}
+	if v := os.Getenv("GOOGLE_REDIRECT_URI"); v != "" {
+		cfg.OAuth.Google.RedirectURI = v
+	}
+	if v := os.Getenv("GOOGLE_ENABLED"); v != "" {
+		cfg.OAuth.Google.Enabled = strings.ToLower(v) == "true"
+	}
+
+	// GitHub OAuth
+	if v := os.Getenv("GITHUB_CLIENT_ID"); v != "" {
+		cfg.OAuth.GitHub.ClientID = v
+	}
+	if v := os.Getenv("GITHUB_CLIENT_SECRET"); v != "" {
+		cfg.OAuth.GitHub.ClientSecret = v
+	}
+	if v := os.Getenv("GITHUB_REDIRECT_URI"); v != "" {
+		cfg.OAuth.GitHub.RedirectURI = v
+	}
+	if v := os.Getenv("GITHUB_ENABLED"); v != "" {
+		cfg.OAuth.GitHub.Enabled = strings.ToLower(v) == "true"
+	}
+
+	// QQ OAuth (uses APP_ID and APP_KEY instead of CLIENT_ID and CLIENT_SECRET)
+	if v := os.Getenv("QQ_APP_ID"); v != "" {
+		cfg.OAuth.QQ.ClientID = v
+	}
+	if v := os.Getenv("QQ_APP_KEY"); v != "" {
+		cfg.OAuth.QQ.ClientSecret = v
+	}
+	if v := os.Getenv("QQ_REDIRECT_URI"); v != "" {
+		cfg.OAuth.QQ.RedirectURI = v
+	}
+	if v := os.Getenv("QQ_ENABLED"); v != "" {
+		cfg.OAuth.QQ.Enabled = strings.ToLower(v) == "true"
+	}
+
+	// SMTP configuration
+	if v := os.Getenv("SMTP_HOST"); v != "" {
+		cfg.SMTP.Host = v
+	}
+	if v := os.Getenv("SMTP_PORT"); v != "" {
+		cfg.SMTP.Port = parseInt(v, cfg.SMTP.Port)
+	}
+	if v := os.Getenv("SMTP_USERNAME"); v != "" {
+		cfg.SMTP.Username = v
+	}
+	if v := os.Getenv("SMTP_PASSWORD"); v != "" {
+		cfg.SMTP.Password = v
+	}
+	if v := os.Getenv("SMTP_FROM"); v != "" {
+		cfg.SMTP.From = v
+	}
+	if v := os.Getenv("SMTP_FROM_NAME"); v != "" {
+		cfg.SMTP.FromName = v
+	}
+	if v := os.Getenv("SMTP_USE_TLS"); v != "" {
+		cfg.SMTP.UseTLS = strings.ToLower(v) == "true"
+	}
+	if v := os.Getenv("SMTP_ENABLED"); v != "" {
+		cfg.SMTP.Enabled = strings.ToLower(v) == "true"
 	}
 }
 

@@ -40,6 +40,9 @@ func SetupTestDB(t *testing.T) func() {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			email VARCHAR(255) UNIQUE NOT NULL,
 			password_hash VARCHAR(255) NOT NULL,
+			nickname VARCHAR(255),
+			avatar_url TEXT,
+			email_verified BOOLEAN DEFAULT FALSE,
 			created_at DATETIME,
 			updated_at DATETIME
 		)`,
@@ -73,7 +76,7 @@ func SetupTestDB(t *testing.T) func() {
 		`CREATE TABLE conversations (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
-			provider_model_id TEXT,
+			current_provider_model_id TEXT,
 			model_id VARCHAR(255),
 			title VARCHAR(500),
 			is_saved BOOLEAN DEFAULT FALSE,
@@ -85,6 +88,8 @@ func SetupTestDB(t *testing.T) func() {
 			conversation_id INTEGER NOT NULL,
 			role VARCHAR(20) NOT NULL,
 			content TEXT NOT NULL,
+			provider_model_id TEXT,
+			model_id VARCHAR(255),
 			created_at DATETIME
 		)`,
 		`CREATE TABLE folders (
