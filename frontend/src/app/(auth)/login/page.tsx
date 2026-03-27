@@ -10,7 +10,7 @@ import { authApi } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Mail, KeyRound } from 'lucide-react'
 import { useTranslations } from '@/i18n'
 import VerificationCodeForm from '@/components/auth/VerificationCodeForm'
 import { cn } from '@/lib/utils'
@@ -137,30 +137,38 @@ function LoginFormContent() {
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex p-1 bg-muted/50 rounded-lg">
+      <div className="flex gap-2 p-1.5 bg-muted/30 rounded-xl border border-border/50">
         <button
           type="button"
           onClick={() => setActiveTab('password')}
           className={cn(
-            'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200',
+            'flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden',
             activeTab === 'password'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 shadow-sm'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
           )}
         >
-          {t('auth.verificationCode.passwordTab')}
+          <Mail className={cn(
+            'w-4 h-4 transition-transform duration-300',
+            activeTab === 'password' && 'scale-110'
+          )} />
+          <span>{t('auth.verificationCode.passwordTab')}</span>
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('code')}
           className={cn(
-            'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200',
+            'flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden',
             activeTab === 'code'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 shadow-sm'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
           )}
         >
-          {t('auth.verificationCode.codeTab')}
+          <KeyRound className={cn(
+            'w-4 h-4 transition-transform duration-300',
+            activeTab === 'code' && 'scale-110'
+          )} />
+          <span>{t('auth.verificationCode.codeTab')}</span>
         </button>
       </div>
 

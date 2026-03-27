@@ -59,13 +59,11 @@
   - [x] SubTask 9.2: 在 `en.json` 中添加验证码登录相关翻译
 
 ## Phase 4: 测试与文档
-
 - [x] Task 10: 编写集成测试
   - [x] SubTask 10.1: 测试验证码发送流程
   - [x] SubTask 10.2: 测试验证码验证流程
   - [x] SubTask 10.3: 测试验证码过期场景
   - [x] SubTask 10.4: 测试错误场景
-
 - [x] Task 11: 更新配置文档
   - [x] SubTask 11.1: 更新 `.env.example` 文件
   - [x] SubTask 11.2: 更新 `config.yaml.example` 文件
