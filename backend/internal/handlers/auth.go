@@ -16,6 +16,7 @@ import (
 type AuthHandler struct {
 	userRepo              *repository.UserRepository
 	refreshTokenRepo      *repository.RefreshTokenRepository
+	accountDeletionRepo   *repository.AccountDeletionRepository
 	jwtService            *crypto.JWTService
 	verificationCodeSvc   *services.VerificationCodeService
 	emailSvc              *services.EmailService
@@ -25,6 +26,7 @@ func NewAuthHandler(jwtService *crypto.JWTService, verificationCodeSvc *services
 	return &AuthHandler{
 		userRepo:              repository.NewUserRepository(),
 		refreshTokenRepo:      repository.NewRefreshTokenRepository(),
+		accountDeletionRepo:   repository.NewAccountDeletionRepository(),
 		jwtService:            jwtService,
 		verificationCodeSvc:   verificationCodeSvc,
 		emailSvc:              emailSvc,
@@ -294,6 +296,20 @@ type VerifyCodeAndLoginRequest struct {
 	Code  string `json:"code" binding:"required,len=6"`
 }
 
+type DeleteAccountRequest struct {
+	Password string `json:"password"`
+}
+
+type DeleteAccountResponse struct {
+	Message string `json:"message"`
+}
+
+type ChangePasswordRequest struct {
+	Email       string `json:"email" binding:"required,email"`
+	Code        string `json:"code" binding:"required,len=6"`
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
 func (h *AuthHandler) SendVerificationCode(c *gin.Context) {
 	var req SendVerificationCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -399,5 +415,87 @@ func (h *AuthHandler) VerifyCodeAndLogin(c *gin.Context) {
 		Token:        token,
 		RefreshToken: refreshToken,
 		User:         user,
+	})
+}
+
+func (h *AuthHandler) DeleteAccount(c *gin.Context) {
+	var req DeleteAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	userID := middleware.GetUserID(c)
+
+	user, err := h.userRepo.FindByID(userID)
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "DeleteAccount", err, "userID", userID, "step", "find_user")
+		utils.SendErrorWithErr(c, http.StatusNotFound, "user_not_found", "User not found", err)
+		return
+	}
+
+	if user.PasswordHash != "" {
+		if req.Password == "" {
+			utils.LogAuthEvent("delete_account", false, "userID", userID, "reason", "password_required")
+			utils.SendError(c, http.StatusBadRequest, "password_required", "Password is required for email login users")
+			return
+		}
+		if !crypto.CheckPassword(req.Password, user.PasswordHash) {
+			utils.LogAuthEvent("delete_account", false, "userID", userID, "reason", "invalid_password")
+			utils.SendError(c, http.StatusUnauthorized, "invalid_password", "Invalid password")
+			return
+		}
+	}
+
+	if err := h.accountDeletionRepo.DeleteAllUserData(userID); err != nil {
+		utils.LogOperationError("AuthHandler", "DeleteAccount", err, "userID", userID, "step", "delete_user_data")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete account", err)
+		return
+	}
+
+	utils.LogAuthEvent("delete_account", true, "userID", userID, "email", user.Email)
+	c.JSON(http.StatusOK, DeleteAccountResponse{
+		Message: "Account deleted successfully",
+	})
+}
+
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	userID := middleware.GetUserID(c)
+	currentEmail := middleware.GetEmail(c)
+
+	if req.Email != currentEmail {
+		utils.LogAuthEvent("change_password", false, "userID", userID, "reason", "email_mismatch")
+		utils.SendError(c, http.StatusForbidden, "email_mismatch", "Email does not match current user")
+		return
+	}
+
+	if !h.verificationCodeSvc.VerifyCode(req.Email, req.Code) {
+		utils.LogAuthEvent("change_password", false, "email", req.Email, "userID", userID, "reason", "invalid_code")
+		utils.SendError(c, http.StatusUnauthorized, "invalid_code", "Invalid or expired verification code")
+		return
+	}
+
+	passwordHash, err := crypto.HashPassword(req.NewPassword)
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "ChangePassword", err, "email", req.Email, "userID", userID, "step", "password_hash")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "hash_error", "Failed to secure password", err)
+		return
+	}
+
+	if err := h.userRepo.UpdatePassword(userID, passwordHash); err != nil {
+		utils.LogOperationError("AuthHandler", "ChangePassword", err, "email", req.Email, "userID", userID, "step", "update_password")
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "update_error", "Failed to update password", err)
+		return
+	}
+
+	utils.LogAuthEvent("change_password", true, "userID", userID, "email", req.Email)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password updated successfully",
 	})
 }

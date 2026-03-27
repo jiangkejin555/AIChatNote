@@ -14,7 +14,6 @@ import {
   PanelLeft,
   Plus,
   Cpu,
-  LogOut,
   ChevronUp,
   MoreHorizontal,
   Pencil,
@@ -25,6 +24,7 @@ import {
   HelpCircle,
   Search,
   Loader2,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -51,6 +51,7 @@ import {
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import type { Conversation } from '@/types'
+import AccountManagementDialog from '@/components/auth/account-management-dialog'
 
 // Helper function to format time
 function formatTime(dateString: string): string {
@@ -131,6 +132,9 @@ export function Sidebar() {
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { results: searchResults, isSearching, clearResults } = useSearchConversations(searchQuery)
+
+  // Account management state
+  const [showAccountManagement, setShowAccountManagement] = useState(false)
 
   const navItems = [
     { href: '/notes', label: t('sidebar.knowledgeBase'), icon: FileText },
@@ -583,10 +587,9 @@ export function Sidebar() {
                 <span>{t('about.title')}</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>{t('sidebar.logout')}</span>
+            <DropdownMenuItem onClick={() => setShowAccountManagement(true)}>
+              <User className="mr-2 h-4 w-4" />
+              <span>{t('accountManagement.title')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -609,6 +612,12 @@ export function Sidebar() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Account Management Dialog */}
+      <AccountManagementDialog
+        open={showAccountManagement}
+        onOpenChange={setShowAccountManagement}
+      />
     </aside>
   )
 }

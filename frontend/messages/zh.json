@@ -29,6 +29,7 @@
   },
   "settings": {
     "title": "设置",
+    "deleteAccount": "注销账号",
     "appearance": "外观",
     "appearanceDesc": "自定义应用的外观和显示方式",
     "theme": "主题模式",
@@ -587,5 +588,27 @@
     "title": "帮助与反馈",
     "helpTab": "帮助",
     "feedbackTab": "反馈"
+  },
+  "accountManagement": {
+    "title": "账号管理",
+    "email": "邮箱",
+    "changePassword": "修改密码",
+    "logout": "退出登录",
+    "logoutConfirm": "确定要退出登录吗？",
+    "deleteAccount": "注销账号",
+    "deleteAccountWarning": "此操作将永久删除您的账户和所有数据，且不可恢复"
+  },
+  "changePassword": {
+    "title": "修改密码",
+    "currentEmail": "当前账号邮箱",
+    "verificationCode": "验证码",
+    "sendCode": "发送验证码",
+    "resendIn": "秒后重发",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "success": "密码修改成功",
+    "failed": "密码修改失败",
+    "codeError": "验证码错误或已过期",
+    "noPasswordForOAuth": "OAuth 登录用户无密码，请使用 OAuth 登录"
   }
 }

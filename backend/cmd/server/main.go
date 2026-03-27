@@ -114,6 +114,8 @@ func main() {
 		{
 			authProtected.POST("/logout", authHandler.Logout)
 			authProtected.GET("/me", authHandler.GetCurrentUser)
+			authProtected.DELETE("/account", authHandler.DeleteAccount)
+			authProtected.PUT("/password", authHandler.ChangePassword)
 		}
 
 		// User settings routes

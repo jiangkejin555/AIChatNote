@@ -1,0 +1,38 @@
+{
+  "accountManagement": {
+    "title": "Account Management",
+    "email": "Email",
+    "changePassword": "Change Password",
+    "logout": "Logout",
+    "deleteAccount": "Delete Account",
+    "deleteAccountWarning": "This action will permanently delete your account and all data, and cannot be recovered"
+  },
+  "changePassword": {
+    "title": "Change Password",
+    "currentEmail": "Current Account Email",
+    "verificationCode": "Verification Code",
+    "sendCode": "Send Code",
+    "resendIn": "seconds to resend",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "success": "Password changed successfully",
+    "failed": "Password change failed",
+    "codeError": "Verification code is incorrect or expired",
+    "noPasswordForOAuth": "OAuth users have no password, please use OAuth login"
+  },
+  "deleteAccount": {
+    "title": "Confirm Account Deletion?",
+    "description": "This action will permanently delete your account and all data, and cannot be recovered",
+    "dataToDelete": "Data to be deleted includes:",
+    "conversations": "Conversations and messages",
+    "notes": "Notes and folders",
+    "models": "Model configurations",
+    "otherData": "All other data",
+    "passwordRequired": "Please enter your password to confirm deletion",
+    "oauthRequired": "Please verify via {provider} to confirm deletion",
+    "success": "Account has been deleted",
+    "failed": "Deletion failed, please try again later",
+    "confirmButton": "Confirm Deletion",
+    "cancelButton": "Cancel"
+  }
+}

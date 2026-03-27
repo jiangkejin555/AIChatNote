@@ -18,6 +18,24 @@ export interface VerifyCodeAndLoginRequest {
   code: string
 }
 
+export interface ChangePasswordRequest {
+  email: string
+  code: string
+  new_password: string
+}
+
+export interface ChangePasswordResponse {
+  message: string
+}
+
+export interface DeleteAccountRequest {
+  password?: string
+}
+
+export interface DeleteAccountResponse {
+  message: string
+}
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/login', data)
@@ -58,6 +76,16 @@ export const authApi = {
 
   verifyCodeAndLogin: async (data: VerifyCodeAndLoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/email/login', data)
+    return response.data
+  },
+
+  changePassword: async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    const response = await apiClient.put<ChangePasswordResponse>('/auth/password', data)
+    return response.data
+  },
+
+  deleteAccount: async (data?: DeleteAccountRequest): Promise<DeleteAccountResponse> => {
+    const response = await apiClient.delete<DeleteAccountResponse>('/auth/account', { data })
     return response.data
   },
 }

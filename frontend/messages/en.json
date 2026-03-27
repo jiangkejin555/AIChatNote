@@ -30,6 +30,7 @@
   },
   "settings": {
     "title": "System Settings",
+    "deleteAccount": "Delete Account",
     "appearance": "Appearance",
     "appearanceDesc": "Customize how the app looks and displays",
     "systemDesc": "Customize how the app looks and displays",
@@ -592,5 +593,27 @@
     "title": "Help & Feedback",
     "helpTab": "Help",
     "feedbackTab": "Feedback"
+  },
+  "accountManagement": {
+    "title": "Account Management",
+    "email": "Email",
+    "changePassword": "Change Password",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "deleteAccount": "Delete Account",
+    "deleteAccountWarning": "This action will permanently delete your account and all data, and cannot be undone"
+  },
+  "changePassword": {
+    "title": "Change Password",
+    "currentEmail": "Current Account Email",
+    "verificationCode": "Verification Code",
+    "sendCode": "Send Code",
+    "resendIn": "seconds to resend",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "success": "Password changed successfully",
+    "failed": "Failed to change password",
+    "codeError": "Verification code is invalid or expired",
+    "noPasswordForOAuth": "OAuth users have no password, please use OAuth login"
   }
 }
