@@ -32,6 +32,7 @@ import {
   LogOut,
   ChevronUp,
 } from 'lucide-react'
+import { NotificationBell } from '@/components/notifications'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -496,35 +497,47 @@ export function Sidebar() {
 
       {/* Header */}
       <div className="relative flex items-center justify-between p-4 shrink-0">
-        {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full scale-150" />
-              <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-                <MessageSquare className="h-4 w-4 text-primary-foreground" />
+        {!sidebarCollapsed ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full scale-150" />
+                <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                  <MessageSquare className="h-4 w-4 text-primary-foreground" />
+                </div>
               </div>
+              <h1 className="text-lg font-semibold text-sidebar-foreground tracking-tight">
+                AI Chat Note
+              </h1>
             </div>
-            <h1 className="text-lg font-semibold text-sidebar-foreground tracking-tight">
-              AI Chat Note
-            </h1>
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebarCollapse}
-          className={cn(
-            'relative rounded-lg transition-all duration-200',
-            'hover:bg-sidebar-accent/80 hover:scale-105 active:scale-95',
-            sidebarCollapsed ? 'ml-0 mx-auto' : 'ml-auto'
-          )}
-        >
-          {sidebarCollapsed ? (
+            <div className="flex items-center gap-1">
+              <NotificationBell />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebarCollapse}
+                className={cn(
+                  'relative rounded-lg transition-all duration-200',
+                  'hover:bg-sidebar-accent/80 hover:scale-105 active:scale-95'
+                )}
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebarCollapse}
+            className={cn(
+              'relative rounded-lg transition-all duration-200 mx-auto',
+              'hover:bg-sidebar-accent/80 hover:scale-105 active:scale-95'
+            )}
+          >
             <PanelLeft className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </Button>
+          </Button>
+        )}
       </div>
 
       <Separator className="shrink-0 opacity-50" />
