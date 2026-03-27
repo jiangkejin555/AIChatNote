@@ -123,6 +123,28 @@ func (h *NoteHandler) Create(c *gin.Context) {
 	}
 
 	utils.LogOperationSuccess("NoteHandler", "Create", "noteID", note.ID, "userID", userID, "title", note.Title, "tagCount", len(req.Tags))
+
+	// Send notification
+	notificationRepo := repository.NewNotificationRepository()
+	folderName := "默认文件夹"
+	if note.FolderID != nil {
+		if folder, err := h.folderRepo.FindByID(*note.FolderID); err == nil {
+			folderName = folder.Name
+		}
+	}
+	notificationRepo.CreateFromTemplate(
+		userID,
+		"note_saved",
+		map[string]string{
+			"title":  req.Title,
+			"folder": folderName,
+		},
+		models.NotificationPayload{
+			ResourceType: "note",
+			ResourceID:   strconv.FormatUint(uint64(note.ID), 10),
+		},
+	)
+
 	c.JSON(http.StatusCreated, gin.H{"data": note})
 }
 
