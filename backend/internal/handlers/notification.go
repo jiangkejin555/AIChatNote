@@ -123,8 +123,8 @@ func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
 
 	utils.LogOperationSuccess("NotificationHandler", "MarkAllAsRead", "userID", userID, "count", count)
 	c.JSON(http.StatusOK, gin.H{
-		"message":      "All notifications marked as read",
-		"updated_count": count,
+		"message":   "All notifications marked as read",
+		"affected":   count,
 	})
 }
 
@@ -161,8 +161,8 @@ func (h *NotificationHandler) DeleteAll(c *gin.Context) {
 
 	utils.LogOperationSuccess("NotificationHandler", "DeleteAll", "userID", userID, "type", notificationType, "count", count)
 	c.JSON(http.StatusOK, gin.H{
-		"message":      "Notifications deleted",
-		"deleted_count": count,
+		"message":   "Notifications deleted",
+		"affected":   count,
 	})
 }
 
