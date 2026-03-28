@@ -34,5 +34,10 @@
     "failed": "注销失败，请稍后重试",
     "confirmButton": "确认注销",
     "cancelButton": "取消"
+  },
+  "notes": {
+    "aiGenerating": "AI笔记生成中...",
+    "aiGenerateSuccess": "笔记生成完成",
+    "aiGenerateFailed": "AI总结失败"
   }
 }

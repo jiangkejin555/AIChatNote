@@ -34,5 +34,10 @@
     "failed": "Deletion failed, please try again later",
     "confirmButton": "Confirm Deletion",
     "cancelButton": "Cancel"
+  },
+  "notes": {
+    "aiGenerating": "AI note generating...",
+    "aiGenerateSuccess": "Note generated successfully",
+    "aiGenerateFailed": "AI summarization failed"
   }
 }
