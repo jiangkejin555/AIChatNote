@@ -93,6 +93,18 @@ func SetupTestDB(t *testing.T) func() {
 			canceled BOOLEAN DEFAULT FALSE,
 			created_at DATETIME
 		)`,
+		`CREATE TABLE user_integrations (
+			id TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL,
+			provider VARCHAR(255) NOT NULL,
+			access_token_encrypted TEXT NOT NULL,
+			notion_workspace_id VARCHAR(255),
+			notion_root_page_id VARCHAR(255),
+			notion_app_page_id VARCHAR(255),
+			created_at DATETIME,
+			updated_at DATETIME,
+			UNIQUE(user_id, provider)
+		)`,
 		`CREATE TABLE folders (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
@@ -109,7 +121,9 @@ func SetupTestDB(t *testing.T) func() {
 			title VARCHAR(500) NOT NULL,
 			content TEXT NOT NULL,
 			created_at DATETIME,
-			updated_at DATETIME
+			updated_at DATETIME,
+			notion_page_id VARCHAR(255) UNIQUE,
+			notion_last_sync_at DATETIME
 		)`,
 		`CREATE TABLE note_tags (
 			note_id INTEGER NOT NULL,

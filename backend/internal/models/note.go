@@ -14,6 +14,8 @@ type Note struct {
 	Tags                 []NoteTag `gorm:"foreignKey:NoteID;constraint:OnDelete:CASCADE" json:"tags"`
 	CreatedAt            time.Time `json:"created_at"`
 	UpdatedAt            time.Time `json:"updated_at"`
+	NotionPageID         *string   `gorm:"size:255;uniqueIndex" json:"notion_page_id"`
+	NotionLastSyncAt     *time.Time `json:"notion_last_sync_at"`
 
 	Folder             *Folder       `gorm:"foreignKey:FolderID" json:"-"`
 	SourceConversation *Conversation `gorm:"foreignKey:SourceConversationID;constraint:OnDelete:SET NULL" json:"-"`
