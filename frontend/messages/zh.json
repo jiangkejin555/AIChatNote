@@ -648,6 +648,10 @@
     "deleteFailed": "删除失败",
     "clearSuccess": "消息已清空",
     "clearFailed": "清空失败",
+    "viewDetail": "查看详情",
+    "noContent": "暂无详细内容",
+    "createdAt": "创建时间",
+    "readAt": "阅读时间",
     "types": {
       "all": "全部",
       "system": "系统",

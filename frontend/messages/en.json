@@ -652,6 +652,10 @@
     "deleteFailed": "Failed to delete",
     "clearSuccess": "Notifications cleared",
     "clearFailed": "Failed to clear",
+    "viewDetail": "View Details",
+    "noContent": "No detailed content",
+    "createdAt": "Created at",
+    "readAt": "Read at",
     "types": {
       "all": "All",
       "system": "System",
