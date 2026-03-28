@@ -17,6 +17,7 @@ type AuthHandler struct {
 	userRepo              *repository.UserRepository
 	refreshTokenRepo      *repository.RefreshTokenRepository
 	accountDeletionRepo   *repository.AccountDeletionRepository
+	notificationRepo      *repository.NotificationRepository
 	jwtService            *crypto.JWTService
 	verificationCodeSvc   *services.VerificationCodeService
 	emailSvc              *services.EmailService
@@ -27,6 +28,7 @@ func NewAuthHandler(jwtService *crypto.JWTService, verificationCodeSvc *services
 		userRepo:              repository.NewUserRepository(),
 		refreshTokenRepo:      repository.NewRefreshTokenRepository(),
 		accountDeletionRepo:   repository.NewAccountDeletionRepository(),
+		notificationRepo:      repository.NewNotificationRepository(),
 		jwtService:            jwtService,
 		verificationCodeSvc:   verificationCodeSvc,
 		emailSvc:              emailSvc,
@@ -95,6 +97,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "create_error", "Failed to create user", err)
 		return
 	}
+
+	// Send welcome notification
+	h.sendWelcomeNotification(user)
 
 	token, err := h.jwtService.GenerateToken(user)
 	if err != nil {
@@ -383,6 +388,8 @@ func (h *AuthHandler) VerifyCodeAndLogin(c *gin.Context) {
 			return
 		}
 		utils.LogOperationSuccess("AuthHandler", "VerifyCodeAndLogin", "action", "user_created", "userID", user.ID, "email", user.Email)
+		// Send welcome notification for new users
+		h.sendWelcomeNotification(user)
 	}
 
 	token, err := h.jwtService.GenerateToken(user)
@@ -492,4 +499,35 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Password updated successfully",
 	})
+}
+
+// sendWelcomeNotification sends a welcome notification to a newly registered user
+func (h *AuthHandler) sendWelcomeNotification(user *models.User) {
+	// Get user count for "第X位用户"
+	userCount, err := h.userRepo.Count()
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "sendWelcomeNotification", err, "userID", user.ID, "step", "get_user_count")
+		userCount = 1 // fallback
+	}
+
+	// Extract username from email (part before @)
+	username := user.Email
+	if idx := len(user.Email); idx > 0 {
+		for i, c := range user.Email {
+			if c == '@' {
+				username = user.Email[:i]
+				break
+			}
+		}
+	}
+
+	vars := map[string]string{
+		"username":   username,
+		"user_count": fmt.Sprintf("%d", userCount),
+	}
+
+	_, err = h.notificationRepo.CreateFromTemplate(user.ID, "welcome", vars, models.NotificationPayload{})
+	if err != nil {
+		utils.LogOperationError("AuthHandler", "sendWelcomeNotification", err, "userID", user.ID, "step", "create_notification")
+	}
 }

@@ -42,6 +42,13 @@ var Templates = map[string]Template{
 	},
 
 	// System notifications
+	"welcome": {
+		Code:         "welcome",
+		Type:         MessageTypeSystem,
+		Title:        "欢迎加入 ChatNote",
+		Content:      "你好，{{username}}！非常高兴你成为我们的第 {{user_count}} 位用户。\n\n在这里，你可以：\n• 与 AI 对话，自动生成笔记\n• 管理和整理你的知识库\n• 使用多种 AI 模型\n\n如有任何问题，欢迎随时联系我们。祝你使用愉快！",
+		ResourceType: "",
+	},
 	"system_announcement": {
 		Code:         "system_announcement",
 		Type:         MessageTypeSystem,

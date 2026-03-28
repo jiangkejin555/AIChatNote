@@ -45,3 +45,10 @@ func (r *UserRepository) DeleteUser(tx *gorm.DB, userID uint) error {
 func (r *UserRepository) UpdatePassword(id uint, passwordHash string) error {
 	return database.DB.Model(&models.User{}).Where("id = ?", id).Update("password_hash", passwordHash).Error
 }
+
+// Count returns the total number of users
+func (r *UserRepository) Count() (int64, error) {
+	var count int64
+	err := database.DB.Model(&models.User{}).Count(&count).Error
+	return count, err
+}
