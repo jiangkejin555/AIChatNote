@@ -210,6 +210,42 @@ func TestMessageRequestRepository(t *testing.T) {
 		assert.Nil(t, found)
 	})
 
+	t.Run("ClearAssistantMessageID", func(t *testing.T) {
+		requestID := uuid.New().String()
+		req := &models.MessageRequest{
+			ConversationID: conv.ID,
+			RequestID:      requestID,
+			Status:         models.StatusProcessing,
+		}
+		created, err := requestRepo.CreateIfNotExists(req)
+		require.NoError(t, err)
+
+		// Create assistant message and link it
+		assistantMsg := &models.Message{
+			ConversationID: conv.ID,
+			Role:           models.RoleAssistant,
+			Content:        "Test answer",
+		}
+		require.NoError(t, msgRepo.Create(assistantMsg))
+		require.NoError(t, requestRepo.SetCompleted(created.ID, assistantMsg.ID))
+
+		// Verify assistant_message_id is set
+		found, _ := requestRepo.FindByRequestIDWithMessages(requestID)
+		assert.NotNil(t, found.AssistantMessageID)
+		assert.Equal(t, assistantMsg.ID, *found.AssistantMessageID)
+
+		// Clear the FK reference
+		err = requestRepo.ClearAssistantMessageID(assistantMsg.ID)
+		require.NoError(t, err)
+
+		// Verify assistant_message_id is now nil
+		found2, _ := requestRepo.FindByRequestIDWithMessages(requestID)
+		assert.Nil(t, found2.AssistantMessageID)
+		// The message itself should still exist and be deletable
+		err = msgRepo.Delete(assistantMsg.ID)
+		assert.NoError(t, err)
+	})
+
 	t.Run("FullWorkflow_NewRequest", func(t *testing.T) {
 		requestID := uuid.New().String()
 

@@ -67,9 +67,36 @@ export const conversationsApi = {
   regenerate: async (conversationId: number, messageId: number): Promise<Message> => {
     const response = await apiClient.post<ApiResponse<Message>>(
       `/conversations/${conversationId}/messages/${messageId}/regenerate`,
-      { stream: false }  // Non-streaming for now
+      { stream: false }
     )
     return response.data.data
+  },
+
+  // Regenerate with SSE streaming - returns the raw fetch Response for SSE parsing
+  regenerateStream: async (conversationId: number, messageId: number, token: string): Promise<Response> => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+    const response = await fetch(`${API_URL}/conversations/${conversationId}/messages/${messageId}/regenerate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({ stream: true }),
+    })
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        const errorData = await response.json()
+        if (errorData.message) {
+          errorMessage = errorData.message
+        }
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(errorMessage)
+    }
+    return response
   },
 
   markAsSaved: async (id: number): Promise<Conversation> => {

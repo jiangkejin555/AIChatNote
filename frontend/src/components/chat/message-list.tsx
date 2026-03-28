@@ -46,16 +46,13 @@ export function MessageList({
   // Combine server messages with optimistic messages
   const allMessages = useMemo(() => {
     const serverMessages = messages || []
-    
-    // If we have a baseMessageCount and server messages are still loading/updating,
-    // we only use the base messages to avoid duplicates when appending optimistic messages
-    const baseMessages = (baseMessageCount !== undefined && optimisticMessages.length > 0 && serverMessages.length >= baseMessageCount) 
-      ? serverMessages.slice(0, baseMessageCount) 
-      : serverMessages;
 
-    // Filter out optimistic messages that already exist in server messages (by ID or content+role heuristic)
-    // Actually, optimistic messages have temporary IDs (Date.now()), so they won't match server IDs.
-    // The baseMessageCount approach is safer to prevent UI flashing.
+    // If we have a baseMessageCount, slice server messages to that count.
+    // This is used during streaming to avoid showing stale messages (e.g. during regenerate,
+    // the old assistant message is still in the cache until refetch completes).
+    const baseMessages = (baseMessageCount !== undefined && serverMessages.length >= baseMessageCount)
+      ? serverMessages.slice(0, baseMessageCount)
+      : serverMessages;
 
     return [...baseMessages, ...optimisticMessages]
   }, [messages, optimisticMessages, baseMessageCount])
@@ -123,13 +120,20 @@ export function MessageList({
       onScroll={handleScroll}
     >
       <div className="max-w-3xl mx-auto">
-        {allMessages.map((message) => (
-          <MessageItem
-            key={message.id}
-            message={message}
-            modelsMap={modelsMap}
-          />
-        ))}
+        {allMessages.map((message, index) => {
+          // Determine if this is the last assistant message
+          const isLastAssistant = message.role === 'assistant' &&
+            !allMessages.slice(index + 1).some(m => m.role === 'assistant')
+
+          return (
+            <MessageItem
+              key={message.id}
+              message={message}
+              isLastAssistant={isLastAssistant}
+              modelsMap={modelsMap}
+            />
+          )
+        })}
 
         {(streamingContent || (isCancelled && !streamingContent)) && (
           <MessageItem

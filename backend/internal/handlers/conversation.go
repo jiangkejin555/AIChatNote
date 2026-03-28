@@ -646,37 +646,31 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 		return
 	}
 
+	// Verify this is the last assistant message in the conversation
+	lastAssistant, err := h.msgRepo.GetLastAssistantMessage(conv.ID)
+	if err != nil {
+		utils.SendErrorWithErr(c, http.StatusBadRequest, "no_assistant_message", "No assistant message found to regenerate", err)
+		return
+	}
+	if lastAssistant.ID != uint(msgID) {
+		utils.SendError(c, http.StatusBadRequest, "not_last_message", "只能重新生成最后一条AI回复")
+		return
+	}
+
+	// Clear FK reference in message_requests before deleting
+	if err := h.requestRepo.ClearAssistantMessageID(uint(msgID)); err != nil {
+		utils.LogOperationError("ConversationHandler", "Regenerate", err, "step", "clear_fk_reference", "msgID", msgID)
+		// Non-fatal: continue even if no FK reference exists
+	}
+
 	// Delete the assistant message
 	if err := h.msgRepo.Delete(uint(msgID)); err != nil {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "delete_error", "Failed to delete message", err)
 		return
 	}
 
-	// Get updated messages
-	messages, err := h.msgRepo.FindByConversationID(conv.ID)
-	if err != nil {
-		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to fetch messages", err)
-		return
-	}
-
-	// // Handle mock mode
-	// if h.mockEnabled {
-	// 	assistantMsg := &models.Message{
-	// 		ConversationID: conv.ID,
-	// 		Role:           models.RoleAssistant,
-	// 		Content:        mockResponse,
-	// 	}
-	// 	if err := h.msgRepo.Create(assistantMsg); err != nil {
-	// 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
-	// 		return
-	// 	}
-	// 	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
-	// 	return
-	// }
-
 	// Get provider info
 	if conv.CurrentProviderModelID == nil {
-		// Model has been deleted - show friendly error with model_id snapshot
 		modelInfo := "未知模型"
 		if conv.ModelID != "" {
 			modelInfo = conv.ModelID
@@ -703,55 +697,76 @@ func (h *ConversationHandler) Regenerate(c *gin.Context) {
 		return
 	}
 
-	// Build messages
-	chatMessages := make([]openai.ChatCompletionMessage, len(messages))
-	for i, msg := range messages {
-		role := openai.ChatMessageRoleUser
-		if msg.Role == models.RoleAssistant {
-			role = openai.ChatMessageRoleAssistant
-		}
-		chatMessages[i] = openai.ChatCompletionMessage{
-			Role:    role,
-			Content: msg.Content,
-		}
-	}
+	// Create OpenAI client
+	clientConfig := openai.DefaultConfig(apiKey)
+	clientConfig.BaseURL = provider.APIBase
+	client := openai.NewClientWithConfig(clientConfig)
 
-	config := openai.DefaultConfig(apiKey)
-	config.BaseURL = provider.APIBase
-	client := openai.NewClientWithConfig(config)
-
-	ctx := context.Background()
-	req := openai.ChatCompletionRequest{
-		Model:    providerModel.ModelID,
-		Messages: chatMessages,
-	}
-
-	resp, err := client.CreateChatCompletion(ctx, req)
+	// Build context using the same logic as SendMessage (respects user settings)
+	chatMessages, err := h.buildContextMessages(c, conv, userID, client, providerModel.ModelID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "llm_error", err.Error())
+		utils.SendErrorWithErr(c, http.StatusInternalServerError, "context_error", "Failed to build context", err)
 		return
 	}
 
-	if len(resp.Choices) == 0 {
-		utils.SendError(c, http.StatusInternalServerError, "no_response", "No response from model")
-		return
+	// Create a new MessageRequest for deduplication
+	requestID := uuid.New().String()
+	msgReq := &models.MessageRequest{
+		ConversationID: conv.ID,
+		RequestID:      requestID,
+		Status:         models.StatusProcessing,
+	}
+	if _, err := h.requestRepo.CreateIfNotExists(msgReq); err != nil {
+		utils.LogOperationError("ConversationHandler", "Regenerate", err, "step", "create_request")
+		msgReq = nil // Continue without dedup protection
 	}
 
-	content := resp.Choices[0].Message.Content
+	// Stream the regenerated response
+	h.handleStreamResponse(c, client, providerModel.ModelID, chatMessages, conv, msgReq)
+}
 
-	assistantMsg := &models.Message{
-		ConversationID:  conv.ID,
-		Role:            models.RoleAssistant,
-		Content:         content,
-		ProviderModelID: conv.CurrentProviderModelID,
-		ModelID:         conv.ModelID,
-	}
-	if err := h.msgRepo.Create(assistantMsg); err != nil {
-		utils.SendErrorWithErr(c, http.StatusInternalServerError, "save_error", "Failed to save response", err)
-		return
+// buildContextMessages builds chat context messages using user settings (same logic as SendMessage)
+func (h *ConversationHandler) buildContextMessages(c *gin.Context, conv *models.Conversation, userID uint, client *openai.Client, model string) ([]openai.ChatCompletionMessage, error) {
+	defaultMode := h.contextConfigSvc.GetDefaultMode()
+	defaultLevel := h.contextConfigSvc.GetDefaultLevel()
+	userSettings, settingsErr := h.userSettingsRepo.GetOrCreate(userID, defaultMode, defaultLevel)
+	if settingsErr != nil {
+		utils.LogOperationError("ConversationHandler", "buildContextMessages", settingsErr, "step", "get_user_settings", "userID", userID)
+		userSettings = &models.UserSettings{
+			ContextMode: defaultMode,
+			MemoryLevel: defaultLevel,
+		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": assistantMsg})
+	contextParams := h.contextConfigSvc.GetContextParams(userSettings.ContextMode, userSettings.MemoryLevel)
+
+	if userSettings.ContextMode == models.ContextModeSimple {
+		messages, err := h.msgRepo.FindRecentByConversationID(conv.ID, contextParams.HistoryLimit)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch messages: %w", err)
+		}
+		return h.messagesToChatMessages(messages), nil
+	}
+
+	// Summary mode
+	chatMessages, _, err := h.buildContextMessagesWithSummary(
+		c.Request.Context(),
+		conv,
+		contextParams,
+		client,
+		model,
+	)
+	if err != nil {
+		utils.LogOperationError("ConversationHandler", "buildContextMessages", err, "step", "build_context_with_summary", "convID", conv.ID)
+		// Fallback to recent messages
+		messages, fallbackErr := h.msgRepo.FindRecentByConversationID(conv.ID, contextParams.WindowAutoSize)
+		if fallbackErr != nil {
+			return nil, fmt.Errorf("failed to fetch fallback messages: %w", fallbackErr)
+		}
+		return h.messagesToChatMessages(messages), nil
+	}
+
+	return chatMessages, nil
 }
 
 // handleRequestDeduplication handles request deduplication logic

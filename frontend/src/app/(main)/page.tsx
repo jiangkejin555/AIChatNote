@@ -98,12 +98,11 @@ export default function ChatPage() {
             optimisticMessages: [],
           })
         } else if (isCancelled && !isEmptyMessage) {
-          // 手动取消但有部分内容 - 保持流式状态显示已取消的部分内容，不立即 refetch 以避免重复消息
-          // 流式状态会在用户发送新消息或刷新页面时自然清除
-          updateStreamingState(conversationIdToInvalidate, {
-            isCancelled: true,
-            isThinking: false,
-            optimisticMessages: [],
+          // 手动取消但有部分内容 - refetch 以获取真实的数据库消息 ID（用于 regenerate 等操作）
+          clearStreamingState(conversationIdToInvalidate)
+
+          queryClient.invalidateQueries({
+            queryKey: ['conversations', conversationIdToInvalidate, 'messages'],
           })
         } else {
           clearStreamingState(conversationIdToInvalidate)

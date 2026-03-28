@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { conversationsApi } from '@/lib/api'
-import { useChatStore } from '@/stores'
+import { useChatStore, useAuthStore } from '@/stores'
+import { parseSSEStream } from '@/lib/stream'
 import { toast } from 'sonner'
 import { getT } from '@/i18n'
-import type { CreateConversationRequest, SendMessageRequest, ConversationSearchResult } from '@/types'
+import type { CreateConversationRequest, SendMessageRequest, ConversationSearchResult, Message } from '@/types'
 
 // Debounce hook for search
 function useDebounce<T>(value: T, delay: number): T {
@@ -156,25 +157,127 @@ export function useSendMessage() {
 
 export function useRegenerateMessage() {
   const queryClient = useQueryClient()
+  const { token } = useAuthStore()
+  const { startStreaming, stopStreaming, updateStreamingState, clearStreamingState, getStreamingState } = useChatStore()
+  const [isRegenerating, setIsRegenerating] = useState(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
   const t = getT()
 
-  return useMutation({
-    mutationFn: ({
-      conversationId,
-      messageId,
-    }: {
-      conversationId: number
-      messageId: number
-    }) => conversationsApi.regenerate(conversationId, messageId),
-    onSuccess: (_, { conversationId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ['conversations', conversationId, 'messages'],
+  const regenerateStream = useCallback(
+    async ({ conversationId, messageId }: { conversationId: number; messageId: number }) => {
+      if (!token) {
+        toast.error(t('chat.regenerateFailed'))
+        return
+      }
+
+      setIsRegenerating(true)
+      startStreaming(conversationId)
+
+      // Get current messages count as base (minus the message being regenerated)
+      const currentMessages = queryClient.getQueryData<Message[]>(['conversations', conversationId, 'messages'])
+      const baseMessageCount = currentMessages ? currentMessages.filter(m => m.id !== messageId).length : 0
+
+      // Set initial streaming state
+      updateStreamingState(conversationId, {
+        content: '',
+        optimisticMessages: [],
+        baseMessageCount,
+        isThinking: true,
+        isTimeout: false,
+        isCancelled: false,
+        lastUserMessage: '',
+        requestId: null,
       })
+
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+        const response = await fetch(`${API_URL}/conversations/${conversationId}/messages/${messageId}/regenerate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'text/event-stream',
+          },
+          body: JSON.stringify({ stream: true }),
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          let errorMessage = `HTTP error! status: ${response.status}`
+          try {
+            const errorData = await response.json()
+            if (errorData.message) {
+              errorMessage = errorData.message
+            }
+          } catch {
+            // Ignore JSON parse errors
+          }
+          throw new Error(errorMessage)
+        }
+
+        if (!response.body) {
+          throw new Error('No response body')
+        }
+
+        let fullContent = ''
+
+        for await (const chunk of parseSSEStream(response.body)) {
+          if (chunk.done) {
+            if (chunk.error) {
+              throw new Error(chunk.error)
+            }
+            break
+          }
+
+          fullContent += chunk.content
+          updateStreamingState(conversationId, {
+            content: fullContent,
+            isThinking: false,
+          })
+        }
+
+        // Success - clear streaming state and refetch
+        clearStreamingState(conversationId)
+        queryClient.invalidateQueries({
+          queryKey: ['conversations', conversationId, 'messages'],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['conversations'],
+        })
+      } catch (error) {
+        const err = error as Error
+        if (err.name === 'AbortError') {
+          console.log('Regenerate stream aborted')
+        } else {
+          console.error('Regenerate stream error:', error)
+          toast.error(err.message || t('chat.regenerateFailed'))
+        }
+        clearStreamingState(conversationId)
+      } finally {
+        setIsRegenerating(false)
+        stopStreaming(conversationId)
+        abortControllerRef.current = null
+      }
     },
-    onError: () => {
-      toast.error(t('chat.regenerateFailed'))
-    },
-  })
+    [token, queryClient, startStreaming, stopStreaming, updateStreamingState, clearStreamingState, t]
+  )
+
+  const stopRegenerate = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setIsRegenerating(false)
+  }, [])
+
+  return {
+    regenerate: regenerateStream,
+    stopRegenerate,
+    isPending: isRegenerating,
+  }
 }
 
 export function useMarkAsSaved() {

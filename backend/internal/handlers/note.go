@@ -566,7 +566,7 @@ func NewFolderHandler() *FolderHandler {
 	}
 }
 
-// List returns all folders in tree structure
+// List returns all folders as a flat array
 func (h *FolderHandler) List(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -576,9 +576,7 @@ func (h *FolderHandler) List(c *gin.Context) {
 		return
 	}
 
-	// Build tree structure
-	tree := buildFolderTree(folders, nil)
-	c.JSON(http.StatusOK, gin.H{"data": tree})
+	c.JSON(http.StatusOK, gin.H{"data": folders})
 }
 
 // Create creates a new folder
@@ -737,19 +735,6 @@ func (h *FolderHandler) Copy(c *gin.Context) {
 
 	utils.LogOperationSuccess("FolderHandler", "Copy", "sourceFolderID", folderID, "newFolderID", newFolder.ID, "userID", userID, "notesCopied", len(notes))
 	c.JSON(http.StatusOK, gin.H{"data": newFolder})
-}
-
-func buildFolderTree(folders []models.Folder, parentID *uint) []models.Folder {
-	var result []models.Folder
-	for _, folder := range folders {
-		if (parentID == nil && folder.ParentID == nil) ||
-			(parentID != nil && folder.ParentID != nil && *folder.ParentID == *parentID) {
-			children := buildFolderTree(folders, &folder.ID)
-			folder.Children = children
-			result = append(result, folder)
-		}
-	}
-	return result
 }
 
 // TagHandler handles tag operations

@@ -19,7 +19,9 @@ export function MessageInput({ onSend, onStop, isLoading, disabled }: MessageInp
   const [content, setContent] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const prevConversationIdRef = useRef<number | null>(null)
-  const { currentConversationId, drafts, setDraft, clearDraft } = useChatStore()
+  const historyIndexRef = useRef(-1)
+  const isNavigatingRef = useRef(false)
+  const { currentConversationId, drafts, setDraft, clearDraft, inputHistories, pushInputHistory } = useChatStore()
   const t = useTranslations()
 
   // Auto-resize textarea based on content
@@ -36,6 +38,8 @@ export function MessageInput({ onSend, onStop, isLoading, disabled }: MessageInp
   useEffect(() => {
     if (prevConversationIdRef.current !== currentConversationId) {
       prevConversationIdRef.current = currentConversationId
+      historyIndexRef.current = -1
+      isNavigatingRef.current = false
       if (currentConversationId) {
         setContent(drafts[currentConversationId] || '')
       } else {
@@ -49,8 +53,11 @@ export function MessageInput({ onSend, onStop, isLoading, disabled }: MessageInp
   const handleSubmit = useCallback(() => {
     if (!content.trim() || isLoading || disabled) return
 
-    onSend(content.trim())
+    const sentContent = content.trim()
+    onSend(sentContent)
     setContent('')
+    historyIndexRef.current = -1
+    isNavigatingRef.current = false
 
     // Reset textarea height after sending
     const textarea = textareaRef.current
@@ -59,11 +66,17 @@ export function MessageInput({ onSend, onStop, isLoading, disabled }: MessageInp
     }
 
     if (currentConversationId) {
+      pushInputHistory(currentConversationId, sentContent)
       clearDraft(currentConversationId)
     }
-  }, [content, isLoading, disabled, onSend, currentConversationId, clearDraft])
+  }, [content, isLoading, disabled, onSend, currentConversationId, clearDraft, pushInputHistory])
 
   const handleChange = useCallback((value: string) => {
+    if (!isNavigatingRef.current) {
+      historyIndexRef.current = -1
+    }
+    isNavigatingRef.current = false
+
     setContent(value)
     adjustTextareaHeight()
     // Save draft directly on change
@@ -76,6 +89,45 @@ export function MessageInput({ onSend, onStop, isLoading, disabled }: MessageInp
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
       handleSubmit()
+      return
+    }
+
+    const history = currentConversationId ? (inputHistories[currentConversationId] || []) : []
+    if (history.length === 0) return
+
+    if (e.key === 'ArrowUp') {
+      if (!content && !isNavigatingRef.current) {
+        e.preventDefault()
+        historyIndexRef.current = 0
+        isNavigatingRef.current = true
+        setContent(history[0])
+        adjustTextareaHeight()
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart = textareaRef.current.selectionEnd = textareaRef.current.value.length
+          }
+        }, 0)
+      } else if (isNavigatingRef.current) {
+        const nextIndex = Math.min(historyIndexRef.current + 1, history.length - 1)
+        if (nextIndex !== historyIndexRef.current) {
+          e.preventDefault()
+          historyIndexRef.current = nextIndex
+          setContent(history[nextIndex])
+          adjustTextareaHeight()
+        }
+      }
+    } else if (e.key === 'ArrowDown' && isNavigatingRef.current) {
+      e.preventDefault()
+      const prevIndex = historyIndexRef.current - 1
+      if (prevIndex >= 0) {
+        historyIndexRef.current = prevIndex
+        setContent(history[prevIndex])
+      } else {
+        historyIndexRef.current = -1
+        isNavigatingRef.current = false
+        setContent('')
+      }
+      adjustTextareaHeight()
     }
   }
 

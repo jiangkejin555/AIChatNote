@@ -22,6 +22,7 @@ interface MessageItemProps {
   isThinking?: boolean
   isTimeout?: boolean
   isCancelled?: boolean
+  isLastAssistant?: boolean
   onRetry?: () => void
   modelsMap?: Map<string, ModelInfo>
 }
@@ -32,11 +33,12 @@ export function MessageItem({
   isThinking,
   isTimeout,
   isCancelled,
+  isLastAssistant,
   onRetry,
   modelsMap,
 }: MessageItemProps) {
   const [copied, setCopied] = useState(false)
-  const regenerate = useRegenerateMessage()
+  const { regenerate, isPending: isRegenerating } = useRegenerateMessage()
   const t = useTranslations()
 
   const isUser = message.role === 'user'
@@ -54,7 +56,7 @@ export function MessageItem({
   }
 
   const handleRegenerate = () => {
-    regenerate.mutate({
+    regenerate({
       conversationId: message.conversation_id,
       messageId: message.id,
     })
@@ -203,16 +205,16 @@ export function MessageItem({
                 )}
               </Button>
 
-              {!isUser && (
+              {!isUser && isLastAssistant && (
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
                   onClick={handleRegenerate}
-                  disabled={regenerate.isPending}
+                  disabled={isRegenerating}
                   title={t('common.regenerate')}
                 >
-                  {regenerate.isPending ? (
+                  {isRegenerating ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
                     <RotateCcw className="h-3 w-3" />

@@ -28,6 +28,10 @@ interface ChatState {
   setDraft: (conversationId: number, draft: string) => void
   clearDraft: (conversationId: number) => void
 
+  // Input history per conversation
+  inputHistories: Record<number, string[]>
+  pushInputHistory: (conversationId: number, content: string) => void
+
   // Streaming state management
   startStreaming: (conversationId: number) => void
   stopStreaming: (conversationId: number) => void
@@ -56,6 +60,7 @@ export const useChatStore = create<ChatState>()(
       isPendingNewChat: false,
       streamingStates: {},
       streamingConversationIds: new Set(),
+      inputHistories: {},
 
       setCurrentConversation: (id) =>
         set({
@@ -76,6 +81,18 @@ export const useChatStore = create<ChatState>()(
         set((state) => {
           const { [conversationId]: _, ...rest } = state.drafts
           return { drafts: rest }
+        }),
+
+      pushInputHistory: (conversationId, content) =>
+        set((state) => {
+          const history = state.inputHistories[conversationId] || []
+          if (history[0] === content) return state
+          return {
+            inputHistories: {
+              ...state.inputHistories,
+              [conversationId]: [content, ...history].slice(0, 100),
+            },
+          }
         }),
 
       // Streaming state management

@@ -92,6 +92,15 @@ func (r *MessageRequestRepository) SetFailed(id uint) error {
 		Update("status", models.StatusFailed).Error
 }
 
+// ClearAssistantMessageID sets assistant_message_id to NULL for all records
+// referencing the given message ID. This is needed before deleting a message
+// to avoid foreign key constraint violations.
+func (r *MessageRequestRepository) ClearAssistantMessageID(messageID uint) error {
+	return database.DB.Model(&models.MessageRequest{}).
+		Where("assistant_message_id = ?", messageID).
+		Update("assistant_message_id", nil).Error
+}
+
 // Delete removes a request record
 func (r *MessageRequestRepository) Delete(id uint) error {
 	return database.DB.Delete(&models.MessageRequest{}, id).Error

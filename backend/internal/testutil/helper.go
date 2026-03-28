@@ -90,6 +90,7 @@ func SetupTestDB(t *testing.T) func() {
 			content TEXT NOT NULL,
 			provider_model_id TEXT,
 			model_id VARCHAR(255),
+			canceled BOOLEAN DEFAULT FALSE,
 			created_at DATETIME
 		)`,
 		`CREATE TABLE folders (

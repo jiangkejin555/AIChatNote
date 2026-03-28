@@ -218,8 +218,7 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
             className="w-56 p-2 rounded-xl"
           >
             <div className="px-2 py-2 mb-1">
-              <p className="text-sm font-medium truncate">{user?.email?.split('@')[0]}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-sm font-medium truncate">{user?.email}</p>
             </div>
             <DropdownMenuSeparator />
             <Link href="/settings" className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-accent text-sm">
@@ -273,9 +272,6 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.email?.split('@')[0]}
-              </p>
-              <p className="text-xs text-sidebar-foreground/50 truncate">
                 {user?.email}
               </p>
             </div>
@@ -303,9 +299,6 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-popover-foreground truncate">
-                  {user?.email?.split('@')[0]}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
                   {user?.email}
                 </p>
               </div>

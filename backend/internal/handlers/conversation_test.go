@@ -10,6 +10,7 @@ import (
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
+	"github.com/chat-note/backend/internal/repository"
 	"github.com/chat-note/backend/internal/services"
 	"github.com/chat-note/backend/internal/testutil"
 	"github.com/gin-gonic/gin"
@@ -299,18 +300,6 @@ func TestConversationHandler_Regenerate(t *testing.T) {
 	testutil.CreateTestMessage(t, conv.ID, models.RoleUser, "Hello")
 	assistantMsg := testutil.CreateTestMessage(t, conv.ID, models.RoleAssistant, "Original response")
 
-	t.Run("should regenerate response in mock mode", func(t *testing.T) {
-		w := testutil.MakeAuthenticatedRequest(router, "POST",
-			fmt.Sprintf("/api/conversations/%d/messages/%d/regenerate", conv.ID, assistantMsg.ID),
-			nil, user.ID, cfg)
-
-		require.Equal(t, 200, w.Code)
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
-		data := response["data"].(map[string]interface{})
-		assert.NotEmpty(t, data["content"])
-	})
-
 	t.Run("should return error for invalid conversation ID", func(t *testing.T) {
 		w := testutil.MakeAuthenticatedRequest(router, "POST",
 			"/api/conversations/invalid/messages/1/regenerate",
@@ -325,6 +314,86 @@ func TestConversationHandler_Regenerate(t *testing.T) {
 			nil, user.ID, cfg)
 
 		assert.Equal(t, 404, w.Code)
+	})
+
+	t.Run("should return error when model is deleted", func(t *testing.T) {
+		// Conv has no CurrentProviderModelID — model_deleted error
+		w := testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/conversations/%d/messages/%d/regenerate", conv.ID, assistantMsg.ID),
+			`{"stream": true}`, user.ID, cfg)
+
+		assert.Equal(t, 400, w.Code)
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, "model_deleted", response["error"])
+	})
+
+		t.Run("should return error when regenerating non-last assistant message", func(t *testing.T) {
+			// Create a conversation with multiple assistant messages
+			multiConv := testutil.CreateTestConversation(t, user.ID, "Multi Assistant")
+			testutil.CreateTestMessage(t, multiConv.ID, models.RoleUser, "Q1")
+			firstAssistant := testutil.CreateTestMessage(t, multiConv.ID, models.RoleAssistant, "A1")
+			testutil.CreateTestMessage(t, multiConv.ID, models.RoleUser, "Q2")
+			testutil.CreateTestMessage(t, multiConv.ID, models.RoleAssistant, "A2") // last assistant
+
+			// Try to regenerate the first (non-last) assistant message
+			w := testutil.MakeAuthenticatedRequest(router, "POST",
+				fmt.Sprintf("/api/conversations/%d/messages/%d/regenerate", multiConv.ID, firstAssistant.ID),
+				`{"stream": true}`, user.ID, cfg)
+
+			assert.Equal(t, 400, w.Code)
+			var response map[string]interface{}
+			json.Unmarshal(w.Body.Bytes(), &response)
+			assert.Equal(t, "not_last_message", response["error"])
+		})
+
+	t.Run("should clear message_requests FK and delete assistant message", func(t *testing.T) {
+		// Create a fresh conversation with a provider model for this test
+		provider := testutil.CreateTestProvider(t, user.ID, "Regen FK Provider", models.ProviderOpenAI)
+		providerModel := testutil.CreateTestProviderModel(t, provider.ID, "regen-fk-model", "Regen FK Model")
+
+		fkConv := &models.Conversation{
+			UserID:                 user.ID,
+			CurrentProviderModelID: &providerModel.ID,
+			ModelID:                "regen-fk-model",
+			Title:                  "FK Test Conv",
+		}
+		require.NoError(t, database.DB.Create(fkConv).Error)
+
+		testutil.CreateTestMessage(t, fkConv.ID, models.RoleUser, "Hello FK test")
+		fkAssistantMsg := testutil.CreateTestMessage(t, fkConv.ID, models.RoleAssistant, "Original FK response")
+
+		// Create a message_request that references the assistant message
+		reqRepo := repository.NewMessageRequestRepository()
+		msgReq := &models.MessageRequest{
+			ConversationID:     fkConv.ID,
+			RequestID:          uuid.New().String(),
+			AssistantMessageID: &fkAssistantMsg.ID,
+			Status:             models.StatusCompleted,
+		}
+		_, err := reqRepo.CreateIfNotExists(msgReq)
+		require.NoError(t, err)
+
+		// Verify FK is set before regeneration
+		found, err := reqRepo.FindByRequestIDWithMessages(msgReq.RequestID)
+		require.NoError(t, err)
+		require.NotNil(t, found.AssistantMessageID, "FK should be set before regeneration")
+
+		// Call regenerate — the LLM call will fail (no real API key),
+		// but the FK cleanup and message deletion should succeed before that
+		_ = testutil.MakeAuthenticatedRequest(router, "POST",
+			fmt.Sprintf("/api/conversations/%d/messages/%d/regenerate", fkConv.ID, fkAssistantMsg.ID),
+			`{"stream": true}`, user.ID, cfg)
+
+		// Verify the assistant_message_id was cleared in message_requests
+		found2, err := reqRepo.FindByRequestIDWithMessages(msgReq.RequestID)
+		require.NoError(t, err)
+		assert.Nil(t, found2.AssistantMessageID, "assistant_message_id should have been cleared")
+
+		// Verify the old message was deleted
+		var deletedMsg models.Message
+		err = database.DB.Where("id = ?", fkAssistantMsg.ID).First(&deletedMsg).Error
+		assert.Error(t, err, "old assistant message should have been deleted")
 	})
 }
 
@@ -373,10 +442,10 @@ func TestConversationHandler_SendMessage_DeletedModel(t *testing.T) {
 	t.Run("should return error when model is deleted (provider_model_id is null)", func(t *testing.T) {
 		// Create a conversation with null provider_model_id but with model_id snapshot
 		conv := &models.Conversation{
-			UserID:          user.ID,
+			UserID:                 user.ID,
 			CurrentProviderModelID: nil, // Model has been deleted
-			ModelID:         "gpt-4o-deleted",
-			Title:           "Deleted Model Conversation",
+			ModelID:                "gpt-4o-deleted",
+			Title:                  "Deleted Model Conversation",
 		}
 		require.NoError(t, database.DB.Create(conv).Error)
 
@@ -388,7 +457,7 @@ func TestConversationHandler_SendMessage_DeletedModel(t *testing.T) {
 		assert.Equal(t, 400, w.Code)
 		var response map[string]interface{}
 		json.Unmarshal(w.Body.Bytes(), &response)
-		assert.Equal(t, "model_deleted", response["code"])
+		assert.Equal(t, "model_deleted", response["error"])
 		assert.Contains(t, response["message"], "gpt-4o-deleted")
 	})
 
@@ -397,10 +466,10 @@ func TestConversationHandler_SendMessage_DeletedModel(t *testing.T) {
 		providerModel := testutil.CreateTestProviderModel(t, provider.ID, "gpt-4o-mini", "GPT-4o Mini")
 
 		conv := &models.Conversation{
-			UserID:          user.ID,
+			UserID:                 user.ID,
 			CurrentProviderModelID: &providerModel.ID,
-			ModelID:         "gpt-4o-mini",
-			Title:           "Normal Conversation",
+			ModelID:                "gpt-4o-mini",
+			Title:                  "Normal Conversation",
 		}
 		require.NoError(t, database.DB.Create(conv).Error)
 
@@ -427,10 +496,10 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 	t.Run("model_id snapshot should be preserved after model deletion", func(t *testing.T) {
 		// Create conversation with model
 		conv := &models.Conversation{
-			UserID:          user.ID,
+			UserID:                 user.ID,
 			CurrentProviderModelID: &providerModel.ID,
-			ModelID:         "gpt-4-turbo",
-			Title:           "Snapshot Test",
+			ModelID:                "gpt-4-turbo",
+			Title:                  "Snapshot Test",
 		}
 		require.NoError(t, database.DB.Create(conv).Error)
 
@@ -465,10 +534,10 @@ func TestConversationModelID_Snapshot(t *testing.T) {
 		require.NoError(t, database.DB.Create(model).Error)
 
 		conv := &models.Conversation{
-			UserID:          user.ID,
+			UserID:                 user.ID,
 			CurrentProviderModelID: &modelID,
-			ModelID:         "temporary-model",
-			Title:           "Temp Model Conv",
+			ModelID:                "temporary-model",
+			Title:                  "Temp Model Conv",
 		}
 		require.NoError(t, database.DB.Create(conv).Error)
 
