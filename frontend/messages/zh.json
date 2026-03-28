@@ -112,7 +112,8 @@
     "aiAssistantReady": "AI 助手随时待命",
     "startChattingDesc": "开始与 AI 对话，探索无限可能，让你的灵感高效记录",
     "sendHint": "按 Enter 发送 · Shift + Enter 换行",
-    "newMessages": "新消息"
+    "newMessages": "新消息",
+    "generationCanceled": "会话已被取消"
   },
   "saveNote": {
     "title": "保存为笔记",

@@ -20,6 +20,7 @@ type Message struct {
 	Content         string      `gorm:"type:text;not null" json:"content"`
 	ProviderModelID *uuid.UUID  `gorm:"type:uuid" json:"provider_model_id"` // Model used for this message (assistant messages only)
 	ModelID         string      `gorm:"size:255" json:"model_id"`           // Snapshot of model_id (e.g., "gpt-4o"), preserved after model deletion
+	Canceled        bool        `gorm:"default:false" json:"canceled"`      // Whether the generation was manually canceled by the user
 	CreatedAt       time.Time   `json:"created_at"`
 
 	ProviderModel *ProviderModel `gorm:"foreignKey:ProviderModelID" json:"-"`

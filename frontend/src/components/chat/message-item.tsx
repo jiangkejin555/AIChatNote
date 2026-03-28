@@ -165,55 +165,63 @@ export function MessageItem({
               <span className="text-xs">{t('chat.thinking')}</span>
             </div>
           ) : (
-            <div className="text-sm leading-relaxed">
+            <div className="text-sm leading-relaxed min-h-[20px]">
               <MarkdownContent content={message.content} />
               {isStreaming && (
-                <span className="inline-block w-0.5 h-4 bg-foreground/60 animate-pulse ml-0.5 rounded-full" />
+                <span className="inline-block w-0.5 h-4 bg-foreground/60 animate-pulse ml-0.5 rounded-full align-middle" />
               )}
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        {!isStreaming && !isTimeout && (
-          <div
-            className={cn(
-              'flex gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150',
-              isUser ? 'justify-end' : 'justify-start'
-            )}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
-              onClick={handleCopy}
-              title={t('common.copy')}
-            >
-              {copied ? (
-                <Check className="h-3 w-3 text-green-500" />
-              ) : (
-                <Copy className="h-3 w-3" />
+        {/* Action Buttons and Cancel Status */}
+        <div className={cn('flex items-center', isUser ? 'justify-end' : 'justify-start', 'gap-2 mt-1.5')}>
+          {!isStreaming && !isTimeout && (
+            <div
+              className={cn(
+                'flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150'
               )}
-            </Button>
-
-            {!isUser && (
+            >
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
-                onClick={handleRegenerate}
-                disabled={regenerate.isPending}
-                title={t('common.regenerate')}
+                onClick={handleCopy}
+                title={t('common.copy')}
               >
-                {regenerate.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                {copied ? (
+                  <Check className="h-3 w-3 text-green-500" />
                 ) : (
-                  <RotateCcw className="h-3 w-3" />
+                  <Copy className="h-3 w-3" />
                 )}
               </Button>
-            )}
-          </div>
-        )}
+
+              {!isUser && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+                  onClick={handleRegenerate}
+                  disabled={regenerate.isPending}
+                  title={t('common.regenerate')}
+                >
+                  {regenerate.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-3 w-3" />
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {/* Canceled status indicator */}
+          {message.canceled && !isUser && (
+            <span className="text-[11px] text-muted-foreground/50 italic px-1">
+              {t('chat.generationCanceled')}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

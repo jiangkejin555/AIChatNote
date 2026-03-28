@@ -209,6 +209,7 @@ export interface Message {
   content: string
   provider_model_id?: string | null // Model used for this message (assistant messages only)
   model_id?: string // Model ID snapshot (e.g., "gpt-4o"), preserved after model deletion
+  canceled?: boolean // Whether the message generation was manually canceled
   created_at: string
 }
 

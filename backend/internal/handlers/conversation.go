@@ -533,6 +533,7 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 		Content:         fullContent,
 		ProviderModelID: conv.CurrentProviderModelID,
 		ModelID:         conv.ModelID,
+		Canceled:        isCanceled,
 	}
 	err = h.msgRepo.Create(assistantMsg)
 	if err != nil {
