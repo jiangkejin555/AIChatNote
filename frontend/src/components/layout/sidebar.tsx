@@ -120,6 +120,58 @@ const themeOptions = [
   { value: 'system', labelKey: 'settings.themeSystem', icon: Monitor },
 ] as const
 
+// Collapsed Quick Chat List - 简化版聊天列表（收缩状态）
+interface CollapsedQuickChatListProps {
+  conversations: Conversation[]
+  currentConversationId: number | null
+  onSelectConversation: (id: number) => void
+}
+
+function CollapsedQuickChatList({ conversations, currentConversationId, onSelectConversation }: CollapsedQuickChatListProps) {
+  // 显示最近聊天（支持滚动查看更多）
+  const recentChats = conversations.slice(0, 20)
+
+  // 获取标题首字符（优先取中文/英文首字）
+  const getInitialChar = (title: string): string => {
+    if (!title) return 'N'
+    const firstChar = title.charAt(0).toUpperCase()
+    return firstChar
+  }
+
+  return (
+    <div className="px-2 space-y-1">
+      {recentChats.map((conv, index) => {
+        const isActive = currentConversationId === conv.id
+        const initial = getInitialChar(conv.title || '')
+        return (
+          <button
+            key={conv.id}
+            onClick={() => onSelectConversation(conv.id)}
+            className={cn(
+              'w-full h-9 rounded-lg flex items-center justify-center transition-all duration-200',
+              'text-xs font-medium',
+              isActive
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-sidebar-accent/40 text-sidebar-foreground/60 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground',
+              'animate-in fade-in-0 slide-in-from-left-1'
+            )}
+            style={{ animationDelay: `${index * 20}ms` }}
+            title={conv.title || '新对话'}
+          >
+            {initial}
+          </button>
+        )
+      })}
+      {recentChats.length === 0 && (
+        <div className="py-3 flex flex-col items-center gap-1.5">
+          <MessageSquare className="h-4 w-4 text-sidebar-foreground/20" />
+          <span className="text-[9px] text-sidebar-foreground/25">暂无</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // User Dropdown Menu Component
 interface UserDropdownMenuProps {
   user: { email: string } | null
@@ -144,6 +196,62 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
     setShowLogoutConfirm(false)
   }
 
+  // 收缩状态下不显示完整用户菜单，只显示小头像
+  if (sidebarCollapsed) {
+    return (
+      <div className="p-2 shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full">
+            <div className="relative flex justify-center">
+              <Avatar className="h-8 w-8 ring-2 ring-sidebar-border/50 hover:ring-primary/30 transition-all duration-200 cursor-pointer hover:scale-105">
+                <AvatarFallback className="text-[10px] bg-gradient-to-br from-primary/80 to-primary text-primary-foreground font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-sidebar" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="right"
+            align="start"
+            sideOffset={8}
+            className="w-56 p-2 rounded-xl"
+          >
+            <div className="px-2 py-2 mb-1">
+              <p className="text-sm font-medium truncate">{user?.email?.split('@')[0]}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
+            <DropdownMenuSeparator />
+            <Link href="/settings" className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-accent text-sm">
+              <Settings className="h-4 w-4" />
+              <span>{t('sidebar.settings')}</span>
+            </Link>
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-destructive/10 text-destructive text-sm"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>{t('sidebar.logout')}</span>
+            </button>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('accountManagement.logout')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('accountManagement.logoutConfirm')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogoutConfirm}>{t('accountManagement.logout')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    )
+  }
+
   return (
     <div className="border-t border-sidebar-border/60 p-3 shrink-0">
       <DropdownMenu>
@@ -152,8 +260,7 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
             className={cn(
               'flex items-center gap-3 rounded-xl p-2 transition-all duration-200',
               'hover:bg-sidebar-accent/80 hover:shadow-sm',
-              'cursor-pointer group',
-              sidebarCollapsed && 'justify-center'
+              'cursor-pointer group'
             )}
           >
             <div className="relative">
@@ -164,19 +271,15 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
               </Avatar>
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-sidebar" />
             </div>
-            {!sidebarCollapsed && (
-              <>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
-                    {user?.email?.split('@')[0]}
-                  </p>
-                  <p className="text-xs text-sidebar-foreground/50 truncate">
-                    {user?.email}
-                  </p>
-                </div>
-                <ChevronUp className="h-4 w-4 text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors" />
-              </>
-            )}
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user?.email?.split('@')[0]}
+              </p>
+              <p className="text-xs text-sidebar-foreground/50 truncate">
+                {user?.email}
+              </p>
+            </div>
+            <ChevronUp className="h-4 w-4 text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors" />
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -860,6 +963,29 @@ export function Sidebar() {
                   ))}
                 </div>
               )}
+            </ScrollArea>
+          </div>
+        </>
+      )}
+
+      {/* Collapsed Quick Chat List - 收缩状态下显示简化聊天列表 */}
+      {sidebarCollapsed && (
+        <>
+          <Separator className="shrink-0 opacity-50" />
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden py-2">
+            {/* 聊天列表 - 从上向下滚动 */}
+            <ScrollArea className="flex-1 h-0 [&>_[data-slot=scroll-area-scrollbar]]:opacity-0 [&>_[data-slot=scroll-area-scrollbar]]:hover:opacity-100 [&>_[data-slot=scroll-area-scrollbar]]:transition-opacity">
+              <CollapsedQuickChatList
+                conversations={sortedConversations}
+                currentConversationId={currentConversationId}
+                onSelectConversation={(id) => {
+                  setIsPendingNewChat(false)
+                  setCurrentConversation(id)
+                  if (pathname !== '/') {
+                    router.push('/')
+                  }
+                }}
+              />
             </ScrollArea>
           </div>
         </>
