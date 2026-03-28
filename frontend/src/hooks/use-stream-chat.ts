@@ -127,6 +127,10 @@ export function useStreamChat({
 
           for await (const chunk of parseSSEStream(response.body)) {
             if (stopRef.current || chunk.done) {
+              // If there's an error from the stream chunk, throw it so it gets handled
+              if (chunk.error) {
+                throw new Error(chunk.error)
+              }
               break
             }
 

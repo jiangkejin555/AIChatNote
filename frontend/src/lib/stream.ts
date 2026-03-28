@@ -60,14 +60,20 @@ function parseSSEMessage(data: string): SSEMessage | null {
   }
 
   try {
-    const chunk: StreamChunk = JSON.parse(jsonStr)
-    const content = chunk.choices[0]?.delta?.content || ''
-    const id = chunk.id
+    const chunk = JSON.parse(jsonStr)
+    
+    // Check if the chunk contains an error instead of normal stream content
+    if (chunk.error) {
+      return { id: '', content: '', done: true, error: chunk.error }
+    }
+    
+    const content = chunk.choices?.[0]?.delta?.content || ''
+    const id = chunk.id || ''
 
     return {
       id,
       content,
-      done: chunk.choices[0]?.finish_reason === 'stop',
+      done: chunk.choices?.[0]?.finish_reason === 'stop',
     }
   } catch {
     console.error('Failed to parse SSE message:', jsonStr)
