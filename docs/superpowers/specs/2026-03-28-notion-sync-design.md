@@ -10,7 +10,16 @@ Allow users to connect their Notion account via OAuth and seamlessly sync their 
 ## 3. Core Architecture (Backend-Driven)
 We will adopt a backend-driven approach (Option B discussed in brainstorming) where the Go backend handles the OAuth flow, stores the access tokens, parses Markdown into Notion Blocks, and communicates with the Notion API.
 
-### 3.1 Data Model Changes
+### 3.1 App-Level Configuration
+To act as a Public Integration, the backend needs the application's OAuth credentials. These will be added to the `.env` and `config.yaml` files:
+```env
+NOTION_CLIENT_ID=your_notion_client_id
+NOTION_CLIENT_SECRET=your_notion_client_secret
+NOTION_REDIRECT_URI=http://localhost:3000/api/integrations/notion/callback
+```
+*Note: These are global app credentials. Individual user access tokens obtained after authorization will be stored in the database.*
+
+### 3.2 Data Model Changes
 Add a new table `user_integrations` to keep the main `users` table clean:
 ```sql
 CREATE TABLE user_integrations (
@@ -34,7 +43,7 @@ ADD COLUMN notion_page_id VARCHAR(255),
 ADD COLUMN notion_last_sync_at TIMESTAMP WITH TIME ZONE;
 ```
 
-### 3.2 Backend API Routes
+### 3.3 Backend API Routes
 - **OAuth Endpoints:**
   - `GET /api/integrations/notion/auth-url`: Returns the OAuth URL to redirect the user to Notion.
   - `POST /api/integrations/notion/callback`: Handles the OAuth callback, exchanges code for token, stores it, and auto-creates the "AIChatNote" parent page.
@@ -43,7 +52,7 @@ ADD COLUMN notion_last_sync_at TIMESTAMP WITH TIME ZONE;
 - **Sync Endpoints:**
   - `POST /api/notes/:id/sync/notion`: Triggers the sync for a specific note.
 
-### 3.3 The "Update" Strategy (Soft Delete & Recreate)
+### 3.4 The "Update" Strategy (Soft Delete & Recreate)
 Notion's API does not support bulk replacing page content easily due to its Block architecture. 
 When a note is synced that already has a `notion_page_id`:
 1. The backend makes an API call to Archive (soft delete) the existing `notion_page_id`.
