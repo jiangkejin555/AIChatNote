@@ -84,12 +84,18 @@ export default function ChatPage() {
 
       // Clear streaming state for the specific conversation
       if (conversationIdToInvalidate) {
+        // If message is completely empty (e.g. aborted before any content), don't trigger refetch
+        // We just clear the UI state and let the server handle the empty state
+        const isEmptyMessage = !message?.content && !getStreamingState(conversationIdToInvalidate)?.content
+        
         clearStreamingState(conversationIdToInvalidate)
 
-        // Invalidate messages to refetch
-        queryClient.invalidateQueries({
-          queryKey: ['conversations', conversationIdToInvalidate, 'messages'],
-        })
+        if (!isEmptyMessage) {
+          // Invalidate messages to refetch
+          queryClient.invalidateQueries({
+            queryKey: ['conversations', conversationIdToInvalidate, 'messages'],
+          })
+        }
       }
 
       // Also invalidate conversations list to update sidebar
@@ -209,42 +215,47 @@ export default function ChatPage() {
           return
         }
 
-        // Clear pending state
-        setIsPendingNewChat(false)
+        try {
+          // Create new conversation first
+          const conv = await createConversation.mutateAsync({ provider_model_id: selectedModelId })
+          setCurrentConversation(conv.id)
 
-        // Create new conversation first
-        const conv = await createConversation.mutateAsync({ provider_model_id: selectedModelId })
-        setCurrentConversation(conv.id)
+          // Clear pending state
+          setIsPendingNewChat(false)
 
-        // Add optimistic user message and set thinking state for the new conversation
-        const optimisticUserMessage: Message = {
-          id: Date.now(),
-          conversation_id: conv.id,
-          role: 'user',
-          content,
-          created_at: new Date().toISOString(),
+          // Add optimistic user message and set thinking state for the new conversation
+          const optimisticUserMessage: Message = {
+            id: Date.now(),
+            conversation_id: conv.id,
+            role: 'user',
+            content,
+            created_at: new Date().toISOString(),
+          }
+          updateStreamingState(conv.id, {
+            optimisticMessages: [optimisticUserMessage],
+            isThinking: true,
+            isTimeout: false,
+            lastUserMessage: content,
+            requestId,
+          })
+
+          // Track the conversation ID for streaming (to avoid stale closure in onMessageEnd)
+          streamingConversationIdRef.current = conv.id
+
+          // Invalidate conversations list to update sidebar
+          queryClient.invalidateQueries({
+            queryKey: ['conversations'],
+          })
+
+          // Then send message to new conversation
+          streamMessage(content, conv.id, requestId)
+
+          // Mark that we need to generate title after message ends
+          needGenerateTitleRef.current = true
+        } catch (error) {
+          // Error is handled by the mutation's onError callback
+          console.error('Failed to create conversation:', error)
         }
-        updateStreamingState(conv.id, {
-          optimisticMessages: [optimisticUserMessage],
-          isThinking: true,
-          isTimeout: false,
-          lastUserMessage: content,
-          requestId,
-        })
-
-        // Track the conversation ID for streaming (to avoid stale closure in onMessageEnd)
-        streamingConversationIdRef.current = conv.id
-
-        // Invalidate conversations list to update sidebar
-        queryClient.invalidateQueries({
-          queryKey: ['conversations'],
-        })
-
-        // Then send message to new conversation
-        streamMessage(content, conv.id, requestId)
-
-        // Mark that we need to generate title after message ends
-        needGenerateTitleRef.current = true
       } else {
         // Add optimistic user message and set thinking state for existing conversation
         const optimisticUserMessage: Message = {
@@ -378,8 +389,8 @@ export default function ChatPage() {
             <ChatStartPage
               onSend={handleSendMessage}
               onStop={stopStreaming}
-              isLoading={isCurrentConversationStreaming}
-              disabled={!selectedModelId}
+              isLoading={isCurrentConversationStreaming || createConversation.isPending}
+              disabled={!selectedModelId || createConversation.isPending}
             />
           </>
         ) : (
