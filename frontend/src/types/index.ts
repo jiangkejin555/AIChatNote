@@ -276,6 +276,21 @@ export interface GenerateNoteResponse {
   tags: string[]
 }
 
+export interface AsyncNoteGenerationResponse {
+  task_id: number
+}
+
+export interface NoteGenerationTask {
+  id: number
+  user_id: number
+  conversation_id: number
+  status: 'generating' | 'done' | 'failed'
+  error_message: string | null
+  note_id: number | null
+  created_at: string
+  updated_at: string
+}
+
 // Folder types
 export interface Folder {
   id: number

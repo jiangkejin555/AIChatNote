@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useGenerateNote, useCreateNote, useFolders, useTags, useMessages } from '@/hooks'
+import { useAsyncNoteGeneration, useCreateNote, useFolders, useTags, useMessages } from '@/hooks'
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import { X, Sparkles, FileText, Loader2, Folder } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from '@/i18n'
 import { MessageSelector } from './message-selector'
-import { markdownToHtml, formatMessagesAsHtml } from '@/lib/markdown-utils'
+import { formatMessagesAsHtml } from '@/lib/markdown-utils'
 import type { Message, Folder as FolderType } from '@/types'
 
 interface SaveNoteDialogProps {
@@ -45,7 +45,7 @@ export function SaveNoteDialog({
   const [selectedMessageIds, setSelectedMessageIds] = useState<number[]>([])
 
   // Hooks
-  const generateNote = useGenerateNote()
+  const { startGeneration } = useAsyncNoteGeneration()
   const createNote = useCreateNote()
   const { data: folders } = useFolders()
   const { data: existingTags } = useTags()
@@ -172,32 +172,18 @@ export function SaveNoteDialog({
       return
     }
 
-    // Close dialog immediately
+    // Close dialog immediately — generation runs async in the background
     onOpenChange(false)
-    toast.info(t('saveNote.aiSaving'))
 
     try {
-      // First generate AI summary
-      const result = await generateNote.mutateAsync({ conversation_id: conversationId })
-
-      // Convert Markdown to HTML for consistent storage
-      const htmlContent = await markdownToHtml(result.content)
-
-      // Then create note with AI-generated or user-provided title/tags
-      await createNote.mutateAsync({
-        title: title.trim() || result.title,
-        content: htmlContent,
-        tags: tags.length > 0 ? tags : result.tags,
-        folder_id: folderId ?? undefined,
-        source_conversation_id: conversationId,
-      })
+      await startGeneration(conversationId)
       onSuccess?.()
     } catch {
       toast.error(t('saveNote.saveFailed'))
     }
   }
 
-  const isSaving = createNote.isPending || generateNote.isPending
+  const isSaving = createNote.isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

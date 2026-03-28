@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notesApi, type NotesQueryParams } from '@/lib/api/notes'
 import { useNotesStore } from '@/stores'
 import { toast } from 'sonner'
-import type { CreateNoteRequest, UpdateNoteRequest, GenerateNoteRequest } from '@/types'
+import type { CreateNoteRequest, UpdateNoteRequest } from '@/types'
 import { getT } from '@/i18n'
 
 export function useNotes(params?: NotesQueryParams) {
@@ -83,15 +83,69 @@ export function useDeleteNote() {
   })
 }
 
-export function useGenerateNote() {
+export function useAsyncNoteGeneration() {
+  const queryClient = useQueryClient()
   const t = getT()
 
-  return useMutation({
-    mutationFn: (data: GenerateNoteRequest) => notesApi.generate(data),
-    onError: () => {
-      toast.error(t('notes.aiGenerateFailed'))
-    },
-  })
+  const startGeneration = async (conversationId: number) => {
+    // Trigger async generation
+    const { task_id } = await notesApi.generate({ conversation_id: conversationId })
+
+    // Store to localStorage for recovery after refresh
+    localStorage.setItem('pendingNoteTask', JSON.stringify({
+      taskId: task_id,
+      conversationId,
+    }))
+
+    toast.info(t('notes.aiGenerating'))
+
+    // Start polling
+    return pollTaskStatus(task_id)
+  }
+
+  const pollTaskStatus = (taskId: number): Promise<{ status: string; note_id?: number }> => {
+    return new Promise((resolve, reject) => {
+      const poll = async () => {
+        try {
+          const task = await notesApi.getTask(taskId)
+
+          if (task.status === 'generating') {
+            setTimeout(poll, 3000)
+          } else if (task.status === 'done') {
+            localStorage.removeItem('pendingNoteTask')
+            queryClient.invalidateQueries({ queryKey: ['notes'] })
+            queryClient.invalidateQueries({ queryKey: ['tags'] })
+            toast.success(t('notes.aiGenerateSuccess'))
+            resolve({ status: 'done', note_id: task.note_id ?? undefined })
+          } else if (task.status === 'failed') {
+            localStorage.removeItem('pendingNoteTask')
+            toast.error(t('notes.aiGenerateFailed') + (task.error_message ? `: ${task.error_message}` : ''))
+            reject(new Error(task.error_message || 'Generation failed'))
+          }
+        } catch {
+          // API error during polling — retry after delay
+          setTimeout(poll, 3000)
+        }
+      }
+
+      poll()
+    })
+  }
+
+  const recoverPendingTask = () => {
+    const pending = localStorage.getItem('pendingNoteTask')
+    if (pending) {
+      try {
+        const { taskId } = JSON.parse(pending)
+        toast.info(t('notes.aiGenerating'))
+        pollTaskStatus(taskId).catch(() => {})
+      } catch {
+        localStorage.removeItem('pendingNoteTask')
+      }
+    }
+  }
+
+  return { startGeneration, recoverPendingTask }
 }
 
 export function useExportNote() {

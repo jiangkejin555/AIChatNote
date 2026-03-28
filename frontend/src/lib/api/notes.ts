@@ -5,6 +5,8 @@ import type {
   UpdateNoteRequest,
   GenerateNoteRequest,
   GenerateNoteResponse,
+  AsyncNoteGenerationResponse,
+  NoteGenerationTask,
   ApiResponse,
 } from '@/types'
 
@@ -80,11 +82,18 @@ export const notesApi = {
     await apiClient.delete(`/notes/${id}`)
   },
 
-  generate: async (data: GenerateNoteRequest): Promise<GenerateNoteResponse> => {
-    const response = await apiClient.post<ApiResponse<GenerateNoteResponse>>(
+  generate: async (data: GenerateNoteRequest): Promise<AsyncNoteGenerationResponse> => {
+    const response = await apiClient.post<ApiResponse<AsyncNoteGenerationResponse>>(
       '/notes/generate',
       data,
-      { timeout: 120000 } // AI 生成需要较长时间，设置 2 分钟超时
+      { timeout: 120000 }
+    )
+    return response.data.data
+  },
+
+  getTask: async (taskId: number): Promise<NoteGenerationTask> => {
+    const response = await apiClient.get<ApiResponse<NoteGenerationTask>>(
+      `/notes/tasks/${taskId}`
     )
     return response.data.data
   },
