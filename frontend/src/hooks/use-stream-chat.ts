@@ -153,8 +153,22 @@ export function useStreamChat({
           clearTimeout(timeoutId)
         }
       } catch (error) {
-        console.error('Stream error:', error)
         const err = error as Error
+        // 如果是用户主动停止（stopRef.current 为 true）产生的 AbortError，则忽略报错
+        if (err.name === 'AbortError' && stopRef.current) {
+          console.log('Stream manually aborted by user.')
+          // 虽然中止了，但也需要在 UI 上触发一个空或残断的消息结束事件，以确保能够重置消息列表中的状态
+          onMessageEndRef.current?.({
+            id: Date.now(),
+            conversation_id: targetConversationId,
+            role: 'assistant',
+            content: '', // 这里因为在 hook 外面有状态管理，只需要通知 end 即可
+            created_at: new Date().toISOString(),
+          })
+          return
+        }
+
+        console.error('Stream error:', error)
 
         // Return user-friendly error message
         if (err.name === 'AbortError') {
