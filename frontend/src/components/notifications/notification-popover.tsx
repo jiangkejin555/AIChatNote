@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { BellRing, Loader2 } from 'lucide-react'
+import { BellRing, Loader2, Inbox } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -19,14 +19,10 @@ export function NotificationPopover({ children, triggerClassName }: Notification
   const router = useRouter()
   const t = getT()
   const { data: unreadCount } = useUnreadCount()
-  const { data, isLoading } = useNotifications({ page_size: 5 })
+  const { data, isLoading } = useNotifications({ page_size: 5, unread: true })
 
   const notifications = data?.data ?? []
   const hasUnread = (unreadCount ?? 0) > 0
-
-  const handleViewAll = () => {
-    router.push('/notifications')
-  }
 
   return (
     <Popover>
@@ -64,15 +60,15 @@ export function NotificationPopover({ children, triggerClassName }: Notification
           )}
         </div>
 
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="max-h-[240px]">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <BellRing className="h-8 w-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">{t('notifications.empty')}</p>
+              <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">{t('notifications.noUnread')}</p>
             </div>
           ) : (
             <div className="p-2 space-y-1">
@@ -91,7 +87,7 @@ export function NotificationPopover({ children, triggerClassName }: Notification
           <Button
             variant="ghost"
             className="w-full justify-center text-sm"
-            onClick={handleViewAll}
+            onClick={() => router.push('/notifications')}
           >
             {t('notifications.viewAll')}
           </Button>

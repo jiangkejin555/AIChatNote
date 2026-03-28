@@ -154,16 +154,16 @@ export default function ChatPage() {
     return { isDeleted, deletedModelId }
   }, [currentConversation])
 
-  // Set initial conversation
+  // Set initial conversation - default to new chat state
   useEffect(() => {
-    if (conversations && conversations.length > 0 && !currentConversationId) {
-      // Only set if the conversation still exists (handles race condition during delete)
-      setCurrentConversation(conversations[0].id)
+    if (conversations && !currentConversationId && !isPendingNewChat) {
+      // Default to new conversation start page
+      setIsPendingNewChat(true)
     } else if (conversations && conversations.length === 0 && currentConversationId) {
       // Clear current conversation if no conversations exist (all deleted)
       setCurrentConversation(null)
     }
-  }, [conversations, currentConversationId, setCurrentConversation])
+  }, [conversations, currentConversationId, isPendingNewChat, setCurrentConversation, setIsPendingNewChat])
 
   // Set initial model from conversation or default
   useEffect(() => {

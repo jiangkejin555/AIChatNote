@@ -637,6 +637,8 @@
     "unread": "unread",
     "empty": "No notifications",
     "emptyDesc": "New notifications will appear here",
+    "noUnread": "No unread notifications",
+    "noUnreadDesc": "All notifications have been read",
     "viewAll": "View all notifications",
     "markAllRead": "Mark all read",
     "clearAll": "Clear all",
