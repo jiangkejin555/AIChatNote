@@ -158,8 +158,8 @@ export function useStreamChat({
         }
       } catch (error) {
         const err = error as Error
-        // 如果是用户主动停止（stopRef.current 为 true）产生的 AbortError，则忽略报错
-        if (err.name === 'AbortError' && stopRef.current) {
+        // 如果是用户主动停止（stopRef.current 为 true）产生的错误（可能是 AbortError 或 TypeError: Failed to fetch），则忽略报错
+        if ((err.name === 'AbortError' || err.message.includes('Failed to fetch')) && stopRef.current) {
           console.log('Stream manually aborted by user.')
           // 虽然中止了，但也需要在 UI 上触发一个空或残断的消息结束事件，以确保能够重置消息列表中的状态
           onMessageEndRef.current?.({
