@@ -91,8 +91,9 @@ export function useCreateTestNotification() {
 
   return useMutation({
     mutationFn: (params: {
-      template_code: string
-      vars?: Record<string, string>
+      type: string
+      title: string
+      content: string
       payload?: NotificationPayload
     }) => notificationsApi.createTest(params),
     onSuccess: () => {

@@ -7,22 +7,21 @@ import type {
   NotificationsListResponse,
   NotificationPayload,
 } from '@/types'
-import type { ApiResponse } from '@/types'
 
 export const notificationsApi = {
   getAll: async (params?: NotificationsQueryParams): Promise<NotificationsListResponse> => {
-    const response = await apiClient.get<ApiResponse<NotificationsListResponse>>(
+    const response = await apiClient.get<NotificationsListResponse>(
       '/notifications',
       { params }
     )
-    return response.data.data
+    return response.data
   },
 
   getUnreadCount: async (): Promise<number> => {
-    const response = await apiClient.get<ApiResponse<{ count: number }>>(
+    const response = await apiClient.get<{ count: number }>(
       '/notifications/unread-count'
     )
-    return response.data.data.count
+    return response.data.count
   },
 
   markAsRead: async (id: number): Promise<void> => {
@@ -30,10 +29,10 @@ export const notificationsApi = {
   },
 
   markAllAsRead: async (): Promise<number> => {
-    const response = await apiClient.put<ApiResponse<{ affected: number }>>(
+    const response = await apiClient.put<{ affected: number }>(
       '/notifications/read-all'
     )
-    return response.data.data.affected
+    return response.data.affected
   },
 
   delete: async (id: number): Promise<void> => {
@@ -41,19 +40,20 @@ export const notificationsApi = {
   },
 
   deleteAll: async (type?: string): Promise<number> => {
-    const response = await apiClient.delete<ApiResponse<{ affected: number }>>(
+    const response = await apiClient.delete<{ affected: number }>(
       '/notifications',
       { params: type ? { type } : undefined }
     )
-    return response.data.data.affected
+    return response.data.affected
   },
 
   createTest: async (params: {
-    template_code: string
-    vars?: Record<string, string>
+    type: string
+    title: string
+    content: string
     payload?: NotificationPayload
   }): Promise<Notification> => {
-    const response = await apiClient.post<ApiResponse<Notification>>(
+    const response = await apiClient.post<{ data: Notification }>(
       '/notifications/test',
       params
     )
