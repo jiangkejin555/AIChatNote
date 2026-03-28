@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Send, Loader2, Sparkles } from 'lucide-react'
+import { Send, Square, Sparkles } from 'lucide-react'
 import { useTranslations } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 interface ChatStartPageProps {
   onSend: (content: string) => void
+  onStop?: () => void
   isLoading?: boolean
   disabled?: boolean
 }
@@ -22,6 +23,7 @@ const suggestions = [
 
 export function ChatStartPage({
   onSend,
+  onStop,
   isLoading,
   disabled
 }: ChatStartPageProps) {
@@ -101,8 +103,8 @@ export function ChatStartPage({
             />
           </div>
           <Button
-            onClick={handleSubmit}
-            disabled={!content.trim() || isLoading || disabled}
+            onClick={isLoading ? onStop : handleSubmit}
+            disabled={!isLoading && (!content.trim() || disabled)}
             className={cn(
               'h-[52px] w-[52px] shrink-0 rounded-2xl',
               'transition-all duration-200',
@@ -111,7 +113,7 @@ export function ChatStartPage({
             )}
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Square className="h-5 w-5 fill-current" />
             ) : (
               <Send className="h-5 w-5" />
             )}

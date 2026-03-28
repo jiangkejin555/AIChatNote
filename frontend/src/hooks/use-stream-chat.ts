@@ -24,6 +24,7 @@ export function useStreamChat({
   const { token } = useAuthStore()
   const { startStreaming, stopStreaming, isConversationStreaming } = useChatStore()
   const stopRef = useRef(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Use refs to store callbacks to avoid stale closure issues
   // and prevent unnecessary re-renders when callbacks change
@@ -42,6 +43,10 @@ export function useStreamChat({
 
   const stopStreamingCallback = useCallback(() => {
     stopRef.current = true
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
     setIsStreaming(false)
     if (conversationId) {
       stopStreaming(conversationId)
@@ -74,6 +79,7 @@ export function useStreamChat({
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
 
         const controller = new AbortController()
+        abortControllerRef.current = controller
         const timeoutId = setTimeout(() => controller.abort(), 60000) // 1 minutes timeout
 
         try {

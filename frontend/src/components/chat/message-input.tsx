@@ -3,18 +3,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Square } from 'lucide-react'
 import { useChatStore } from '@/stores'
 import { useTranslations } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 interface MessageInputProps {
   onSend: (content: string) => void
+  onStop?: () => void
   isLoading?: boolean
   disabled?: boolean
 }
 
-export function MessageInput({ onSend, isLoading, disabled }: MessageInputProps) {
+export function MessageInput({ onSend, onStop, isLoading, disabled }: MessageInputProps) {
   const [content, setContent] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const prevConversationIdRef = useRef<number | null>(null)
@@ -102,19 +103,21 @@ export function MessageInput({ onSend, isLoading, disabled }: MessageInputProps)
           rows={1}
         />
         <Button
-          onClick={handleSubmit}
-          disabled={!canSend}
+          onClick={isLoading ? onStop : handleSubmit}
+          disabled={!isLoading && !canSend}
           size="icon"
           className={cn(
             'h-[44px] w-[44px] shrink-0 rounded-xl',
             'transition-all duration-150',
-            canSend
+            isLoading 
               ? 'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
-              : 'opacity-50'
+              : canSend
+                ? 'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
+                : 'opacity-50'
           )}
         >
           {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Square className="h-5 w-5 fill-current" />
           ) : (
             <Send className="h-5 w-5" />
           )}

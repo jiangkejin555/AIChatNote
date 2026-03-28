@@ -61,7 +61,7 @@ export default function ChatPage() {
   // Track if we need to generate title after message ends (for new conversations)
   const needGenerateTitleRef = useRef<boolean>(false)
 
-  const { streamMessage, isStreaming } = useStreamChat({
+  const { streamMessage, isStreaming, stopStreaming } = useStreamChat({
     conversationId: currentConversationId!,
     onMessageChunk: (content) => {
       // Get the conversation ID being streamed
@@ -377,6 +377,7 @@ export default function ChatPage() {
             {/* Start Page */}
             <ChatStartPage
               onSend={handleSendMessage}
+              onStop={stopStreaming}
               isLoading={isCurrentConversationStreaming}
               disabled={!selectedModelId}
             />
@@ -410,6 +411,7 @@ export default function ChatPage() {
             {/* Input */}
             <MessageInput
               onSend={handleSendMessage}
+              onStop={stopStreaming}
               isLoading={isCurrentConversationStreaming}
               disabled={modelStatus.isDeleted || !selectedModelId}
             />

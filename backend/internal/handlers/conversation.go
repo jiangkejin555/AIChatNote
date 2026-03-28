@@ -450,7 +450,7 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 
 	utils.LogInfo("ConversationHandler", "StreamResponse started", "convID", conv.ID, "model", model)
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	req := openai.ChatCompletionRequest{
 		Model:    model,
 		Messages: messages,
@@ -459,6 +459,10 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 
 	stream, err := client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			utils.LogInfo("ConversationHandler", "StreamResponse canceled by client before starting", "convID", conv.ID)
+			return
+		}
 		utils.LogExternalCallError("ConversationHandler", "openai", err, "convID", conv.ID, "model", model)
 		fmt.Fprintf(c.Writer, "data: {\"error\":\"%s\"}\n\n", err.Error())
 		c.Writer.Flush()
@@ -471,7 +475,19 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 	defer stream.Close()
 
 	var fullContent string
+	isCanceled := false
 	for {
+		// Check if client has disconnected
+		select {
+		case <-c.Request.Context().Done():
+			isCanceled = true
+			utils.LogInfo("ConversationHandler", "StreamResponse canceled by client during streaming", "convID", conv.ID)
+		default:
+		}
+		if isCanceled {
+			break
+		}
+
 		response, err := stream.Recv()
 		if err != nil {
 			break
@@ -502,7 +518,15 @@ func (h *ConversationHandler) handleStreamResponse(c *gin.Context, client *opena
 		}
 	}
 
-	// Save assistant message with model attribution
+	// If canceled but no content was generated at all, just return
+	if isCanceled && fullContent == "" {
+		if msgReq != nil && msgReq.ID > 0 {
+			h.requestRepo.SetFailed(msgReq.ID)
+		}
+		return
+	}
+
+	// Save assistant message with model attribution (save even if canceled, to keep partial context)
 	assistantMsg := &models.Message{
 		ConversationID:  conv.ID,
 		Role:            models.RoleAssistant,
