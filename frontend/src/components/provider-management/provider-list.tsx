@@ -77,13 +77,16 @@ export function ProviderList() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {[1, 2].map((i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <Skeleton className="h-6 w-32 mb-4" />
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-5 w-32" />
+              </div>
               <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-8 w-40" />
             </CardContent>
           </Card>
         ))}
@@ -94,11 +97,16 @@ export function ProviderList() {
   if (!providers || providers.length === 0) {
     return (
       <>
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">{t('provider.pleaseAddProvider')}</p>
-            <Button onClick={handleAdd}>
-              <Plus className="h-4 w-4 mr-2" />
+        <Card className="border-dashed bg-muted/30 hover:bg-muted/50 transition-colors duration-300">
+          <CardContent className="flex flex-col items-center justify-center py-16 px-6">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Plus className="h-8 w-8 text-primary/60" />
+            </div>
+            <p className="text-muted-foreground text-sm mb-5 text-center max-w-[200px]">
+              {t('provider.pleaseAddProvider')}
+            </p>
+            <Button onClick={handleAdd} className="gap-2">
+              <Plus className="h-4 w-4" />
               {t('provider.addFirstProvider')}
             </Button>
           </CardContent>
@@ -116,9 +124,13 @@ export function ProviderList() {
 
   return (
     <>
-      <div className="grid gap-4">
-        {providers.map((provider) => (
-          <div key={provider.id} className="relative">
+      <div className="grid gap-3">
+        {providers.map((provider, index) => (
+          <div
+            key={provider.id}
+            className="animate-in fade-in-0 slide-in-from-top-2"
+            style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
+          >
             <ProviderCard
               provider={provider}
               onEdit={handleEdit}
@@ -128,7 +140,11 @@ export function ProviderList() {
           </div>
         ))}
 
-        <Button variant="outline" className="w-full" onClick={handleAdd}>
+        <Button
+          variant="outline"
+          className="w-full h-10 border-dashed hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
+          onClick={handleAdd}
+        >
           <Plus className="h-4 w-4 mr-2" />
           {t('provider.addProvider')}
         </Button>

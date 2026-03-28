@@ -425,15 +425,15 @@ export function ModelSelectionDialog({
       <div
         key={id}
         className={cn(
-          'flex items-center justify-between p-3 rounded-lg border transition-colors',
-          'hover:bg-accent/50',
-          localState.pendingDelete.includes(id) && 'opacity-50',
+          'group flex items-center justify-between p-3 rounded-lg border transition-all duration-200',
+          'hover:bg-accent/50 hover:border-primary/20',
+          localState.pendingDelete.includes(id) && 'opacity-40',
           !effectiveEnabled && 'bg-muted/30'
         )}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className={cn(
                 'text-sm font-medium truncate',
                 !effectiveEnabled && 'text-muted-foreground'
@@ -441,51 +441,51 @@ export function ModelSelectionDialog({
                 {displayName}
               </p>
               {showDefault && (
-                <Badge variant="secondary" className="text-xs shrink-0">
-                  <Star className="h-3 w-3 mr-1" />
+                <Badge variant="default" className="text-[10px] shrink-0 px-1.5 py-0 h-4 gap-0.5">
+                  <Star className="h-2.5 w-2.5" />
                   {t('provider.defaultModel')}
                 </Badge>
               )}
               {isPending && (
-                <Badge variant="outline" className="text-xs shrink-0 text-muted-foreground">
+                <Badge variant="outline" className="text-[10px] shrink-0 px-1.5 py-0 h-4 text-muted-foreground">
                   {t('provider.addSelectedModels')}
                 </Badge>
               )}
               {!enabled && !isPending && !isPendingEnable && !isPendingDisable && (
-                <Badge variant="outline" className="text-xs shrink-0 text-muted-foreground">
+                <Badge variant="outline" className="text-[10px] shrink-0 px-1.5 py-0 h-4 text-muted-foreground">
                   {t('provider.disabled')}
                 </Badge>
               )}
               {isPendingEnable && (
-                <Badge variant="outline" className="text-xs shrink-0 text-green-600">
+                <Badge variant="outline" className="text-[10px] shrink-0 px-1.5 py-0 h-4 text-green-600 border-green-200 dark:border-green-800">
                   {t('provider.willEnable')}
                 </Badge>
               )}
               {isPendingDisable && (
-                <Badge variant="outline" className="text-xs shrink-0 text-orange-600">
+                <Badge variant="outline" className="text-[10px] shrink-0 px-1.5 py-0 h-4 text-orange-600 border-orange-200 dark:border-orange-800">
                   {t('provider.willDisable')}
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-muted-foreground truncate">{modelId}</p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{modelId}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Test result indicator */}
           {testModelId === modelId && testResult && (
             <div
               className={cn(
-                'flex items-center gap-1 text-xs',
-                testResult.success ? 'text-green-600' : 'text-red-500'
+                'flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded',
+                testResult.success ? 'text-green-600 bg-green-50 dark:bg-green-950/50' : 'text-red-500 bg-red-50 dark:bg-red-950/50'
               )}
             >
               {testResult.success ? (
                 <>
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <CheckCircle2 className="h-3 w-3" />
                   <span>{testResult.latency}ms</span>
                 </>
               ) : (
-                <XCircle className="h-3.5 w-3.5" />
+                <XCircle className="h-3 w-3" />
               )}
             </div>
           )}
@@ -495,10 +495,10 @@ export function ModelSelectionDialog({
             size="sm"
             onClick={() => handleTestConnection(modelId)}
             disabled={isTesting && testModelId === modelId}
-            className="h-8 px-2"
+            className="h-7 px-2 text-xs opacity-70 hover:opacity-100"
           >
             {isTesting && testModelId === modelId ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               t('provider.test')
             )}
@@ -509,7 +509,7 @@ export function ModelSelectionDialog({
               variant={effectiveEnabled ? 'outline' : 'secondary'}
               size="sm"
               onClick={() => handleToggleEnabled(id, effectiveEnabled)}
-              className="h-8"
+              className="h-7 text-xs"
             >
               {effectiveEnabled ? t('provider.disable') : t('provider.enable')}
             </Button>
@@ -517,12 +517,12 @@ export function ModelSelectionDialog({
           {/* Set as default button */}
           {!showDefault && effectiveEnabled && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => handleSetDefault(id)}
-              className="h-8"
+              className="h-7 px-2 text-xs opacity-70 hover:opacity-100"
             >
-              {t('provider.setAsDefault')}
+              <Star className="h-3 w-3" />
             </Button>
           )}
           {/* Remove button */}
@@ -530,9 +530,9 @@ export function ModelSelectionDialog({
             variant="ghost"
             size="sm"
             onClick={() => handleRemoveModel(isPending ? modelId : id, isPending)}
-            className="h-8 px-2 text-destructive hover:text-destructive"
+            className="h-7 px-2 text-destructive opacity-60 hover:opacity-100 hover:text-destructive"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
@@ -542,9 +542,9 @@ export function ModelSelectionDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[650px]">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-[640px]">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">
               {isNewProvider
                 ? t('provider.selectModelsForProvider')
                 : t('provider.selectModelsFor', { name: provider?.name || '' })}
@@ -559,15 +559,15 @@ export function ModelSelectionDialog({
           <div className="space-y-4 py-4">
             {/* Header with fetch button */}
             <div className="flex items-center justify-between">
-              <Label className="text-base">{t('provider.configuredModels')}</Label>
+              <Label className="text-sm font-medium">{t('provider.configuredModels')}</Label>
               {preset?.supportsDynamicModels && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setAvailableModelsDialogOpen(true)}
-                  className="gap-2"
+                  className="h-8 gap-1.5 text-xs"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-3.5 w-3.5" />
                   {t('provider.fetchAvailableModels')}
                 </Button>
               )}
@@ -576,8 +576,8 @@ export function ModelSelectionDialog({
             {/* Configured models list */}
             <div className="space-y-2">
               {localState.models.length > 0 || localState.pendingAdd.length > 0 ? (
-                <ScrollArea className="h-[280px] border rounded-lg p-2">
-                  <div className="space-y-2">
+                <ScrollArea className="h-[260px] border rounded-lg p-2">
+                  <div className="space-y-1.5">
                     {/* Existing models */}
                     {localState.models
                       .filter((m) => !localState.pendingDelete.includes(m.id))
@@ -605,8 +605,10 @@ export function ModelSelectionDialog({
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 border rounded-lg border-dashed text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <div className="flex flex-col items-center justify-center py-10 border rounded-lg border-dashed bg-muted/20">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <AlertCircle className="h-6 w-6 text-muted-foreground/60" />
+                  </div>
                   <p className="text-sm text-muted-foreground mb-4">
                     {t('provider.noConfiguredModels')}
                   </p>
@@ -614,9 +616,9 @@ export function ModelSelectionDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => setAvailableModelsDialogOpen(true)}
-                    className="gap-2"
+                    className="h-8 gap-1.5 text-xs"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-3.5 w-3.5" />
                     {t('provider.fetchAvailableModels')}
                   </Button>
                 </div>
@@ -625,39 +627,40 @@ export function ModelSelectionDialog({
 
             {/* Manual add */}
             <div className="space-y-2">
-              <Label>{t('provider.manualAdd')}</Label>
+              <Label className="text-sm font-medium">{t('provider.manualAdd')}</Label>
               <div className="flex gap-2">
                 <Input
                   placeholder={t('provider.modelIdPlaceholder')}
                   value={manualModelId}
                   onChange={(e) => setManualModelId(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 h-8 text-sm"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddManualModel()}
                 />
                 <Input
                   placeholder={t('provider.displayNamePlaceholder')}
                   value={manualDisplayName}
                   onChange={(e) => setManualDisplayName(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 h-8 text-sm"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddManualModel()}
                 />
                 <Button
                   variant="outline"
-                  size="icon"
+                  size="icon-sm"
                   onClick={handleAddManualModel}
                   disabled={!manualModelId.trim()}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
+              className="h-8"
             >
               {isNewProvider ? t('provider.configureLater') : t('common.cancel')}
             </Button>
@@ -667,10 +670,11 @@ export function ModelSelectionDialog({
                 syncModels.isPending ||
                 (localState.models.length === 0 && localState.pendingAdd.length === 0)
               }
+              className="h-8"
             >
               {syncModels.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                   {t('provider.saving')}
                 </>
               ) : (
@@ -683,9 +687,9 @@ export function ModelSelectionDialog({
 
       {/* Available Models Dialog */}
       <Dialog open={availableModelsDialogOpen} onOpenChange={setAvailableModelsDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>{t('provider.availableModelsList')}</DialogTitle>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">{t('provider.availableModelsList')}</DialogTitle>
             <DialogDescription>
               {t('provider.selectModelsDescNew')}
             </DialogDescription>
@@ -695,7 +699,7 @@ export function ModelSelectionDialog({
             {/* Select all / deselect all */}
             {displayAvailableModels.length > 0 && (
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -708,6 +712,7 @@ export function ModelSelectionDialog({
                         .map((m) => ('id' in m ? m.id : m.model_id))
                       setSelectedAvailableModels(new Set(allIds))
                     }}
+                    className="h-7 text-xs"
                   >
                     {t('provider.selectAll')}
                   </Button>
@@ -715,12 +720,13 @@ export function ModelSelectionDialog({
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedAvailableModels(new Set())}
+                    className="h-7 text-xs"
                   >
                     {t('provider.deselectAll')}
                   </Button>
                 </div>
                 {selectedAvailableModels.size > 0 && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full">
                     {t('provider.selectedCount').replace('{count}', String(selectedAvailableModels.size))}
                   </span>
                 )}
@@ -731,12 +737,12 @@ export function ModelSelectionDialog({
             {isLoadingAvailable ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
+                  <Skeleton key={i} className="h-11 w-full" />
                 ))}
               </div>
             ) : displayAvailableModels.length > 0 ? (
-              <ScrollArea className="h-[260px] border rounded-lg p-2">
-                <div className="space-y-1">
+              <ScrollArea className="h-[240px] border rounded-lg p-1.5">
+                <div className="space-y-0.5">
                   {displayAvailableModels.map((model) => {
                     const modelId = 'id' in model ? model.id : model.model_id
                     const displayName = 'name' in model ? model.name : model.display_name
@@ -747,13 +753,14 @@ export function ModelSelectionDialog({
                       <div
                         key={modelId}
                         className={cn(
-                          'flex items-center gap-3 p-2 rounded-lg transition-colors',
+                          'flex items-center gap-3 p-2.5 rounded-md transition-all duration-150',
                           isAlreadyAdded
-                            ? 'bg-muted/50 opacity-60'
+                            ? 'bg-muted/40 opacity-50 cursor-not-allowed'
                             : isSelected
-                              ? 'bg-accent'
-                              : 'hover:bg-accent/50'
+                              ? 'bg-primary/10 border border-primary/20'
+                              : 'hover:bg-accent/60 cursor-pointer'
                         )}
+                        onClick={() => !isAlreadyAdded && handleToggleAvailableModel(modelId, isAlreadyAdded)}
                       >
                         <Checkbox
                           checked={isSelected || isAlreadyAdded}
@@ -761,13 +768,14 @@ export function ModelSelectionDialog({
                           onCheckedChange={() =>
                             handleToggleAvailableModel(modelId, isAlreadyAdded)
                           }
+                          className="shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{displayName}</p>
                           <p className="text-xs text-muted-foreground truncate">{modelId}</p>
                         </div>
                         {isAlreadyAdded && (
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-[10px] shrink-0">
                             {t('provider.alreadyAdded')}
                           </Badge>
                         )}
@@ -777,8 +785,10 @@ export function ModelSelectionDialog({
                 </div>
               </ScrollArea>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 border rounded-lg text-center">
-                <AlertCircle className="h-8 w-8 text-muted-foreground/50 mb-2" />
+              <div className="flex flex-col items-center justify-center py-10 border rounded-lg bg-muted/20">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-2">
+                  <AlertCircle className="h-5 w-5 text-muted-foreground/60" />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {t('provider.noAvailableModelsToAdd')}
                 </p>
@@ -786,16 +796,17 @@ export function ModelSelectionDialog({
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAvailableModelsDialogOpen(false)}>
-              <X className="h-4 w-4 mr-2" />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAvailableModelsDialogOpen(false)} className="h-8">
+              <X className="h-3.5 w-3.5 mr-1.5" />
               {t('common.close')}
             </Button>
             <Button
               onClick={handleAddSelectedAvailableModels}
               disabled={selectedAvailableModels.size === 0}
+              className="h-8"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
               {t('provider.addSelectedModels')}
               {selectedAvailableModels.size > 0 && ` (${selectedAvailableModels.size})`}
             </Button>

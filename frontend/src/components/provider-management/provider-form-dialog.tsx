@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { useEffect, useState } from 'react'
 import { Provider, ProviderType, CreateProviderRequest, UpdateProviderRequest } from '@/types'
-import { PROVIDER_TYPE_OPTIONS, PROVIDER_PRESETS } from '@/constants/providers'
+import { PROVIDER_TYPE_OPTIONS, PROVIDER_PRESETS, getProviderIcon } from '@/constants/providers'
 import {
   useCreateProvider,
   useUpdateProvider,
@@ -131,9 +131,11 @@ export function ProviderFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? t('provider.editProvider') : t('provider.addProvider')}</DialogTitle>
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">
+            {isEditing ? t('provider.editProvider') : t('provider.addProvider')}
+          </DialogTitle>
           <DialogDescription>
             {isEditing
               ? t('provider.editProviderDesc')
@@ -141,27 +143,41 @@ export function ProviderFormDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-5">
             <div className="space-y-2">
-              <Label htmlFor="name">{t('provider.providerName')}</Label>
+              <Label htmlFor="name" className="text-sm font-medium">
+                {t('provider.providerName')}
+              </Label>
               <Input
                 id="name"
                 placeholder={t('provider.namePlaceholder')}
+                className="h-9"
                 {...register('name', { required: t('provider.nameRequired') })}
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
+                <p className="text-xs text-destructive">{errors.name.message}</p>
               )}
             </div>
 
-            {!isEditing && (
-              <div className="space-y-2">
-                <Label htmlFor="type">{t('provider.providerType')}</Label>
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-sm font-medium">
+                {t('provider.providerType')}
+              </Label>
+              {isEditing ? (
+                // Show as read-only in edit mode
+                <div className="flex items-center gap-2 h-9 px-3 py-2 text-sm bg-muted/50 rounded-md border">
+                  <span>{getProviderIcon(provider?.type || selectedType)}</span>
+                  <span className="text-muted-foreground">
+                    {PROVIDER_TYPE_OPTIONS.find(opt => opt.value === provider?.type)?.label || provider?.type}
+                  </span>
+                </div>
+              ) : (
+                // Show as selectable in create mode
                 <Select
                   value={selectedType}
                   onValueChange={(value) => value && setValue('type', value as ProviderType)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder={t('provider.selectProviderType')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -172,45 +188,52 @@ export function ProviderFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="api_base">{t('provider.apiBase')}</Label>
-              <Input
-                id="api_base"
-                placeholder="https://api.openai.com/v1"
-                {...register('api_base', { required: t('provider.apiBaseRequired') })}
-              />
-              {errors.api_base && (
-                <p className="text-sm text-destructive">{errors.api_base.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="api_key">{t('provider.apiKey')}</Label>
+              <Label htmlFor="api_base" className="text-sm font-medium">
+                {t('provider.apiBase')}
+              </Label>
+              <Input
+                id="api_base"
+                placeholder="https://api.openai.com/v1"
+                className="h-9"
+                {...register('api_base', { required: t('provider.apiBaseRequired') })}
+              />
+              {errors.api_base && (
+                <p className="text-xs text-destructive">{errors.api_base.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="api_key" className="text-sm font-medium">
+                {t('provider.apiKey')}
+              </Label>
               <Input
                 id="api_key"
                 type="password"
                 placeholder={isEditing ? t('provider.apiKeyPlaceholder') : 'sk-...'}
+                className="h-9"
                 {...register('api_key', {
                   required: isEditing ? false : t('provider.apiKeyRequired'),
                 })}
               />
               {errors.api_key && (
-                <p className="text-sm text-destructive">{errors.api_key.message}</p>
+                <p className="text-xs text-destructive">{errors.api_key.message}</p>
               )}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="h-8"
             >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="h-8">
               {isSubmitting ? t('provider.saving') : t('common.save')}
             </Button>
           </DialogFooter>
