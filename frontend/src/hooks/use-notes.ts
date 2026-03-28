@@ -6,6 +6,7 @@ import { useNotesStore } from '@/stores'
 import { toast } from 'sonner'
 import type { CreateNoteRequest, UpdateNoteRequest } from '@/types'
 import { getT } from '@/i18n'
+import { markdownToHtml } from '@/lib/markdown-utils'
 
 export function useNotes(params?: NotesQueryParams) {
   const { selectedFolderId, selectedTag, searchQuery } = useNotesStore()
@@ -83,6 +84,9 @@ export function useDeleteNote() {
   })
 }
 
+// Module-level guard to prevent duplicate polling across hook instances
+let activePollingTaskId: number | null = null
+
 export function useAsyncNoteGeneration() {
   const queryClient = useQueryClient()
   const t = getT()
@@ -101,7 +105,10 @@ export function useAsyncNoteGeneration() {
     toast.info(t('notes.aiGenerating'))
 
     // Start polling
-    return pollTaskStatus(task_id)
+    activePollingTaskId = task_id
+    return pollTaskStatus(task_id).finally(() => {
+      activePollingTaskId = null
+    })
   }
 
   const pollTaskStatus = (taskId: number): Promise<{ status: string; note_id?: number }> => {
@@ -114,6 +121,18 @@ export function useAsyncNoteGeneration() {
             setTimeout(poll, 3000)
           } else if (task.status === 'done') {
             localStorage.removeItem('pendingNoteTask')
+
+            // Convert markdown to HTML (backend stores raw markdown)
+            if (task.note_id) {
+              try {
+                const note = await notesApi.getById(task.note_id)
+                const htmlContent = await markdownToHtml(note.content)
+                await notesApi.update(task.note_id, { content: htmlContent })
+              } catch {
+                // Conversion failed — note keeps raw markdown, not critical
+              }
+            }
+
             useNotesStore.getState().setIsGeneratingNote(false)
             queryClient.invalidateQueries({ queryKey: ['notes'] })
             queryClient.invalidateQueries({ queryKey: ['tags'] })
@@ -140,9 +159,13 @@ export function useAsyncNoteGeneration() {
     if (pending) {
       try {
         const { taskId } = JSON.parse(pending)
+        // Skip if this session is already polling the same task
+        if (activePollingTaskId === taskId) return
         useNotesStore.getState().setIsGeneratingNote(true)
-        // No toast here — the generating card in NotesList is sufficient
-        pollTaskStatus(taskId).catch(() => {})
+        activePollingTaskId = taskId
+        pollTaskStatus(taskId).finally(() => {
+          activePollingTaskId = null
+        }).catch(() => {})
       } catch {
         localStorage.removeItem('pendingNoteTask')
       }
