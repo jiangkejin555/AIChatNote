@@ -21,6 +21,7 @@ interface MessageItemProps {
   isStreaming?: boolean
   isThinking?: boolean
   isTimeout?: boolean
+  isCancelled?: boolean
   onRetry?: () => void
   modelsMap?: Map<string, ModelInfo>
 }
@@ -30,6 +31,7 @@ export function MessageItem({
   isStreaming,
   isThinking,
   isTimeout,
+  isCancelled,
   onRetry,
   modelsMap,
 }: MessageItemProps) {
@@ -166,9 +168,14 @@ export function MessageItem({
             </div>
           ) : (
             <div className="text-sm leading-relaxed min-h-[20px]">
-              <MarkdownContent content={message.content} />
+              {message.content && <MarkdownContent content={message.content} />}
               {isStreaming && (
                 <span className="inline-block w-0.5 h-4 bg-foreground/60 animate-pulse ml-0.5 rounded-full align-middle" />
+              )}
+              {(isCancelled || message.canceled) && !isUser && (
+                <div className={cn('text-xs mt-2', message.content ? 'pt-2 border-t border-border/50' : '', 'text-amber-500/80')}>
+                  {t('chat.replyCancelled')}
+                </div>
               )}
             </div>
           )}
@@ -215,12 +222,7 @@ export function MessageItem({
             </div>
           )}
           
-          {/* Canceled status indicator */}
-          {message.canceled && !isUser && (
-            <span className="text-[11px] text-muted-foreground/50 italic px-1">
-              {t('chat.generationCanceled')}
-            </span>
-          )}
+          {/* Canceled status indicator - now shown inside the bubble */}
         </div>
       </div>
     </div>

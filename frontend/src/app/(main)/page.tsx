@@ -81,20 +81,39 @@ export default function ChatPage() {
     onMessageEnd: (message) => {
       // Use the conversation ID from the message or the ref to avoid stale closure
       const conversationIdToInvalidate = message?.conversation_id || streamingConversationIdRef.current
+      const isCancelled = (message as Message & { _cancelled?: boolean })?._cancelled
 
       // Clear streaming state for the specific conversation
       if (conversationIdToInvalidate) {
+        const currentState = getStreamingState(conversationIdToInvalidate)
         // If message is completely empty (e.g. aborted before any content), don't trigger refetch
         // We just clear the UI state and let the server handle the empty state
-        const isEmptyMessage = !message?.content && !getStreamingState(conversationIdToInvalidate)?.content
-        
-        clearStreamingState(conversationIdToInvalidate)
+        const isEmptyMessage = !message?.content && !currentState?.content
 
-        if (!isEmptyMessage) {
-          // Invalidate messages to refetch
-          queryClient.invalidateQueries({
-            queryKey: ['conversations', conversationIdToInvalidate, 'messages'],
+        if (isCancelled && isEmptyMessage) {
+          // 手动取消且没有任何内容 - 设置 isCancelled 状态以显示取消提示
+          updateStreamingState(conversationIdToInvalidate, {
+            isCancelled: true,
+            isThinking: false,
+            optimisticMessages: [],
           })
+        } else if (isCancelled && !isEmptyMessage) {
+          // 手动取消但有部分内容 - 保持流式状态显示已取消的部分内容，不立即 refetch 以避免重复消息
+          // 流式状态会在用户发送新消息或刷新页面时自然清除
+          updateStreamingState(conversationIdToInvalidate, {
+            isCancelled: true,
+            isThinking: false,
+            optimisticMessages: [],
+          })
+        } else {
+          clearStreamingState(conversationIdToInvalidate)
+
+          if (!isEmptyMessage) {
+            // Invalidate messages to refetch
+            queryClient.invalidateQueries({
+              queryKey: ['conversations', conversationIdToInvalidate, 'messages'],
+            })
+          }
         }
       }
 
@@ -233,8 +252,10 @@ export default function ChatPage() {
           }
           updateStreamingState(conv.id, {
             optimisticMessages: [optimisticUserMessage],
+            baseMessageCount: 0,
             isThinking: true,
             isTimeout: false,
+            isCancelled: false,
             lastUserMessage: content,
             requestId,
           })
@@ -269,11 +290,17 @@ export default function ChatPage() {
         // Get existing optimistic messages for this conversation
         const existingState = getStreamingState(currentConversationId)
         const existingOptimisticMessages = existingState?.optimisticMessages || []
+        
+        // Get current messages length as base
+        const currentMessages = queryClient.getQueryData<Message[]>(['conversations', currentConversationId, 'messages'])
+        const baseMessageCount = currentMessages?.length || 0
 
         updateStreamingState(currentConversationId, {
           optimisticMessages: [...existingOptimisticMessages, optimisticUserMessage],
+          baseMessageCount: existingOptimisticMessages.length > 0 ? existingState?.baseMessageCount : baseMessageCount,
           isThinking: true,
           isTimeout: false,
+          isCancelled: false,
           lastUserMessage: content,
           requestId,
           content: '', // Reset content for new message
@@ -294,6 +321,7 @@ export default function ChatPage() {
 
     updateStreamingState(currentConversationId, {
       isTimeout: false,
+      isCancelled: false,
       isThinking: true,
       content: '',
     })
@@ -412,10 +440,12 @@ export default function ChatPage() {
 
             {/* Messages */}
             <MessageList
-              streamingContent={isCurrentConversationStreaming && currentStreamingState ? currentStreamingState.content : undefined}
+              streamingContent={isCurrentConversationStreaming && currentStreamingState ? currentStreamingState.content : currentStreamingState?.isCancelled ? currentStreamingState.content || '' : undefined}
               optimisticMessages={currentStreamingState?.optimisticMessages || []}
+              baseMessageCount={currentStreamingState?.baseMessageCount}
               isThinking={currentStreamingState?.isThinking && !currentStreamingState?.content}
               isTimeout={currentStreamingState?.isTimeout}
+              isCancelled={currentStreamingState?.isCancelled}
               onRetry={handleRetry}
             />
 

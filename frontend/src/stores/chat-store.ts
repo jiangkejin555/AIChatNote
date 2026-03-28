@@ -6,8 +6,10 @@ import type { Message } from '@/types'
 export interface ConversationStreamingState {
   content: string
   optimisticMessages: Message[]
+  baseMessageCount?: number
   isThinking: boolean
   isTimeout: boolean
+  isCancelled: boolean
   lastUserMessage: string
   requestId: string | null
 }
@@ -38,8 +40,10 @@ interface ChatState {
 const DEFAULT_STREAMING_STATE: ConversationStreamingState = {
   content: '',
   optimisticMessages: [],
+  baseMessageCount: 0,
   isThinking: false,
   isTimeout: false,
+  isCancelled: false,
   lastUserMessage: '',
   requestId: null,
 }

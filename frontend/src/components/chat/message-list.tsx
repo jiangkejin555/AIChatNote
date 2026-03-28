@@ -18,8 +18,10 @@ interface ModelInfo {
 interface MessageListProps {
   streamingContent?: string
   optimisticMessages?: Message[]
+  baseMessageCount?: number
   isThinking?: boolean
   isTimeout?: boolean
+  isCancelled?: boolean
   onRetry?: () => void
   lastUserMessage?: string
 }
@@ -27,8 +29,10 @@ interface MessageListProps {
 export function MessageList({
   streamingContent,
   optimisticMessages = [],
+  baseMessageCount,
   isThinking,
   isTimeout,
+  isCancelled,
   onRetry,
 }: MessageListProps) {
   const t = useTranslations()
@@ -41,8 +45,20 @@ export function MessageList({
 
   // Combine server messages with optimistic messages
   const allMessages = useMemo(() => {
-    return [...(messages || []), ...optimisticMessages]
-  }, [messages, optimisticMessages])
+    const serverMessages = messages || []
+    
+    // If we have a baseMessageCount and server messages are still loading/updating,
+    // we only use the base messages to avoid duplicates when appending optimistic messages
+    const baseMessages = (baseMessageCount !== undefined && optimisticMessages.length > 0 && serverMessages.length >= baseMessageCount) 
+      ? serverMessages.slice(0, baseMessageCount) 
+      : serverMessages;
+
+    // Filter out optimistic messages that already exist in server messages (by ID or content+role heuristic)
+    // Actually, optimistic messages have temporary IDs (Date.now()), so they won't match server IDs.
+    // The baseMessageCount approach is safer to prevent UI flashing.
+
+    return [...baseMessages, ...optimisticMessages]
+  }, [messages, optimisticMessages, baseMessageCount])
 
   // Build a map of provider_model_id -> model info for displaying model attribution
   const modelsMap = useMemo(() => {
@@ -115,16 +131,17 @@ export function MessageList({
           />
         ))}
 
-        {streamingContent && (
+        {(streamingContent || (isCancelled && !streamingContent)) && (
           <MessageItem
             message={{
               id: -1,
               conversation_id: currentConversationId,
               role: 'assistant',
-              content: streamingContent,
+              content: streamingContent || '',
               created_at: new Date().toISOString(),
             }}
-            isStreaming
+            isStreaming={!isCancelled}
+            isCancelled={isCancelled}
             modelsMap={modelsMap}
           />
         )}

@@ -114,7 +114,8 @@
     "startChattingDesc": "Start a conversation with AI, explore endless possibilities, and capture your inspiration efficiently",
     "sendHint": "Press Enter to send · Shift + Enter for new line",
     "newMessages": "New messages",
-    "generationCanceled": "Session Canceled"
+    "generationCanceled": "Session Canceled",
+    "replyCancelled": "System: Reply has been cancelled"
   },
   "saveNote": {
     "title": "Save as Note",

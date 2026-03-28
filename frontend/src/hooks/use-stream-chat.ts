@@ -144,12 +144,18 @@ export function useStreamChat({
           }
 
           // Create a temporary message object for the UI
+          // If stopRef.current is true, the loop was interrupted by user cancellation
           const tempMessage: Message = {
             id: parseInt(messageId) || Date.now(),
             conversation_id: targetConversationId,
             role: 'assistant',
             content: fullContent,
             created_at: new Date().toISOString(),
+          }
+
+          if (stopRef.current) {
+            // User cancelled during stream - pass _cancelled flag
+            ;(tempMessage as Message & { _cancelled: boolean })._cancelled = true
           }
 
           onMessageEndRef.current?.(tempMessage)
@@ -166,9 +172,10 @@ export function useStreamChat({
             id: Date.now(),
             conversation_id: targetConversationId,
             role: 'assistant',
-            content: '', // 这里因为在 hook 外面有状态管理，只需要通知 end 即可
+            content: '',
             created_at: new Date().toISOString(),
-          })
+            _cancelled: true,
+          } as Message & { _cancelled: boolean })
           return
         }
 
