@@ -141,7 +141,7 @@ export function useAsyncNoteGeneration() {
       try {
         const { taskId } = JSON.parse(pending)
         useNotesStore.getState().setIsGeneratingNote(true)
-        toast.info(t('notes.aiGenerating'))
+        // No toast here — the generating card in NotesList is sufficient
         pollTaskStatus(taskId).catch(() => {})
       } catch {
         localStorage.removeItem('pendingNoteTask')

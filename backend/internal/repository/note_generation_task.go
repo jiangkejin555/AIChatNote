@@ -35,7 +35,7 @@ func (r *NoteGenerationTaskRepository) FindGeneratingByUserAndConversation(userI
 }
 
 func (r *NoteGenerationTaskRepository) UpdateStatus(id uint, status models.TaskStatus, errorMessage string, noteID *uint) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status": status,
 	}
 	if errorMessage != "" {
