@@ -318,6 +318,8 @@
     "moveSuccess": "笔记已移动",
     "moveFailed": "移动失败",
     "aiGenerateFailed": "AI 生成失败",
+    "aiGenerating": "AI笔记生成中...",
+    "aiGenerateSuccess": "笔记生成完成",
     "folderCreateSuccess": "文件夹创建成功",
     "folderCreateFailed": "创建失败",
     "folderUpdateSuccess": "文件夹更新成功",

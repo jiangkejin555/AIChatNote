@@ -323,6 +323,8 @@
     "moveSuccess": "Note moved",
     "moveFailed": "Failed to move",
     "aiGenerateFailed": "AI generation failed",
+    "aiGenerating": "AI note generating...",
+    "aiGenerateSuccess": "Note generated successfully",
     "folderCreateSuccess": "Folder created successfully",
     "folderCreateFailed": "Failed to create folder",
     "folderUpdateSuccess": "Folder updated successfully",
