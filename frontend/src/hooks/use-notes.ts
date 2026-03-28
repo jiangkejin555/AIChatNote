@@ -97,6 +97,7 @@ export function useAsyncNoteGeneration() {
       conversationId,
     }))
 
+    useNotesStore.getState().setIsGeneratingNote(true)
     toast.info(t('notes.aiGenerating'))
 
     // Start polling
@@ -113,12 +114,14 @@ export function useAsyncNoteGeneration() {
             setTimeout(poll, 3000)
           } else if (task.status === 'done') {
             localStorage.removeItem('pendingNoteTask')
+            useNotesStore.getState().setIsGeneratingNote(false)
             queryClient.invalidateQueries({ queryKey: ['notes'] })
             queryClient.invalidateQueries({ queryKey: ['tags'] })
             toast.success(t('notes.aiGenerateSuccess'))
             resolve({ status: 'done', note_id: task.note_id ?? undefined })
           } else if (task.status === 'failed') {
             localStorage.removeItem('pendingNoteTask')
+            useNotesStore.getState().setIsGeneratingNote(false)
             toast.error(t('notes.aiGenerateFailed') + (task.error_message ? `: ${task.error_message}` : ''))
             reject(new Error(task.error_message || 'Generation failed'))
           }
@@ -137,6 +140,7 @@ export function useAsyncNoteGeneration() {
     if (pending) {
       try {
         const { taskId } = JSON.parse(pending)
+        useNotesStore.getState().setIsGeneratingNote(true)
         toast.info(t('notes.aiGenerating'))
         pollTaskStatus(taskId).catch(() => {})
       } catch {

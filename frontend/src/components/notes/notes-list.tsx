@@ -1,10 +1,10 @@
 'use client'
 
-import { useNotes, useDeleteNote, useCopyNote, useExportNote } from '@/hooks'
+import { useNotes, useDeleteNote, useCopyNote, useExportNote, useAsyncNoteGeneration } from '@/hooks'
 import { useNotesStore } from '@/stores'
 import { NoteCard } from './note-card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { FileText } from 'lucide-react'
+import { FileText, Loader2, Sparkles } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,21 +15,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Note } from '@/types'
 import { useTranslations } from '@/i18n'
 
 export function NotesList() {
   const { data: notes, isLoading } = useNotes()
-  const { selectedNoteId, setSelectedNote, selectedFolderId } = useNotesStore()
+  const { selectedNoteId, setSelectedNote, selectedFolderId, isGeneratingNote } = useNotesStore()
   const deleteNote = useDeleteNote()
   const copyNote = useCopyNote()
   const exportNote = useExportNote()
+  const { recoverPendingTask } = useAsyncNoteGeneration()
   const t = useTranslations()
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [noteToMove, setNoteToMove] = useState<Note | null>(null)
+
+  // Recover pending note generation task on mount
+  useEffect(() => {
+    recoverPendingTask()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter notes by selected folder
   const filteredNotes = notes?.filter((note) => note.folder_id === selectedFolderId) || []
@@ -70,7 +76,7 @@ export function NotesList() {
     )
   }
 
-  if (!notes || filteredNotes.length === 0) {
+  if (!notes || (filteredNotes.length === 0 && !isGeneratingNote)) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
         <div className="text-center">
@@ -84,6 +90,18 @@ export function NotesList() {
   return (
     <>
       <div className="p-3 space-y-2">
+        {isGeneratingNote && (
+          <div className="w-full text-left p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 animate-pulse">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-blue-500 shrink-0" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">正在生成新笔记...</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2">
+              <Loader2 className="h-3 w-3 animate-spin text-blue-400" />
+              <span className="text-xs text-muted-foreground">AI 正在总结对话内容</span>
+            </div>
+          </div>
+        )}
         {filteredNotes.map((note) => (
           <NoteCard
             key={note.id}

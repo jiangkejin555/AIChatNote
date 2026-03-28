@@ -12,6 +12,7 @@ interface NotesState {
   expandedFolderIds: Set<number>
   selectedNoteForAction: number | null
   selectedFolderForAction: number | null
+  isGeneratingNote: boolean
   setSelectedFolder: (folderId: number | null) => void
   setSelectedTag: (tag: string | null) => void
   setSearchQuery: (query: string) => void
@@ -27,6 +28,7 @@ interface NotesState {
   collapseFolder: (folderId: number) => void
   setSelectedNoteForAction: (noteId: number | null) => void
   setSelectedFolderForAction: (folderId: number | null) => void
+  setIsGeneratingNote: (generating: boolean) => void
 }
 
 export const useNotesStore = create<NotesState>()(
@@ -42,6 +44,7 @@ export const useNotesStore = create<NotesState>()(
       expandedFolderIds: new Set<number>(),
       selectedNoteForAction: null,
       selectedFolderForAction: null,
+      isGeneratingNote: false,
       setSelectedFolder: (folderId) =>
         set({
           selectedFolderId: folderId,
@@ -118,6 +121,10 @@ export const useNotesStore = create<NotesState>()(
       setSelectedFolderForAction: (folderId) =>
         set({
           selectedFolderForAction: folderId,
+        }),
+      setIsGeneratingNote: (generating) =>
+        set({
+          isGeneratingNote: generating,
         }),
     }),
     {
