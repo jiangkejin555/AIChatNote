@@ -23,22 +23,9 @@ type Template struct {
 }
 
 // Templates contains all notification templates
+// Note: note_saved, note_save_failed, model_config_error are handled by toast, not notifications
 var Templates = map[string]Template{
 	// AI Task notifications
-	"note_saved": {
-		Code:         "note_saved",
-		Type:         MessageTypeAITask,
-		Title:        "笔记保存成功",
-		Content:      "笔记「{{title}}」已成功保存",
-		ResourceType: "note",
-	},
-	"note_save_failed": {
-		Code:         "note_save_failed",
-		Type:         MessageTypeError,
-		Title:        "笔记保存失败",
-		Content:      "笔记「{{title}}」保存失败：{{error}}",
-		ResourceType: "note",
-	},
 	"ai_summary_done": {
 		Code:         "ai_summary_done",
 		Type:         MessageTypeAITask,
@@ -77,13 +64,6 @@ var Templates = map[string]Template{
 		Title:        "API 调用错误",
 		Content:      "{{api_name}} 调用失败：{{error}}",
 		ResourceType: "",
-	},
-	"model_config_error": {
-		Code:         "model_config_error",
-		Type:         MessageTypeError,
-		Title:        "模型配置错误",
-		Content:      "模型「{{model}}」配置有误：{{error}}",
-		ResourceType: "model",
 	},
 }
 

@@ -135,23 +135,10 @@ type TemplateDefinition struct {
 }
 
 // getTemplate returns a template definition by code
+// Note: note_saved, note_save_failed, model_config_error are handled by toast, not notifications
 func getTemplate(code string) (TemplateDefinition, bool) {
 	templates := map[string]TemplateDefinition{
 		// AI Task notifications
-		"note_saved": {
-			Code:         "note_saved",
-			Type:         models.MessageTypeAITask,
-			Title:        "笔记保存成功",
-			Content:      "笔记「{{title}}」已成功保存",
-			ResourceType: "note",
-		},
-		"note_save_failed": {
-			Code:         "note_save_failed",
-			Type:         models.MessageTypeError,
-			Title:        "笔记保存失败",
-			Content:      "笔记「{{title}}」保存失败：{{error}}",
-			ResourceType: "note",
-		},
 		"ai_summary_done": {
 			Code:         "ai_summary_done",
 			Type:         models.MessageTypeAITask,
@@ -188,13 +175,6 @@ func getTemplate(code string) (TemplateDefinition, bool) {
 			Title:        "API 调用错误",
 			Content:      "{{api_name}} 调用失败：{{error}}",
 			ResourceType: "",
-		},
-		"model_config_error": {
-			Code:         "model_config_error",
-			Type:         models.MessageTypeError,
-			Title:        "模型配置错误",
-			Content:      "模型「{{model}}」配置有误：{{error}}",
-			ResourceType: "model",
 		},
 	}
 

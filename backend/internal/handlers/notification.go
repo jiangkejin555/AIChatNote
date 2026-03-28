@@ -22,9 +22,9 @@ func NewNotificationHandler() *NotificationHandler {
 }
 
 type CreateTestNotificationRequest struct {
-	Type    string                `json:"type" binding:"required"`
-	Title   string                `json:"title" binding:"required"`
-	Content string                `json:"content" binding:"required"`
+	Type    string                     `json:"type" binding:"required"`
+	Title   string                     `json:"title" binding:"required"`
+	Content string                     `json:"content" binding:"required"`
 	Payload models.NotificationPayload `json:"payload"`
 }
 
@@ -68,6 +68,7 @@ func (h *NotificationHandler) List(c *gin.Context) {
 		return
 	}
 
+	utils.LogOperationSuccess("NotificationHandler", "List", "userID", userID, "total", total, "count", len(notifications))
 	c.JSON(http.StatusOK, gin.H{
 		"data":         notifications,
 		"total":        total,
@@ -86,7 +87,7 @@ func (h *NotificationHandler) GetUnreadCount(c *gin.Context) {
 		utils.SendErrorWithErr(c, http.StatusInternalServerError, "db_error", "Failed to get unread count", err)
 		return
 	}
-
+	utils.LogOperationSuccess("NotificationHandler", "GetUnreadCount", "userID", userID, "count", count)
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
@@ -121,8 +122,8 @@ func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
 
 	utils.LogOperationSuccess("NotificationHandler", "MarkAllAsRead", "userID", userID, "count", count)
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "All notifications marked as read",
-		"affected":   count,
+		"message":  "All notifications marked as read",
+		"affected": count,
 	})
 }
 
@@ -159,8 +160,8 @@ func (h *NotificationHandler) DeleteAll(c *gin.Context) {
 
 	utils.LogOperationSuccess("NotificationHandler", "DeleteAll", "userID", userID, "type", notificationType, "count", count)
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "Notifications deleted",
-		"affected":   count,
+		"message":  "Notifications deleted",
+		"affected": count,
 	})
 }
 
