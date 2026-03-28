@@ -87,9 +87,7 @@ func (h *NotificationHandler) GetUnreadCount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"unread_count": count,
-	})
+	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
 // MarkAsRead marks a notification as read
