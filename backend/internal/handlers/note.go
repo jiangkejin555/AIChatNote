@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
@@ -26,6 +25,7 @@ type NoteHandler struct {
 	tagRepo    *repository.TagRepository
 	convRepo   *repository.ConversationRepository
 	aiService  *services.AIService
+	taskRepo   *repository.NoteGenerationTaskRepository
 }
 
 func NewNoteHandler(aiService *services.AIService) *NoteHandler {
@@ -35,6 +35,7 @@ func NewNoteHandler(aiService *services.AIService) *NoteHandler {
 		tagRepo:    repository.NewTagRepository(),
 		convRepo:   repository.NewConversationRepository(),
 		aiService:  aiService,
+		taskRepo:   repository.NewNoteGenerationTaskRepository(),
 	}
 }
 
@@ -443,7 +444,7 @@ func (h *NoteHandler) BatchMove(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Notes moved"})
 }
 
-// Generate generates note preview from conversation using AI
+// Generate triggers async note generation from conversation using AI
 func (h *NoteHandler) Generate(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -462,25 +463,84 @@ func (h *NoteHandler) Generate(c *gin.Context) {
 	}
 
 	utils.LogOperationStart("NoteHandler", "Generate", "userID", userID, "convID", req.ConversationID)
-	start := time.Now()
 
-	// Generate note using AI service
-	note, err := h.aiService.GenerateNoteFromConversation(context.Background(), req.ConversationID, userID)
-	if err != nil {
-		utils.LogExternalCallError("NoteHandler", "ai_service", err, "userID", userID, "convID", req.ConversationID)
-		utils.SendError(c, http.StatusInternalServerError, "generation_error", "Failed to generate note: "+err.Error())
+	// Check for existing generating task (concurrency control)
+	existingTask, _ := h.taskRepo.FindGeneratingByUserAndConversation(userID, req.ConversationID)
+	if existingTask != nil {
+		c.JSON(http.StatusOK, gin.H{"data": gin.H{"task_id": existingTask.ID}})
 		return
 	}
 
-	utils.LogLatencyWithSlowWarning("NoteHandler", "Generate", time.Since(start), "userID", userID, "convID", req.ConversationID, "title", note.Title)
+	// Create new task
+	task := &models.NoteGenerationTask{
+		UserID:         userID,
+		ConversationID: req.ConversationID,
+		Status:         models.TaskStatusGenerating,
+	}
+	if err := h.taskRepo.Create(task); err != nil {
+		utils.LogOperationError("NoteHandler", "Generate", err, "userID", userID, "convID", req.ConversationID, "step", "create_task")
+		utils.SendError(c, http.StatusInternalServerError, "create_error", "Failed to create generation task")
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"data": gin.H{
-			"title":   note.Title,
-			"content": note.Content,
-			"tags":    note.Tags,
-		},
-	})
+	// Launch async generation
+	go h.generateNoteAsync(task.ID, userID, req.ConversationID)
+
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"task_id": task.ID}})
+}
+
+// generateNoteAsync runs the AI note generation in a goroutine
+func (h *NoteHandler) generateNoteAsync(taskID, userID, conversationID uint) {
+	note, err := h.aiService.GenerateNoteFromConversation(context.Background(), conversationID, userID)
+
+	if err != nil {
+		utils.LogOperationError("NoteHandler", "generateNoteAsync", err, "taskID", taskID, "userID", userID, "convID", conversationID)
+		_ = h.taskRepo.UpdateStatus(taskID, models.TaskStatusFailed, err.Error(), nil)
+		return
+	}
+
+	// Create the note in DB
+	newNote := &models.Note{
+		UserID:               userID,
+		Title:                note.Title,
+		Content:              note.Content,
+		SourceConversationID: &conversationID,
+	}
+
+	var tags []models.NoteTag
+	if len(note.Tags) > 0 {
+		tags = make([]models.NoteTag, len(note.Tags))
+		for i, tag := range note.Tags {
+			tags[i] = models.NoteTag{Tag: tag}
+		}
+	}
+
+	if err := h.noteRepo.CreateWithTags(newNote, tags); err != nil {
+		utils.LogOperationError("NoteHandler", "generateNoteAsync", err, "taskID", taskID, "userID", userID, "step", "create_note")
+		_ = h.taskRepo.UpdateStatus(taskID, models.TaskStatusFailed, "Failed to save note: "+err.Error(), nil)
+		return
+	}
+
+	utils.LogOperationSuccess("NoteHandler", "generateNoteAsync", "taskID", taskID, "noteID", newNote.ID, "userID", userID, "title", newNote.Title)
+	_ = h.taskRepo.UpdateStatus(taskID, models.TaskStatusDone, "", &newNote.ID)
+}
+
+// GetTask returns the status of a note generation task
+func (h *NoteHandler) GetTask(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	taskID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.SendError(c, http.StatusBadRequest, "invalid_id", "Invalid task ID")
+		return
+	}
+
+	task, err := h.taskRepo.FindByIDAndUserID(uint(taskID), userID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "not_found", "Task not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": task})
 }
 
 func sanitizeFilename(name string) string {

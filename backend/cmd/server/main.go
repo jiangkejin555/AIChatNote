@@ -175,6 +175,7 @@ func main() {
 			notes.GET("", noteHandler.List)
 			notes.POST("", noteHandler.Create)
 			notes.POST("/generate", noteHandler.Generate)
+			notes.GET("/tasks/:id", noteHandler.GetTask)
 			notes.GET("/:id", noteHandler.Get)
 			notes.PUT("/:id", noteHandler.Update)
 			notes.DELETE("/:id", noteHandler.Delete)
