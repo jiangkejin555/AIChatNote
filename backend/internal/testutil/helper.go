@@ -142,6 +142,16 @@ func SetupTestDB(t *testing.T) func() {
 			created_at DATETIME,
 			updated_at DATETIME
 		)`,
+			`CREATE TABLE note_generation_tasks (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				user_id INTEGER NOT NULL,
+				conversation_id INTEGER NOT NULL,
+				status VARCHAR(20) NOT NULL DEFAULT 'generating',
+				error_message TEXT,
+				note_id INTEGER,
+				created_at DATETIME,
+				updated_at DATETIME
+			)`,
 	}
 
 	for _, table := range tables {
