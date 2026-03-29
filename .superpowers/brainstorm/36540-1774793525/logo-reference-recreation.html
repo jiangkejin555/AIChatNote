@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; background: #0F172A; color: #F8FAFC; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h2 { font-weight: 600; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.02em; }
+    p.subtitle { color: #94A3B8; margin-bottom: 40px; font-size: 15px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+    .card { background: #1E293B; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2); cursor: pointer; border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+    .card.selected { border-color: #60A5FA; box-shadow: 0 0 0 1px #60A5FA; }
+    .card-image { background: #111827; display: flex; align-items: center; justify-content: center; height: 280px; position: relative; }
+    .card-body { padding: 24px; border-top: 1px solid #1E293B; }
+    .card-body h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
+    .card-body p { margin: 0; font-size: 14px; color: #94A3B8; line-height: 1.6; }
+    .grid-bg { position: absolute; inset: 0; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>参考图精准复刻与优化</h2>
+    <p class="subtitle">完全按照你提供的参考图结构：一个带有流畅蓝紫渐变的文件夹，中心镶嵌着一个带有渐变省略号的白色长条气泡，周围有点点星光。我做了几个微调版本供你选择。</p>
+
+    <div class="cards">
+      <!-- 方案 1：原版高保真复刻 -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="folder-grad-ref1" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6"/> <!-- Blue (Left/Top) -->
+                <stop offset="0.5" stop-color="#8B5CF6"/> <!-- Purple (Middle) -->
+                <stop offset="1" stop-color="#3B82F6"/> <!-- Blue (Right/Bottom) -->
+              </linearGradient>
+            </defs>
+            
+            <!-- 文件夹主体 -->
+            <!-- 带有一个稍微倾斜的文件夹标签页 -->
+            <path d="M15 35 C15 30 18 26 23 26 L40 26 L50 35 L97 35 C102 35 105 38 105 43 L105 92 C105 97 102 101 97 101 L23 101 C18 101 15 97 15 92 Z" fill="url(#folder-grad-ref1)"/>
+            
+            <!-- 背景星光 -->
+            <circle cx="35" cy="45" r="2.5" fill="#60A5FA" opacity="0.8"/>
+            <circle cx="28" cy="65" r="1.5" fill="#C084FC" opacity="0.6"/>
+            <circle cx="35" cy="80" r="2" fill="#818CF8" opacity="0.9"/>
+            <circle cx="85" cy="50" r="1.5" fill="#E2E8F0" opacity="0.7"/>
+            <circle cx="95" cy="75" r="2" fill="#C084FC" opacity="0.8"/>
+            
+            <!-- 中心的白色药丸形聊天气泡 -->
+            <!-- 气泡带有向左下的细长尾巴 -->
+            <path d="M40 75 L35 85 L45 78 Z" fill="white"/>
+            <rect x="30" y="45" width="60" height="30" rx="15" fill="white"/>
+            
+            <!-- 气泡内部的三个点 (带蓝紫渐变过渡) -->
+            <circle cx="43" cy="60" r="4.5" fill="#3B82F6"/>
+            <circle cx="60" cy="60" r="4.5" fill="#6366F1"/>
+            <circle cx="77" cy="60" r="4.5" fill="#8B5CF6"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>变体 1：1:1 原版复刻</h3>
+          <p>完全遵循参考图的比例和构图。经典的文件选项卡造型，大面积的蓝紫渐变，中间是长条药丸状的白色气泡。内部的点呈现从蓝到紫的渐变过渡。</p>
+        </div>
+      </div>
+
+      <!-- 方案 2：现代圆润版 (更适合 App Icon) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="folder-grad-ref2" x1="15" y1="20" x2="105" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#4F46E5"/> <!-- 深靛蓝 -->
+                <stop offset="0.6" stop-color="#9333EA"/> <!-- 亮紫 -->
+                <stop offset="1" stop-color="#38BDF8"/> <!-- 亮青蓝 -->
+              </linearGradient>
+              <!-- 轻微阴影 -->
+              <filter id="drop-shadow" x="20" y="40" width="80" height="50">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.25"/>
+              </filter>
+            </defs>
+            
+            <!-- 文件夹主体：圆角更大，更饱满，类似 iOS 图标 -->
+            <path d="M15 35 C15 27 21 21 29 21 L43 21 C46 21 48 22 50 24 L56 31 L91 31 C99 31 105 37 105 45 L105 89 C105 97 99 103 91 103 L29 103 C21 103 15 97 15 89 Z" fill="url(#folder-grad-ref2)"/>
+            
+            <!-- 星光调整为四角星芒，增加科技感 -->
+            <path d="M35 40 C35 43 32 45 29 45 C32 45 35 47 35 50 C35 47 38 45 41 45 C38 45 35 43 35 40 Z" fill="#60A5FA" opacity="0.9"/>
+            <path d="M92 45 C92 47 90 48 88 48 C90 48 92 49 92 51 C92 49 94 48 96 48 C94 48 92 47 92 45 Z" fill="#C084FC" opacity="0.8"/>
+            <circle cx="30" cy="75" r="2" fill="#818CF8" opacity="0.8"/>
+            <circle cx="95" cy="75" r="1.5" fill="#38BDF8" opacity="0.7"/>
+            
+            <!-- 中心的气泡，增加了一点点阴影 -->
+            <path d="M43 78 L35 88 L46 80 Z" fill="white" filter="url(#drop-shadow)"/>
+            <rect x="28" y="46" width="64" height="34" rx="17" fill="white" filter="url(#drop-shadow)"/>
+            
+            <!-- 内部的点使用同样的渐变 -->
+            <circle cx="43" cy="63" r="5" fill="#4F46E5"/>
+            <circle cx="60" cy="63" r="5" fill="#8B5CF6"/>
+            <circle cx="77" cy="63" r="5" fill="#38BDF8"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>变体 2：现代圆润 (推荐)</h3>
+          <p>在参考图基础上，加大了文件夹和气泡的圆角曲率，使其更符合现代 App Icon 的饱满感。背景的圆点星光替换为了"四角星芒"，气泡增加了极轻微的阴影使其浮现出来。</p>
+        </div>
+      </div>
+
+      <!-- 方案 3：高级立体光感版 -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="folder-grad-ref3" x1="15" y1="20" x2="105" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#2563EB"/> <!-- Blue -->
+                <stop offset="0.6" stop-color="#7C3AED"/> <!-- Purple -->
+                <stop offset="1" stop-color="#2563EB"/> <!-- Blue -->
+              </linearGradient>
+              <linearGradient id="bubble-glass" x1="30" y1="45" x2="90" y2="85" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFFFFF"/>
+                <stop offset="1" stop-color="#F1F5F9"/>
+              </linearGradient>
+            </defs>
+            
+            <!-- 文件夹主体：带有内发光边缘描边 -->
+            <path d="M15 35 C15 30 18 26 23 26 L40 26 L50 35 L97 35 C102 35 105 38 105 43 L105 92 C105 97 102 101 97 101 L23 101 C18 101 15 97 15 92 Z" fill="url(#folder-grad-ref3)"/>
+            <path d="M15 35 C15 30 18 26 23 26 L40 26 L50 35 L97 35 C102 35 105 38 105 43 L105 92 C105 97 102 101 97 101 L23 101 C18 101 15 97 15 92 Z" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none"/>
+            
+            <!-- 背景星光 -->
+            <circle cx="35" cy="45" r="3" fill="#FFFFFF" opacity="0.8"/>
+            <circle cx="28" cy="65" r="2" fill="#FFFFFF" opacity="0.5"/>
+            <circle cx="35" cy="80" r="2" fill="#FFFFFF" opacity="0.7"/>
+            <circle cx="85" cy="50" r="2" fill="#FFFFFF" opacity="0.6"/>
+            <circle cx="95" cy="75" r="3" fill="#FFFFFF" opacity="0.8"/>
+            
+            <!-- 白色的微质感气泡 -->
+            <path d="M40 75 L35 85 L45 78 Z" fill="url(#bubble-glass)"/>
+            <rect x="30" y="45" width="60" height="30" rx="15" fill="url(#bubble-glass)"/>
+            <!-- 气泡高光 -->
+            <path d="M35 50 C45 46 75 46 85 50 C75 48 45 48 35 50 Z" fill="white"/>
+            
+            <!-- 内部三个点，连成表示连接的线 -->
+            <circle cx="43" cy="60" r="4.5" fill="#60A5FA"/>
+            <circle cx="60" cy="60" r="4.5" fill="#8B5CF6"/>
+            <circle cx="77" cy="60" r="4.5" fill="#3B82F6"/>
+            <line x1="43" y1="60" x2="77" y2="60" stroke="#8B5CF6" stroke-width="2" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>变体 3：立体光感 (带连接线)</h3>
+          <p>在原图基础上增强了光影质感。文件夹增加了一圈微白色的高光描边，让形状更加立体。白色的气泡也做了微渐变和顶部高光处理。内部的三个点被一条隐约的线连接，强调"知识节点之间的联系"。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/helper.js"></script>
+</body>
+</html>

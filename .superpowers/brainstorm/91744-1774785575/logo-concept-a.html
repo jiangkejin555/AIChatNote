@@ -1,0 +1,67 @@
+<h2>细化方向 A：气泡与文档结合的视觉风格</h2>
+<p class="subtitle">我们已经确定了"气泡（聊天）+文档/沉淀（笔记）"的核心概念。现在我们来看看几种不同的表现手法：</p>
+
+<div class="cards">
+  <!-- 方案 1：叠加层级 -->
+  <div class="card" data-choice="1" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: var(--background); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 背景文档 -->
+        <rect x="25" y="15" width="60" height="70" rx="8" fill="var(--primary)" opacity="0.2"/>
+        <line x1="35" y1="35" x2="75" y2="35" stroke="var(--primary)" opacity="0.4" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="50" x2="75" y2="50" stroke="var(--primary)" opacity="0.4" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="65" x2="60" y2="65" stroke="var(--primary)" opacity="0.4" stroke-width="4" stroke-linecap="round"/>
+        <!-- 前景气泡 -->
+        <path d="M15 35C15 26.7157 21.7157 20 30 20H60C68.2843 20 75 26.7157 75 35V60C75 68.2843 68.2843 75 60 75H35L15 85V35Z" fill="var(--primary)"/>
+        <!-- 气泡内的三个点 -->
+        <circle cx="33" cy="47" r="4" fill="white"/>
+        <circle cx="45" cy="47" r="4" fill="white"/>
+        <circle cx="57" cy="47" r="4" fill="white"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 1：前后堆叠 (推荐)</h3>
+      <p>前面是实心的聊天气泡，后面是半透明的笔记文档。清晰表达了"从聊天中产生笔记"的时间线和层级关系。</p>
+    </div>
+  </div>
+
+  <!-- 方案 2：融合变形 -->
+  <div class="card" data-choice="2" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: var(--background); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 基础气泡也是文档 -->
+        <path d="M20 25C20 16.7157 26.7157 10 35 10H75C83.2843 10 90 16.7157 90 25V75C90 83.2843 83.2843 90 75 90H35C26.7157 90 20 83.2843 20 75V25Z" fill="var(--primary)"/>
+        <!-- 气泡的小尾巴变成文档的翻角或书签效果 -->
+        <path d="M20 75L5 90V65C5 65 20 65 20 75Z" fill="var(--primary)"/>
+        <!-- 内部划线表示文档内容，但排布像对话 -->
+        <line x1="35" y1="35" x2="55" y2="35" stroke="white" stroke-width="6" stroke-linecap="round"/>
+        <line x1="55" y1="55" x2="75" y2="55" stroke="white" stroke-width="6" stroke-linecap="round"/>
+        <line x1="35" y1="75" x2="65" y2="75" stroke="white" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 2：一体化变形</h3>
+      <p>将气泡和文档融为一体：整体轮廓是带尾巴的气泡，但内部纹理是文档的横线，呈现一种"聊着聊着就成了笔记"的隐喻。</p>
+    </div>
+  </div>
+
+  <!-- 方案 3：沉淀过滤 -->
+  <div class="card" data-choice="3" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: var(--background); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 上方的气泡 -->
+        <path d="M20 15C20 9.47715 24.4772 5 30 5H70C75.5228 5 80 9.47715 80 15V35C80 40.5228 75.5228 45 70 45H35L20 55V15Z" fill="var(--primary)"/>
+        <!-- 下方沉淀出的笔记层 -->
+        <rect x="20" y="65" width="60" height="8" rx="4" fill="var(--primary)" opacity="0.8"/>
+        <rect x="20" y="78" width="60" height="8" rx="4" fill="var(--primary)" opacity="0.6"/>
+        <rect x="20" y="91" width="40" height="8" rx="4" fill="var(--primary)" opacity="0.4"/>
+        <!-- 连接的粒子/流下效果 -->
+        <circle cx="50" cy="55" r="3" fill="var(--primary)" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 3：过滤沉淀</h3>
+      <p>上方是活跃的对话气泡，下方是逐渐沉淀下来的一层层结构化数据（横线）。强调了"知识提炼与沉淀"的过程。</p>
+    </div>
+  </div>
+</div>

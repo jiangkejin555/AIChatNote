@@ -1,0 +1,68 @@
+<h2>细化"一体化变形"方案：细节与质感</h2>
+<p class="subtitle">我们选择了"一体化变形"（气泡轮廓+文档内容）的方向。现在我们需要决定图形的具体线条风格和质感。</p>
+
+<div class="cards">
+  <!-- 细节 1：实心图标带反白线条 -->
+  <div class="card" data-choice="solid" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: var(--background); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 气泡基底 -->
+        <path d="M15 30C15 21.7157 21.7157 15 30 15H90C98.2843 15 105 21.7157 105 30V80C105 88.2843 98.2843 95 90 95H40C31.7157 95 15 105 15 105V30Z" fill="var(--primary)"/>
+        <!-- 内部文档线 (圆角线段) -->
+        <rect x="35" y="40" width="45" height="8" rx="4" fill="white"/>
+        <rect x="35" y="58" width="55" height="8" rx="4" fill="white"/>
+        <rect x="35" y="76" width="30" height="8" rx="4" fill="white"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>风格 1：实心扁平 (Solid)</h3>
+      <p>背景实心填充品牌色，内部使用白色粗圆角线条。这种风格在小尺寸下识别度极高，适合做应用图标和 favicon，整体感觉非常扎实、稳重。</p>
+    </div>
+  </div>
+
+  <!-- 细节 2：线框图标带AI星芒 -->
+  <div class="card" data-choice="outline" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: var(--background); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 气泡线框 -->
+        <path d="M15 30C15 21.7157 21.7157 15 30 15H90C98.2843 15 105 21.7157 105 30V80C105 88.2843 98.2843 95 90 95H40C31.7157 95 15 105 15 105V30Z" stroke="var(--primary)" stroke-width="8" stroke-linejoin="round"/>
+        <!-- 内部文档线 -->
+        <line x1="35" y1="45" x2="65" y2="45" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+        <line x1="35" y1="65" x2="85" y2="65" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+        <!-- 右上角 AI 星芒点缀 -->
+        <path d="M85 25C85 25 85 35 95 35C85 35 85 45 85 45C85 45 85 35 75 35C85 35 85 25 85 25Z" fill="var(--primary)"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>风格 2：线框带点缀 (Outline)</h3>
+      <p>使用粗线条勾勒轮廓，内部同样是线条表示文档。额外加入了一颗"AI 星芒"点缀，强调智能属性。风格更轻盈、现代。</p>
+    </div>
+  </div>
+
+  <!-- 细节 3：微渐变与阴影 (拟物感) -->
+  <div class="card" data-choice="gradient" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: var(--background); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+            <stop stop-color="var(--primary)"/>
+            <stop offset="1" stop-color="oklch(0.4 0.2 274)"/>
+          </linearGradient>
+          <filter id="shadow" x="0" y="0" width="120" height="120" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+          </filter>
+        </defs>
+        <!-- 气泡基底 (渐变+阴影) -->
+        <path d="M15 30C15 21.7157 21.7157 15 30 15H90C98.2843 15 105 21.7157 105 30V80C105 88.2843 98.2843 95 90 95H40C31.7157 95 15 105 15 105V30Z" fill="url(#grad)" filter="url(#shadow)"/>
+        <!-- 内部文档线 (带微透明度模拟高光) -->
+        <rect x="35" y="40" width="45" height="8" rx="4" fill="white" opacity="0.9"/>
+        <rect x="35" y="58" width="55" height="8" rx="4" fill="white" opacity="0.75"/>
+        <rect x="35" y="76" width="30" height="8" rx="4" fill="white" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>风格 3：微渐变质感 (Gradient)</h3>
+      <p>基础结构与风格1相同，但加入了从亮到暗的微渐变、柔和的阴影，以及内部横线的透明度变化。这种处理让图标更有层次感，适合作为 iOS/macOS 风格的 App Icon。</p>
+    </div>
+  </div>
+</div>

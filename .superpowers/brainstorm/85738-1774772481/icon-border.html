@@ -1,0 +1,187 @@
+<h2>整体边框设计</h2>
+<p class="subtitle">整体图标加边框，对话气泡不变</p>
+
+<h3>边框方案</h3>
+<div class="cards">
+  <div class="card" data-choice="border-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 整体边框 -->
+        <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="3"/>
+        <!-- 对话气泡 (内部) -->
+        <path d="M25 14 
+                 L78 14 
+                 Q88 14 88 21 
+                 L88 35 
+                 L38 35 
+                 Q25 35 28 28 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="42" cy="24" r="4" fill="white"/>
+        <circle cx="55" cy="24" r="4" fill="white"/>
+        <circle cx="68" cy="24" r="4" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>边框 A</h3>
+      <p>细边框 3px</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="border-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 整体边框 -->
+        <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="4"/>
+        <!-- 对话气泡 (内部) -->
+        <path d="M25 14 
+                 L78 14 
+                 Q88 14 88 21 
+                 L88 35 
+                 L38 35 
+                 Q25 35 28 28 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="42" cy="24" r="4" fill="white"/>
+        <circle cx="55" cy="24" r="4" fill="white"/>
+        <circle cx="68" cy="24" r="4" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>边框 B</h3>
+      <p>中边框 4px</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="border-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 整体边框 -->
+        <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="5"/>
+        <!-- 对话气泡 (内部) -->
+        <path d="M25 14 
+                 L78 14 
+                 Q88 14 88 21 
+                 L88 35 
+                 L38 35 
+                 Q25 35 28 28 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="42" cy="24" r="4" fill="white"/>
+        <circle cx="55" cy="24" r="4" fill="white"/>
+        <circle cx="68" cy="24" r="4" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>边框 C</h3>
+      <p>粗边框 5px</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="border-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 整体边框 -->
+        <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="6"/>
+        <!-- 对话气泡 (内部) -->
+        <path d="M25 14 
+                 L78 14 
+                 Q88 14 88 21 
+                 L88 35 
+                 L38 35 
+                 Q25 35 28 28 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="42" cy="24" r="4" fill="white"/>
+        <circle cx="55" cy="24" r="4" fill="white"/>
+        <circle cx="68" cy="24" r="4" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>边框 D</h3>
+      <p>更粗边框 6px</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">不同尺寸预览 (边框 C - 5px)</h3>
+<div style="display: flex; align-items: flex-end; justify-content: center; gap: 16px; padding: 24px; background: #f0f0f0; border-radius: 12px; margin-top: 16px;">
+  <div style="text-align: center;">
+    <svg width="16" height="16" viewBox="0 0 120 120">
+      <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="5"/>
+      <path d="M25 14 L78 14 Q88 14 88 21 L88 35 L38 35 Q25 35 28 28 Z" fill="#3B82F6"/>
+      <circle cx="42" cy="24" r="4" fill="white"/>
+      <circle cx="55" cy="24" r="4" fill="white"/>
+      <circle cx="68" cy="24" r="4" fill="white"/>
+      <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">16px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="24" height="24" viewBox="0 0 120 120">
+      <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="5"/>
+      <path d="M25 14 L78 14 Q88 14 88 21 L88 35 L38 35 Q25 35 28 28 Z" fill="#3B82F6"/>
+      <circle cx="42" cy="24" r="4" fill="white"/>
+      <circle cx="55" cy="24" r="4" fill="white"/>
+      <circle cx="68" cy="24" r="4" fill="white"/>
+      <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">24px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="32" height="32" viewBox="0 0 120 120">
+      <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="5"/>
+      <path d="M25 14 L78 14 Q88 14 88 21 L88 35 L38 35 Q25 35 28 28 Z" fill="#3B82F6"/>
+      <circle cx="42" cy="24" r="4" fill="white"/>
+      <circle cx="55" cy="24" r="4" fill="white"/>
+      <circle cx="68" cy="24" r="4" fill="white"/>
+      <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">32px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="48" height="48" viewBox="0 0 120 120">
+      <rect x="5" y="5" width="110" height="110" rx="12" fill="none" stroke="#3B82F6" stroke-width="5"/>
+      <path d="M25 14 L78 14 Q88 14 88 21 L88 35 L38 35 Q25 35 28 28 Z" fill="#3B82F6"/>
+      <circle cx="42" cy="24" r="4" fill="white"/>
+      <circle cx="55" cy="24" r="4" fill="white"/>
+      <circle cx="68" cy="24" r="4" fill="white"/>
+      <rect x="25" y="48" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="25" y="63" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="25" y="78" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">48px</p>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: #f0f0f0; border-radius: 8px;">
+  <h4 style="margin: 0 0 8px 0;">设计说明</h4>
+  <ul style="margin: 0; padding-left: 20px; color: #555; line-height: 1.8;">
+    <li><strong>整体边框</strong>：外围 5px 蓝色边框，整体像一张笔记卡片</li>
+    <li><strong>上方对话</strong>：气泡填充，左上/右下直角，右上/左下圆弧</li>
+    <li><strong>下方笔记</strong>：三层透明线条，表达沉淀感</li>
+    <li><strong>设计理念</strong>：对话即笔记，整体如一张带边框的卡片</li>
+  </ul>
+</div>

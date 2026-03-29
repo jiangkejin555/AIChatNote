@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; background: #FAFAFA; color: #111827; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h2 { font-weight: 600; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.02em; }
+    p.subtitle { color: #6B7280; margin-bottom: 40px; font-size: 15px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+    .card { background: #FFFFFF; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); cursor: pointer; border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+    .card.selected { border-color: #000000; box-shadow: 0 0 0 1px #000000; }
+    /* 采用类似 Apple/Notion 的极简高级灰背景展示 Logo */
+    .card-image { background: #F3F4F6; display: flex; align-items: center; justify-content: center; height: 280px; position: relative; }
+    .card-body { padding: 24px; border-top: 1px solid #F3F4F6; }
+    .card-body h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
+    .card-body p { margin: 0; font-size: 14px; color: #4B5563; line-height: 1.6; }
+    
+    /* 辅助网格，增加专业感 */
+    .grid-bg { position: absolute; inset: 0; background-image: radial-gradient(#D1D5DB 1px, transparent 1px); background-size: 20px 20px; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>对标顶级应用的极简重构</h2>
+    <p class="subtitle">参考 Claude（几何禅意）、ChatGPT（旋转对称抽象）、Notion（极简黑白线条）的美学。抛弃花哨的光效和复杂的形状，回归最纯粹的几何张力和高级质感。</p>
+
+    <div class="cards">
+      <!-- 方案 1：Claude 风格 (温润的几何禅意) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <!-- Claude 喜欢使用低饱和的温润色彩，比如赤陶色/石板色，这里我们用应用的高级深紫蓝 -->
+            
+            <!-- 极简的文件夹结构 (由两个纯粹的几何面构成) -->
+            <!-- 后背板：深紫色 -->
+            <path d="M20 40 C20 35 24 31 29 31 L45 31 L55 40 L91 40 C96 40 100 44 100 49 L100 91 C100 96 96 100 91 100 L29 100 C24 100 20 96 20 91 Z" fill="#2E1065"/>
+            
+            <!-- 插入的知识核心：一个极其纯粹的"光之球体/星芒" -->
+            <!-- 采用克制的暖色渐变，与深紫形成高级对比 -->
+            <defs>
+              <linearGradient id="claude-core" x1="40" y1="20" x2="80" y2="60" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FDE047"/> <!-- 暖黄 -->
+                <stop offset="1" stop-color="#F97316"/> <!-- 玫瑰粉 -->
+              </linearGradient>
+            </defs>
+            <!-- 这是一个极简的四叶草形状，代表AI -->
+            <path d="M60 15 C60 30 50 35 40 35 C50 35 60 40 60 55 C60 40 70 35 80 35 C70 35 60 30 60 15 Z" fill="url(#claude-core)"/>
+            
+            <!-- 文件夹前盖 (高级灰/米色，带来纸张的质感) -->
+            <path d="M15 55 C15 50 19 46 24 46 L96 46 C101 46 105 50 105 55 L105 91 C105 96 101 100 96 100 L24 100 C19 100 15 96 15 91 Z" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+            <!-- 极简的装饰线 -->
+            <line x1="30" y1="65" x2="50" y2="65" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+            <line x1="30" y1="75" x2="65" y2="75" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>风格 1：几何禅意 (参考 Claude)</h3>
+          <p>放弃了廉价的"科技蓝"和复杂的发光。使用深沉的绛紫色文件夹，搭配一个暖色调的、极其纯粹的 AI 星芒。整体传达出一种克制、高级、有温度的智慧感。</p>
+        </div>
+      </div>
+
+      <!-- 方案 2：GPT 风格 (旋转对称抽象) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <!-- ChatGPT 擅长使用数学美感、无限循环、单一高级色彩 -->
+            <!-- 这里我们使用单色：高贵的曜石黑/深海蓝 -->
+            <defs>
+              <linearGradient id="gpt-dark" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0F172A"/>
+                <stop offset="1" stop-color="#1E1B4B"/>
+              </linearGradient>
+            </defs>
+            
+            <!-- 将文件夹和对话气泡抽象为三个相互咬合、循环的几何带 -->
+            <g transform="translate(60, 60)">
+              <!-- 图形 1：代表收集 (开口向上的半包围结构) -->
+              <path d="M -25,10 C -25,25 -15,35 0,35 C 15,35 25,25 25,10" fill="none" stroke="url(#gpt-dark)" stroke-width="14" stroke-linecap="round"/>
+              
+              <!-- 图形 2：代表输出的知识 (右上角的一段带弧度的粗线) -->
+              <path d="M 25,10 C 25,-5 15,-15 0,-15" fill="none" stroke="#4F46E5" stroke-width="14" stroke-linecap="round"/>
+              
+              <!-- 图形 3：代表输入的对话 (左上角的带有气泡小尖角的粗线) -->
+              <path d="M -25,10 C -25,-5 -15,-15 0,-15" fill="none" stroke="url(#gpt-dark)" stroke-width="14" stroke-linecap="round"/>
+              <!-- 对话小尖角 -->
+              <path d="M -25,10 L -35,5 L -25,-2 Z" fill="url(#gpt-dark)"/>
+              
+              <!-- 中心的连接点 -->
+              <circle cx="0" cy="0" r="6" fill="#F8FAFC"/>
+            </g>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>风格 2：数学抽象 (参考 OpenAI)</h3>
+          <p>完全摒弃了具象的文件夹和气泡。用三条粗重、圆润、相互咬合的几何曲线，抽象表达"输入(对话) -> 处理 -> 输出(结构化知识)"的循环。极具现代感和品牌力量。</p>
+        </div>
+      </div>
+
+      <!-- 方案 3：Notion 风格 (极简黑白线描) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg" style="background-color: #FFFFFF;"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <!-- Notion 风格：纯粹的黑白、粗细对比强烈的线描、带着轻微的手绘/版画感 -->
+            
+            <!-- 等距视角的立体文件夹/书籍 -->
+            <!-- 后面那一页 -->
+            <path d="M35 30 L60 20 L85 30 L85 75 L60 85 L35 75 Z" fill="#F3F4F6" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+            <line x1="60" y1="20" x2="60" y2="85" stroke="#000000" stroke-width="4" stroke-linecap="round"/>
+            
+            <!-- 飞入的抽象对话气泡 (方块状，与 Notion 的块状概念吻合) -->
+            <path d="M20 45 L45 35 L65 45 L40 55 Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+            <!-- 气泡厚度 -->
+            <path d="M20 45 L20 50 L40 60 L40 55 Z" fill="#000000"/>
+            <path d="M40 60 L65 50 L65 45 L40 55 Z" fill="#E5E7EB" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+            <!-- 气泡小尾巴 -->
+            <path d="M25 53 L20 65 L32 57 Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+            
+            <!-- 文件夹前面那一页 (正在合上) -->
+            <path d="M35 85 L60 95 L95 75 L70 65 Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+            
+            <!-- 点缀的高级感品牌色 -->
+            <!-- Notion 虽然是黑白，但偶尔会有一点点红或蓝的克制点缀 -->
+            <circle cx="70" cy="50" r="4" fill="#4F46E5"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>风格 3：极简线描构筑 (参考 Notion)</h3>
+          <p>回归纯粹的黑白线框（带粗重描边）。使用等距立体视角（Isometric），展示一个"代表消息的立体方块"被夹入一本厚重的书/文件夹中。克制、优雅，非常有生产力工具的气质。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/helper.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; background: #FAFAFA; color: #111827; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h2 { font-weight: 600; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.02em; }
+    p.subtitle { color: #6B7280; margin-bottom: 40px; font-size: 15px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+    .card { background: #FFFFFF; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); cursor: pointer; border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+    .card.selected { border-color: #4F46E5; box-shadow: 0 0 0 1px #4F46E5; }
+    /* 深色高级背景，更能衬托蓝紫渐变 */
+    .card-image { background: #0F172A; display: flex; align-items: center; justify-content: center; height: 280px; position: relative; }
+    .card-body { padding: 24px; border-top: 1px solid #F3F4F6; }
+    .card-body h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
+    .card-body p { margin: 0; font-size: 14px; color: #4B5563; line-height: 1.6; }
+    
+    /* 辅助网格，深色版 */
+    .grid-bg { position: absolute; inset: 0; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>几何禅意 + 蓝紫科技感渐变</h2>
+    <p class="subtitle">保留了 Claude 风格中极简、克制的"几何面与星芒"结构，但通过不同层次的蓝紫色渐变和微妙的光影，注入科技感。</p>
+
+    <div class="cards">
+      <!-- 方案 A：深邃立体 (Dark Matter) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <!-- 文件夹后背板：深渊紫 -->
+              <linearGradient id="a-back" x1="20" y1="30" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#1E1B4B"/>
+                <stop offset="1" stop-color="#0F172A"/>
+              </linearGradient>
+              <!-- AI 星芒核心：明亮科技蓝紫渐变 -->
+              <linearGradient id="a-core" x1="40" y1="15" x2="80" y2="55" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#38BDF8"/> <!-- 亮青蓝 -->
+                <stop offset="0.5" stop-color="#818CF8"/> <!-- 柔和紫 -->
+                <stop offset="1" stop-color="#6D28D9"/> <!-- 深紫 -->
+              </linearGradient>
+              <!-- 文件夹前盖：微金属感深蓝紫 -->
+              <linearGradient id="a-front" x1="15" y1="46" x2="105" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#312E81"/>
+                <stop offset="1" stop-color="#1E1B4B"/>
+              </linearGradient>
+              <!-- 星芒微光晕 -->
+              <filter id="a-glow" x="20" y="-5" width="80" height="80">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+              </filter>
+            </defs>
+            
+            <!-- 后背板 -->
+            <path d="M20 40 C20 35 24 31 29 31 L45 31 L55 40 L91 40 C96 40 100 44 100 49 L100 91 C100 96 96 100 91 100 L29 100 C24 100 20 96 20 91 Z" fill="url(#a-back)"/>
+            
+            <!-- 几何星芒 (科技感配色带微光) -->
+            <path d="M60 15 C60 30 50 35 40 35 C50 35 60 40 60 55 C60 40 70 35 80 35 C70 35 60 30 60 15 Z" fill="url(#a-core)" filter="url(#a-glow)"/>
+            
+            <!-- 前盖 -->
+            <path d="M15 55 C15 50 19 46 24 46 L96 46 C101 46 105 50 105 55 L105 91 C105 96 101 100 96 100 L24 100 C19 100 15 96 15 91 Z" fill="url(#a-front)"/>
+            <!-- 前盖的高光描边，增加立体感和精致度 -->
+            <path d="M15 55 C15 50 19 46 24 46 L96 46 C101 46 105 50 105 55" fill="none" stroke="#6366F1" stroke-width="1.5" opacity="0.6"/>
+            
+            <!-- 极简装饰线(代表收纳的知识条) -->
+            <line x1="30" y1="65" x2="50" y2="65" stroke="#4F46E5" stroke-width="3" stroke-linecap="round"/>
+            <line x1="30" y1="75" x2="65" y2="75" stroke="#818CF8" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>变体 A：深邃星空 (高对比)</h3>
+          <p>文件夹使用极暗的深渊紫蓝，衬托出极其明亮的青蓝到紫的"星芒核心"。文件夹边缘带有一丝金属蓝紫高光。整体感觉深邃、精密，像宇宙中的智能节点。</p>
+        </div>
+      </div>
+
+      <!-- 方案 B：通透流光 (Liquid Light) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="b-back" x1="20" y1="31" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#4C1D95"/>
+                <stop offset="1" stop-color="#2563EB"/>
+              </linearGradient>
+              <linearGradient id="b-core" x1="40" y1="15" x2="80" y2="55" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFFFFF"/>
+                <stop offset="0.7" stop-color="#C084FC"/>
+                <stop offset="1" stop-color="#8B5CF6"/>
+              </linearGradient>
+              <!-- 半透明玻璃质感前盖 -->
+              <linearGradient id="b-front" x1="15" y1="46" x2="105" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="rgba(99, 102, 241, 0.4)"/>
+                <stop offset="1" stop-color="rgba(139, 92, 246, 0.1)"/>
+              </linearGradient>
+            </defs>
+            
+            <!-- 后背板 (饱满的蓝紫渐变) -->
+            <path d="M20 40 C20 35 24 31 29 31 L45 31 L55 40 L91 40 C96 40 100 44 100 49 L100 91 C100 96 96 100 91 100 L29 100 C24 100 20 96 20 91 Z" fill="url(#b-back)"/>
+            
+            <!-- 几何星芒 (偏白透紫，像白炽灯/流光) -->
+            <path d="M60 15 C60 30 50 35 40 35 C50 35 60 40 60 55 C60 40 70 35 80 35 C70 35 60 30 60 15 Z" fill="url(#b-core)"/>
+            
+            <!-- 半透前盖 -->
+            <path d="M15 55 C15 50 19 46 24 46 L96 46 C101 46 105 50 105 55 L105 91 C105 96 101 100 96 100 L24 100 C19 100 15 96 15 91 Z" fill="url(#b-front)" style="backdrop-filter: blur(2px);"/>
+            <!-- 玻璃边缘描边 -->
+            <path d="M15 55 C15 50 19 46 24 46 L96 46 C101 46 105 50 105 55 L105 91 C105 96 101 100 96 100 L24 100 C19 100 15 96 15 91 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+            
+            <!-- 透出底部的星芒虚影 -->
+            <path d="M60 55 C60 70 50 75 40 75" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>变体 B：流光玻璃 (通透质感)</h3>
+          <p>背板是鲜艳饱满的蓝紫渐变，星芒使用接近白色的亮紫渐变。前盖做成了微磨砂的玻璃态（Glassmorphism），边缘带有白色的高光线。这是一种非常流行的"清透"科技感。</p>
+        </div>
+      </div>
+
+      <!-- 方案 C：纯粹交叠 (Pure Geometry) -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="c-grad1" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6"/> <!-- Blue -->
+                <stop offset="1" stop-color="#8B5CF6"/> <!-- Purple -->
+              </linearGradient>
+              <!-- 使用透明度来实现正片叠底的几何美感 -->
+            </defs>
+            
+            <!-- 后背板 (不渐变，统一受整个大渐变影响) -->
+            <path d="M20 40 C20 35 24 31 29 31 L45 31 L55 40 L91 40 C96 40 100 44 100 49 L100 91 C100 96 96 100 91 100 L29 100 C24 100 20 96 20 91 Z" fill="url(#c-grad1)" opacity="0.4"/>
+            
+            <!-- 星芒 -->
+            <path d="M60 15 C60 30 50 35 40 35 C50 35 60 40 60 55 C60 40 70 35 80 35 C70 35 60 30 60 15 Z" fill="url(#c-grad1)" opacity="0.8"/>
+            
+            <!-- 前盖 -->
+            <path d="M15 55 C15 50 19 46 24 46 L96 46 C101 46 105 50 105 55 L105 91 C105 96 101 100 96 100 L24 100 C19 100 15 96 15 91 Z" fill="url(#c-grad1)"/>
+            
+            <!-- 前盖内部的镂空线(反白)，极致简约 -->
+            <line x1="30" y1="65" x2="50" y2="65" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <line x1="30" y1="75" x2="70" y2="75" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>变体 C：同色系叠面 (克制渐变)</h3>
+          <p>不再使用多个复杂的渐变。整个图形（后盖、星芒、前盖）共享同一个大的蓝紫渐变色盘，只通过不同的透明度（Opacity）来区分层级。这是当前很多顶级设计系统的处理方式，干净、统一。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/helper.js"></script>
+</body>
+</html>

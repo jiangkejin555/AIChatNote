@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; background: #FAFAFA; color: #111827; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h2 { font-weight: 600; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.02em; }
+    p.subtitle { color: #6B7280; margin-bottom: 40px; font-size: 15px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+    .card { background: #FFFFFF; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); cursor: pointer; border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+    .card.selected { border-color: #4F46E5; box-shadow: 0 0 0 1px #4F46E5; }
+    .card-image { background: #0F172A; display: flex; align-items: center; justify-content: center; height: 280px; position: relative; }
+    .card-body { padding: 24px; border-top: 1px solid #F3F4F6; }
+    .card-body h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
+    .card-body p { margin: 0; font-size: 14px; color: #4B5563; line-height: 1.6; }
+    .grid-bg { position: absolute; inset: 0; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>高级蓝紫渐变文件夹 + 半遮挡构图</h2>
+    <p class="subtitle">恢复了之前大家最喜欢的高级蓝紫渐变色，文件夹完全不透明。内部是被遮挡了一半的“气泡”或“大脑”。</p>
+
+    <div class="cards">
+      <!-- 方案 1：蓝紫渐变文件夹 + 侧漏尾巴气泡 -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <!-- 文件夹：同色系高级蓝紫渐变 (变体 C 的风格) -->
+              <linearGradient id="folder-blue-purple" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6"/> <!-- Blue -->
+                <stop offset="1" stop-color="#8B5CF6"/> <!-- Purple -->
+              </linearGradient>
+              
+              <!-- 内部气泡：用略微不同或者更亮的同色系渐变区分层级 -->
+              <linearGradient id="bubble-bright" x1="30" y1="10" x2="100" y2="70" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#60A5FA"/> <!-- Light Blue -->
+                <stop offset="1" stop-color="#C084FC"/> <!-- Light Purple -->
+              </linearGradient>
+            </defs>
+            
+            <!-- 文件夹后盖 -->
+            <path d="M15 55 C15 50 19 46 24 46 L45 46 L55 55 L96 55 C101 55 105 59 105 64 L105 96 C105 101 101 105 96 105 L24 105 C19 105 15 101 15 96 Z" fill="url(#folder-blue-purple)" opacity="0.6"/>
+            
+            <!-- 露出一半的气泡 (侧漏尾巴) -->
+            <path d="M30 55 L25 65 L35 60 C32 55 30 50 30 45 C30 28.4315 45.67 15 65 15 C84.33 15 100 28.4315 100 45 C100 50 98 53 95 55 Z" fill="url(#bubble-bright)"/>
+            
+            <!-- 内部的对话点 (简约纯白) -->
+            <circle cx="50" cy="40" r="4" fill="white"/>
+            <circle cx="65" cy="40" r="4" fill="white"/>
+            <circle cx="80" cy="40" r="4" fill="white"/>
+            
+            <!-- 文件夹前盖 (完全不透明，同色系渐变) -->
+            <path d="M10 65 C10 60 14 55 19 55 L101 55 C106 55 110 60 110 65 L105 97 C105 102 101 105 96 105 L24 105 C19 105 15 102 15 97 Z" fill="url(#folder-blue-purple)"/>
+            <!-- 极简反白线，增加设计感 -->
+            <line x1="30" y1="75" x2="50" y2="75" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+            <line x1="30" y1="85" x2="70" y2="85" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>方案 1：蓝紫渐变 + 侧边气泡</h3>
+          <p>恢复了高级的蓝紫渐变色盘。文件夹完全不透明，通过前后盖颜色的明暗度来区分层次。左侧漏出尾巴的聊天气泡非常明显。</p>
+        </div>
+      </div>
+
+      <!-- 方案 2：蓝紫渐变文件夹 + 上翻尾巴直角气泡 -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="folder-blue-purple-2" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6"/>
+                <stop offset="1" stop-color="#8B5CF6"/>
+              </linearGradient>
+              <!-- 气泡用对比色：微暖的白色透一点点粉紫，与深色文件夹形成强对比 -->
+              <linearGradient id="bubble-white" x1="35" y1="15" x2="105" y2="55" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFFFFF"/>
+                <stop offset="1" stop-color="#E2E8F0"/>
+              </linearGradient>
+            </defs>
+            
+            <!-- 文件夹后盖 -->
+            <path d="M15 55 C15 50 19 46 24 46 L45 46 L55 55 L96 55 C101 55 105 59 105 64 L105 96 C105 101 101 105 96 105 L24 105 C19 105 15 101 15 96 Z" fill="url(#folder-blue-purple-2)" opacity="0.6"/>
+            
+            <!-- 露出的方形消息气泡 (尾巴在右上角) -->
+            <!-- 颜色用纯白渐变，在蓝紫背景下非常跳跃清晰 -->
+            <path d="M35 55 L35 30 C35 21.7157 41.7157 15 50 15 L85 15 L95 5 L95 20 C100.523 20 105 24.4772 105 30 L105 55 Z" fill="url(#bubble-white)"/>
+            
+            <!-- 极简知识线 (蓝色) -->
+            <line x1="50" y1="35" x2="90" y2="35" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <line x1="50" y1="45" x2="75" y2="45" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            
+            <!-- 文件夹前盖 (完全不透明) -->
+            <path d="M10 65 C10 60 14 55 19 55 L101 55 C106 55 110 60 110 65 L105 97 C105 102 101 105 96 105 L24 105 C19 105 15 102 15 97 Z" fill="url(#folder-blue-purple-2)"/>
+            <line x1="30" y1="75" x2="50" y2="75" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+            <line x1="30" y1="85" x2="70" y2="85" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>方案 2：蓝紫渐变 + 纯白直角气泡</h3>
+          <p>文件夹是高级蓝紫色。为了让气泡在深色背景下更醒目，使用了白色的直角气泡（尾巴翻上）。这种深色包裹浅色的设计非常有立体感和层次感。</p>
+        </div>
+      </div>
+
+      <!-- 方案 3：蓝紫渐变文件夹 + 科技大脑 -->
+      <div class="card" onclick="document.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+        <div class="card-image">
+          <div class="grid-bg"></div>
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <defs>
+              <linearGradient id="folder-blue-purple-3" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6"/>
+                <stop offset="1" stop-color="#8B5CF6"/>
+              </linearGradient>
+              <linearGradient id="brain-grad-bright" x1="30" y1="10" x2="90" y2="60" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#38BDF8"/>
+                <stop offset="1" stop-color="#C084FC"/>
+              </linearGradient>
+            </defs>
+            
+            <!-- 文件夹后盖 -->
+            <path d="M15 55 C15 50 19 46 24 46 L45 46 L55 55 L96 55 C101 55 105 59 105 64 L105 96 C105 101 101 105 96 105 L24 105 C19 105 15 101 15 96 Z" fill="url(#folder-blue-purple-3)" opacity="0.5"/>
+            
+            <!-- 露出的科技大脑上半部分 -->
+            <g>
+              <!-- 大脑左半球 -->
+              <path d="M30 55 L30 40 C30 25 40 15 55 15 C58 15 60 17 60 20 L60 55 Z" fill="url(#brain-grad-bright)"/>
+              <!-- 大脑右半球 -->
+              <path d="M90 55 L90 40 C90 25 80 15 65 15 C62 15 60 17 60 20 L60 55 Z" fill="url(#brain-grad-bright)" opacity="0.8"/>
+              
+              <!-- 脑回路线条 -->
+              <path d="M40 30 C45 25 50 30 50 30 M45 40 C50 35 55 40 55 40" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M80 30 C75 25 70 30 70 30 M75 40 C70 35 65 40 65 40" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              
+              <circle cx="60" cy="30" r="3" fill="white"/>
+              <circle cx="60" cy="45" r="3" fill="white"/>
+            </g>
+            
+            <!-- 文件夹前盖 (完全不透明) -->
+            <path d="M10 65 C10 60 14 55 19 55 L101 55 C106 55 110 60 110 65 L105 97 C105 102 101 105 96 105 L24 105 C19 105 15 102 15 97 Z" fill="url(#folder-blue-purple-3)"/>
+            <line x1="30" y1="75" x2="50" y2="75" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+            <line x1="30" y1="85" x2="70" y2="85" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <h3>方案 3：蓝紫渐变 + 科技大脑</h3>
+          <p>整体色调统一和谐。蓝紫渐变的文件夹包裹着带有发光线路的科技大脑，前盖的反白横线既装饰了文件夹，又暗示了被归纳成行的知识。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/helper.js"></script>
+</body>
+</html>
