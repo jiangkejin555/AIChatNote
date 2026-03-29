@@ -1,0 +1,200 @@
+<h2>简洁图标设计</h2>
+<p class="subtitle">使用 OKLCH 原色，追求极简</p>
+
+<h3>极简方案</h3>
+<div class="cards">
+  <div class="card" data-choice="minimal-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 仅对话气泡 + 一条线 -->
+        <rect x="28" y="28" width="64" height="28" rx="10" fill="white"/>
+        <circle cx="46" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="60" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="74" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>极简 A: 气泡 + 单线</h3>
+      <p>最简洁，一条线代表笔记</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="minimal-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 仅两个点 + 两条线 -->
+        <circle cx="42" cy="38" r="6" fill="white"/>
+        <circle cx="78" cy="38" r="6" fill="white"/>
+        <line x1="28" y1="60" x2="92" y2="60" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="28" y1="82" x2="92" y2="82" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>极简 B: 两点 + 双线</h3>
+      <p>抽象化，两点代表对话</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="minimal-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 单个对话气泡，内含线条 -->
+        <rect x="25" y="25" width="70" height="70" rx="14" fill="white"/>
+        <line x1="38" y1="45" x2="82" y2="45" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="38" y1="60" x2="82" y2="60" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="38" y1="75" x2="65" y2="75" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>极简 C: 单卡片</h3>
+      <p>白色卡片内含线条</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="minimal-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- CN 字母 -->
+        <text x="60" y="72" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="700" fill="white" text-anchor="middle">CN</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>极简 D: 字母 CN</h3>
+      <p>Chat Notes 首字母</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">几何抽象方案</h3>
+<div class="cards">
+  <div class="card" data-choice="geo-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 圆形 + 横线 -->
+        <circle cx="45" cy="45" r="22" fill="white"/>
+        <line x1="28" y1="82" x2="92" y2="82" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="28" y1="98" x2="70" y2="98" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>几何 A: 圆 + 线</h3>
+      <p>圆形代表对话，线代表笔记</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="geo-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 简化的气泡轮廓 -->
+        <path d="M30 35 Q30 25 40 25 L80 25 Q90 25 90 35 L90 55 Q90 65 80 65 L50 65 L42 80 L42 65 L40 65 Q30 65 30 55 Z" fill="white" stroke="none"/>
+        <line x1="42" y1="38" x2="78" y2="38" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="52" x2="65" y2="52" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>几何 B: 气泡含线</h3>
+      <p>气泡内有横线，双重含义</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="geo-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 书签/笔记图标 -->
+        <path d="M35 20 L35 100 L60 80 L85 100 L85 20 Z" fill="white"/>
+        <line x1="45" y1="35" x2="75" y2="35" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="45" y1="50" x2="75" y2="50" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>几何 C: 书签</h3>
+      <p>书签造型，含横线</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="geo-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <!-- 对话图标简化版 -->
+        <rect x="22" y="22" width="38" height="38" rx="10" fill="white"/>
+        <rect x="60" y="60" width="38" height="38" rx="10" fill="white" opacity="0.7"/>
+        <circle cx="35" cy="41" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="47" cy="41" r="4" fill="oklch(0.546 0.245 274)"/>
+        <line x1="72" y1="72" x2="86" y2="72" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="72" y1="82" x2="82" y2="82" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>几何 D: 双卡片</h3>
+      <p>对话卡片 + 笔记卡片</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">不同尺寸预览</h3>
+<div style="display: flex; align-items: flex-end; justify-content: center; gap: 16px; padding: 24px; background: #f0f0f0; border-radius: 12px; margin-top: 16px;">
+  <div style="text-align: center;">
+    <svg width="16" height="16" viewBox="0 0 120 120">
+      <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+      <rect x="28" y="28" width="64" height="28" rx="10" fill="white"/>
+      <circle cx="46" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="60" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="74" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">16px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="24" height="24" viewBox="0 0 120 120">
+      <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+      <rect x="28" y="28" width="64" height="28" rx="10" fill="white"/>
+      <circle cx="46" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="60" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="74" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">24px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="32" height="32" viewBox="0 0 120 120">
+      <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+      <rect x="28" y="28" width="64" height="28" rx="10" fill="white"/>
+      <circle cx="46" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="60" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="74" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">32px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="48" height="48" viewBox="0 0 120 120">
+      <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+      <rect x="28" y="28" width="64" height="28" rx="10" fill="white"/>
+      <circle cx="46" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="60" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="74" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">48px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="64" height="64" viewBox="0 0 120 120">
+      <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+      <rect x="28" y="28" width="64" height="28" rx="10" fill="white"/>
+      <circle cx="46" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="60" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <circle cx="74" cy="42" r="4" fill="oklch(0.546 0.245 274)"/>
+      <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">64px</p>
+  </div>
+</div>

@@ -612,12 +612,11 @@ export function Sidebar() {
         {!sidebarCollapsed ? (
           <>
             <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full scale-150" />
-                <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-                  <MessageSquare className="h-4 w-4 text-primary-foreground" />
-                </div>
-              </div>
+              <img
+                src="/icon.svg"
+                alt="AI Chat Note"
+                className="w-8 h-8"
+              />
               <h1 className="text-lg font-semibold text-sidebar-foreground tracking-tight">
                 AI Chat Note
               </h1>

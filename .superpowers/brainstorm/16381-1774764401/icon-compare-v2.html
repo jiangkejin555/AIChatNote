@@ -1,0 +1,177 @@
+<h2>方案 B 重新设计</h2>
+<p class="subtitle">纯气泡 + 内含笔记元素</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+  <!-- 方案 A: 当前选中方案 -->
+  <div style="background: #f8f8f8; border-radius: 16px; padding: 24px; border: 2px solid #e0e0e0;">
+    <div style="text-align: center;">
+      <span style="background: #9CA3AF; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">方案 A</span>
+    </div>
+    <div style="display: flex; justify-content: center; padding: 32px 0;">
+      <svg width="140" height="140" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#6366F1"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="60" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="72" cy="37" r="4" fill="#6366F1"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h3 style="text-align: center; margin: 0 0 8px 0;">气泡在上，笔记在下</h3>
+    <p style="text-align: center; color: #666; font-size: 14px; margin: 0;">带圆角方形背景</p>
+  </div>
+
+  <!-- 方案 B: 纯气泡包含笔记 -->
+  <div style="background: #f8f8f8; border-radius: 16px; padding: 24px; border: 3px solid #6366F1;">
+    <div style="text-align: center;">
+      <span style="background: #6366F1; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">方案 B (新)</span>
+    </div>
+    <div style="display: flex; justify-content: center; padding: 32px 0;">
+      <svg width="140" height="140" viewBox="0 0 120 120">
+        <!-- 大对话气泡 (无背景) -->
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <!-- 气泡内的笔记图标 -->
+        <rect x="35" y="30" width="50" height="45" rx="5" fill="white"/>
+        <line x1="42" y1="42" x2="78" y2="42" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="66" x2="65" y2="66" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h3 style="text-align: center; margin: 0 0 8px 0;">气泡包含笔记</h3>
+    <p style="text-align: center; color: #666; font-size: 14px; margin: 0;">无背景，纯气泡造型</p>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">方案 B 变体 - 笔记元素样式</h3>
+<div class="cards" style="margin-top: 16px;">
+  <div class="card" data-choice="b-note" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:30px;display:flex;align-items:center;justify-content:center;">
+      <svg width="100" height="100" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <rect x="35" y="30" width="50" height="45" rx="5" fill="white"/>
+        <line x1="42" y1="42" x2="78" y2="42" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="66" x2="65" y2="66" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>笔记文档</h3>
+      <p>白色矩形 + 横线</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b-bookmark" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:30px;display:flex;align-items:center;justify-content:center;">
+      <svg width="100" height="100" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <!-- 书签图标 -->
+        <path d="M40 28 L40 72 L60 58 L80 72 L80 28 Z" fill="white"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>书签</h3>
+      <p>经典书签造型</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b-doc" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:30px;display:flex;align-items:center;justify-content:center;">
+      <svg width="100" height="100" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <!-- 文档图标 (带折角) -->
+        <path d="M35 25 L70 25 L85 40 L85 75 L35 75 Z" fill="white"/>
+        <path d="M70 25 L70 40 L85 40" fill="none" stroke="white" stroke-width="2"/>
+        <line x1="42" y1="50" x2="78" y2="50" stroke="#6366F1" stroke-width="2" stroke-linecap="round"/>
+        <line x1="42" y1="60" x2="78" y2="60" stroke="#6366F1" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>文档</h3>
+      <p>带折角的文档</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">不同尺寸预览</h3>
+<div style="display: flex; gap: 32px; padding: 24px; background: #f0f0f0; border-radius: 12px; margin-top: 16px;">
+  <div style="flex: 1;">
+    <p style="text-align: center; font-size: 12px; color: #666; margin-bottom: 12px;">方案 A</p>
+    <div style="display: flex; align-items: flex-end; justify-content: center; gap: 12px;">
+      <svg width="24" height="24" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#6366F1"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="60" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="72" cy="37" r="4" fill="#6366F1"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg width="32" height="32" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#6366F1"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="60" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="72" cy="37" r="4" fill="#6366F1"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg width="48" height="48" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#6366F1"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="60" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="72" cy="37" r="4" fill="#6366F1"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg width="64" height="64" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#6366F1"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="60" cy="37" r="4" fill="#6366F1"/>
+        <circle cx="72" cy="37" r="4" fill="#6366F1"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+  <div style="flex: 1;">
+    <p style="text-align: center; font-size: 12px; color: #666; margin-bottom: 12px;">方案 B</p>
+    <div style="display: flex; align-items: flex-end; justify-content: center; gap: 12px;">
+      <svg width="24" height="24" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <rect x="35" y="30" width="50" height="45" rx="5" fill="white"/>
+        <line x1="42" y1="42" x2="78" y2="42" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="66" x2="65" y2="66" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg width="32" height="32" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <rect x="35" y="30" width="50" height="45" rx="5" fill="white"/>
+        <line x1="42" y1="42" x2="78" y2="42" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="66" x2="65" y2="66" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg width="48" height="48" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <rect x="35" y="30" width="50" height="45" rx="5" fill="white"/>
+        <line x1="42" y1="42" x2="78" y2="42" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="66" x2="65" y2="66" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg width="64" height="64" viewBox="0 0 120 120">
+        <path d="M15 35 Q15 10 40 10 L95 10 Q110 10 110 30 L110 70 Q110 90 95 90 L45 90 L35 110 L35 90 Q15 90 15 65 Z" fill="#6366F1"/>
+        <rect x="35" y="30" width="50" height="45" rx="5" fill="white"/>
+        <line x1="42" y1="42" x2="78" y2="42" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="66" x2="65" y2="66" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,348 @@
+<h2>修正版 - 正确的圆角设计</h2>
+<p class="subtitle">左上/右下直角，右上/左下圆弧，上下对齐</p>
+
+<h3>圆角变体</h3>
+<div class="cards">
+  <div class="card" data-choice="fix-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡：左上直角，右上圆弧，右下直角，左下圆弧 -->
+        <path d="M15 15 
+                 L75 15 
+                 Q95 15 95 35 
+                 L95 47 
+                 L35 47 
+                 Q15 47 15 27 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="31" r="5" fill="white"/>
+        <circle cx="55" cy="31" r="5" fill="white"/>
+        <circle cx="72" cy="31" r="5" fill="white"/>
+        <!-- 沉淀层 (与上面对齐: x=15, 宽度=80) -->
+        <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>修正 A</h3>
+      <p>圆弧半径 20px</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="fix-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡：较小圆弧 -->
+        <path d="M15 15 
+                 L80 15 
+                 Q95 15 95 30 
+                 L95 47 
+                 L30 47 
+                 Q15 47 15 32 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="31" r="5" fill="white"/>
+        <circle cx="55" cy="31" r="5" fill="white"/>
+        <circle cx="72" cy="31" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>修正 B</h3>
+      <p>圆弧半径 15px</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="fix-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡：更小圆弧 -->
+        <path d="M15 15 
+                 L85 15 
+                 Q95 15 95 25 
+                 L95 47 
+                 L25 47 
+                 Q15 47 15 37 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="31" r="5" fill="white"/>
+        <circle cx="55" cy="31" r="5" fill="white"/>
+        <circle cx="72" cy="31" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>修正 C</h3>
+      <p>圆弧半径 10px</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="fix-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡：最小圆弧 -->
+        <path d="M15 15 
+                 L88 15 
+                 Q95 15 95 22 
+                 L95 47 
+                 L22 47 
+                 Q15 47 15 40 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="31" r="5" fill="white"/>
+        <circle cx="55" cy="31" r="5" fill="white"/>
+        <circle cx="72" cy="31" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>修正 D</h3>
+      <p>圆弧半径 7px</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">带尾巴版本</h3>
+<div class="cards">
+  <div class="card" data-choice="tail-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡 + 尾巴 -->
+        <path d="M15 10 
+                 L75 10 
+                 Q95 10 95 30 
+                 L95 42 
+                 L35 42 
+                 L28 55 
+                 L28 42 
+                 L22 42 
+                 Q15 42 15 35 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="26" r="5" fill="white"/>
+        <circle cx="55" cy="26" r="5" fill="white"/>
+        <circle cx="72" cy="26" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="62" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="77" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="92" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>尾巴 A</h3>
+      <p>圆弧 20px + 尾巴</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="tail-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡 + 尾巴 (紧凑) -->
+        <path d="M15 8 
+                 L78 8 
+                 Q95 8 95 25 
+                 L95 38 
+                 L38 38 
+                 L32 50 
+                 L32 38 
+                 L22 38 
+                 Q15 38 15 31 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="23" r="5" fill="white"/>
+        <circle cx="55" cy="23" r="5" fill="white"/>
+        <circle cx="72" cy="23" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>尾巴 B</h3>
+      <p>圆弧 17px + 尾巴</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="tail-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡 + 尾巴 (小圆弧) -->
+        <path d="M15 10 
+                 L82 10 
+                 Q95 10 95 23 
+                 L95 40 
+                 L35 40 
+                 L28 52 
+                 L28 40 
+                 L20 40 
+                 Q15 40 15 35 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="25" r="5" fill="white"/>
+        <circle cx="55" cy="25" r="5" fill="white"/>
+        <circle cx="72" cy="25" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="60" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="75" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="90" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>尾巴 C</h3>
+      <p>圆弧 13px + 尾巴</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="tail-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 消息气泡 (无尾巴) -->
+        <path d="M15 12 
+                 L85 12 
+                 Q95 12 95 22 
+                 L95 45 
+                 L25 45 
+                 Q15 45 15 35 
+                 Z" 
+              fill="#3B82F6"/>
+        <circle cx="38" cy="28" r="5" fill="white"/>
+        <circle cx="55" cy="28" r="5" fill="white"/>
+        <circle cx="72" cy="28" r="5" fill="white"/>
+        <!-- 沉淀层 -->
+        <rect x="15" y="55" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+        <rect x="15" y="70" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+        <rect x="15" y="85" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>无尾巴</h3>
+      <p>圆弧 10px，简洁版</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #3B82F6;">
+  <h4 style="margin: 0 0 8px 0; color: #1e40af;">设计规格</h4>
+  <ul style="margin: 0; padding-left: 20px; color: #334155; line-height: 1.8;">
+    <li><strong>左上角</strong>：直角 (M15 15 直线开始)</li>
+    <li><strong>右上角</strong>：圆弧 (Q95 15 控制点)</li>
+    <li><strong>右下角</strong>：直角 (L95 47 直线到达)</li>
+    <li><strong>左下角</strong>：圆弧 (Q15 47 控制点)</li>
+    <li><strong>对齐</strong>：消息气泡和沉淀层 x=15，宽度=80</li>
+  </ul>
+</div>
+
+<h3 style="margin-top: 32px;">不同尺寸预览 (修正 B)</h3>
+<div style="display: flex; align-items: flex-end; justify-content: center; gap: 16px; padding: 24px; background: #f0f0f0; border-radius: 12px; margin-top: 16px;">
+  <div style="text-align: center;">
+    <svg width="16" height="16" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">16px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="24" height="24" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">24px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="32" height="32" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">32px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="48" height="48" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">48px</p>
+  </div>
+  <div style="text-align: center;">
+    <svg width="64" height="64" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 4px; font-size: 10px; color: #666;">64px</p>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">不同背景下的效果</h3>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
+  <div style="text-align: center; padding: 20px; background: #ffffff; border-radius: 12px; border: 1px solid #e0e0e0;">
+    <svg width="64" height="64" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 8px; font-size: 12px; color: #666;">白色背景</p>
+  </div>
+  <div style="text-align: center; padding: 20px; background: #1a1a1a; border-radius: 12px;">
+    <svg width="64" height="64" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 8px; font-size: 12px; color: #888;">深色背景</p>
+  </div>
+  <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); border-radius: 12px;">
+    <svg width="64" height="64" viewBox="0 0 120 120">
+      <path d="M15 15 L80 15 Q95 15 95 30 L95 47 L30 47 Q15 47 15 32 Z" fill="#3B82F6"/>
+      <circle cx="38" cy="31" r="5" fill="white"/>
+      <circle cx="55" cy="31" r="5" fill="white"/>
+      <circle cx="72" cy="31" r="5" fill="white"/>
+      <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+      <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+      <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+    </svg>
+    <p style="margin-top: 8px; font-size: 12px; color: #666;">灰色背景</p>
+  </div>
+</div>

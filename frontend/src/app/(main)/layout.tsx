@@ -13,18 +13,26 @@ function MainLayoutContent({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, _hasHydrated } = useAuthStore()
   const { sidebarOpen, setSidebarOpen, toggleSidebar } = useUIStore()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (_hasHydrated && !isAuthenticated) {
       const redirect = encodeURIComponent(pathname + (searchParams.toString() ? `?${searchParams}` : ''))
       router.push(`/login?redirect=${redirect}`)
     }
-  }, [isAuthenticated, router, pathname, searchParams])
+  }, [_hasHydrated, isAuthenticated, router, pathname, searchParams])
+
+  if (!_hasHydrated) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return null

@@ -1,0 +1,127 @@
+<h2>图标设计 v4</h2>
+<p class="subtitle">包含关系 + 品牌蓝 #3B82F6</p>
+
+<div class="cards">
+  <div class="card" data-choice="contain-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 大对话气泡 (外层) -->
+        <path d="M15 45 Q15 12 45 12 L85 12 Q110 12 110 38 L110 62 Q110 88 85 88 L45 88 L35 108 L35 88 Q15 88 15 55 Z" fill="#3B82F6"/>
+        <!-- 笔记文档 (内层，被气泡包含) -->
+        <rect x="35" y="32" width="50" height="40" rx="5" fill="white"/>
+        <line x1="42" y1="44" x2="78" y2="44" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="54" x2="78" y2="54" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="64" x2="65" y2="64" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 A: 气泡含笔记</h3>
+      <p>大对话气泡包裹笔记文档，象征"对话中生成笔记"</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="contain-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 笔记文档 (外层) -->
+        <rect x="15" y="15" width="90" height="90" rx="12" fill="#3B82F6"/>
+        <!-- 对话气泡 (内层，嵌入笔记顶部) -->
+        <rect x="30" y="28" width="60" height="30" rx="10" fill="white"/>
+        <circle cx="48" cy="43" r="4" fill="#3B82F6"/>
+        <circle cx="60" cy="43" r="4" fill="#3B82F6"/>
+        <circle cx="72" cy="43" r="4" fill="#3B82F6"/>
+        <!-- 笔记内容线条 -->
+        <line x1="30" y1="72" x2="90" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="30" y1="86" x2="90" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 B: 笔记含气泡</h3>
+      <p>蓝色笔记卡片包含对话气泡，气泡已融入笔记</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="contain-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 圆角正方形背景 -->
+        <rect x="10" y="10" width="100" height="100" rx="22" fill="#3B82F6"/>
+        <!-- 对话气泡 (上半部分) -->
+        <rect x="28" y="25" width="64" height="28" rx="10" fill="white"/>
+        <circle cx="48" cy="39" r="4" fill="#3B82F6"/>
+        <circle cx="60" cy="39" r="4" fill="#3B82F6"/>
+        <circle cx="72" cy="39" r="4" fill="#3B82F6"/>
+        <!-- 笔记线条 (下半部分) -->
+        <line x1="28" y1="68" x2="92" y2="68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="82" x2="92" y2="82" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="96" x2="65" y2="96" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 C: 圆角方形容器</h3>
+      <p>App 图标经典形状，上气泡下笔记，层次清晰</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="contain-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 圆形背景 -->
+        <circle cx="60" cy="60" r="52" fill="#3B82F6"/>
+        <!-- 对话气泡 (上半) -->
+        <rect x="30" y="25" width="60" height="28" rx="10" fill="white"/>
+        <circle cx="48" cy="39" r="4" fill="#3B82F6"/>
+        <circle cx="60" cy="39" r="4" fill="#3B82F6"/>
+        <circle cx="72" cy="39" r="4" fill="#3B82F6"/>
+        <!-- 笔记线条 (下半) -->
+        <line x1="30" y1="68" x2="90" y2="68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="30" y1="82" x2="90" y2="82" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="30" y1="96" x2="65" y2="96" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 D: 圆形容器</h3>
+      <p>圆形图标，现代简洁，适合各种场景</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>包含关系说明</h3>
+  <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+    <tr style="background: #f0f0f0;">
+      <th style="padding: 8px; text-align: left;">方案</th>
+      <th style="padding: 8px; text-align: left;">外层</th>
+      <th style="padding: 8px; text-align: left;">内层</th>
+      <th style="padding: 8px; text-align: left;">含义</th>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">A</td>
+      <td style="padding: 8px;">对话气泡</td>
+      <td style="padding: 8px;">笔记文档</td>
+      <td style="padding: 8px;">对话中生成笔记</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">B</td>
+      <td style="padding: 8px;">笔记卡片</td>
+      <td style="padding: 8px;">对话气泡</td>
+      <td style="padding: 8px;">对话已融入笔记</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">C</td>
+      <td style="padding: 8px;">圆角方形</td>
+      <td style="padding: 8px;">气泡+笔记</td>
+      <td style="padding: 8px;">经典 App 图标形状</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">D</td>
+      <td style="padding: 8px;">圆形</td>
+      <td style="padding: 8px;">气泡+笔记</td>
+      <td style="padding: 8px;">现代简洁风格</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section" style="margin-top: 16px; padding: 12px; background: #EFF6FF; border-radius: 8px; border-left: 4px solid #3B82F6;">
+  <p style="margin: 0; color: #1E40AF;"><strong>品牌色:</strong> #3B82F6</p>
+</div>

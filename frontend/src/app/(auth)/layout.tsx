@@ -38,6 +38,7 @@ export default function AuthLayout({
 }) {
   const { isAuthenticated } = useAuthStore()
   const router = useRouter()
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const leftPanelRef = useRef<HTMLDivElement>(null)
   const [ripples, setRipples] = useState<Ripple[]>([])
   const [particles, setParticles] = useState<Particle[]>([])
@@ -168,9 +169,10 @@ export default function AuthLayout({
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/')
+      const redirect = searchParams?.get('redirect')
+      router.push(redirect ? decodeURIComponent(redirect) : '/')
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, searchParams])
 
   if (isAuthenticated) {
     return null

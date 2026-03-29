@@ -132,6 +132,7 @@ export const useChatStore = create<ChatState>()(
       name: 'chat-storage',
       partialize: (state) => ({
         drafts: state.drafts,
+        currentConversationId: state.currentConversationId,
       }),
     }
   )

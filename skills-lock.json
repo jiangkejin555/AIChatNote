@@ -5,6 +5,16 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    },
+    "frontend-design": {
+      "source": ".coco/skills/frontend-design",
+      "sourceType": "local",
+      "computedHash": "2177bc810590de429ebbcc904891f64f855d8ddb3e0f21828e7276bda301bcad"
+    },
+    "ui-ux-pro-max": {
+      "source": ".coco/skills/ui-ux-pro-max",
+      "sourceType": "local",
+      "computedHash": "b120bc7a8ee9aebf35a752ee959afe3303e979a3b15454a742b0d67447f57b75"
     }
   }
 }

@@ -66,6 +66,13 @@ export const metadata: Metadata = {
   keywords: ['AI', 'Chat', 'Notes', 'Knowledge Base', 'LLM', 'GPT', 'Claude'],
   authors: [{ name: 'AI Chat Note' }],
   creator: 'AI Chat Note',
+  icons: {
+    icon: [
+      { url: '/favicon.png', sizes: '32x32' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'zh_CN',

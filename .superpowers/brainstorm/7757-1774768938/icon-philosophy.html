@@ -1,0 +1,167 @@
+<h2>核心理念驱动设计</h2>
+<p class="subtitle">聊天即生产，对话即沉淀</p>
+
+<div style="background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+  <h3 style="margin: 0 0 12px 0;">设计哲学</h3>
+  <p style="color: #555; line-height: 1.8; margin: 0;">
+    <strong>"即"</strong> 是关键词 —— 对话与笔记不是两个分离的过程，而是<strong>一体两面</strong>。<br>
+    图标应该表达：<strong>一个形状，双重含义</strong>。
+  </p>
+</div>
+
+<h3>一体化设计</h3>
+<div class="cards">
+  <div class="card" data-choice="unified-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <path d="M25 22 Q25 15 32 15 L88 15 Q95 15 95 22 L95 75 Q95 82 88 82 L42 82 L32 98 L32 82 L32 82 Q25 82 25 75 Z" fill="white"/>
+        <line x1="35" y1="35" x2="85" y2="35" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="52" x2="85" y2="52" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="69" x2="65" y2="69" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>一体化 A</h3>
+      <p>大气泡含线条，对话即笔记</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="unified-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <rect x="25" y="20" width="70" height="65" rx="14" fill="white"/>
+        <path d="M40 85 L60 85 L50 100 Z" fill="white"/>
+        <line x1="35" y1="35" x2="85" y2="35" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="52" x2="85" y2="52" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="69" x2="65" y2="69" stroke="oklch(0.546 0.245 274)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>一体化 B</h3>
+      <p>卡片+尾巴，笔记即对话</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="unified-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <path d="M25 30 Q25 18 37 18 L83 18 Q95 18 95 30 L95 82 Q95 88 89 88 L50 88 L40 102 L40 88 L37 88 Q25 88 25 82 Z" fill="white"/>
+        <circle cx="45" cy="42" r="5" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="60" cy="42" r="5" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="75" cy="42" r="5" fill="oklch(0.546 0.245 274)"/>
+        <line x1="38" y1="62" x2="82" y2="62" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="38" y1="76" x2="65" y2="76" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>一体化 C</h3>
+      <p>上对话下笔记，融合一体</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="unified-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="40" cy="35" r="6" fill="white"/>
+        <circle cx="60" cy="35" r="6" fill="white"/>
+        <circle cx="80" cy="35" r="6" fill="white"/>
+        <line x1="30" y1="60" x2="90" y2="60" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="30" y1="78" x2="90" y2="78" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="30" y1="96" x2="70" y2="96" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>一体化 D</h3>
+      <p>极简抽象，上点下线</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">沉淀感设计</h3>
+<div class="cards">
+  <div class="card" data-choice="settle-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <path d="M28 18 Q28 12 35 12 L85 12 Q92 12 92 18 L92 55 Q92 61 85 61 L48 61 L38 75 L38 61 L35 61 Q28 61 28 55 Z" fill="white"/>
+        <circle cx="45" cy="36" r="5" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="60" cy="36" r="5" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="75" cy="36" r="5" fill="oklch(0.546 0.245 274)"/>
+        <line x1="28" y1="82" x2="92" y2="82" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="28" y1="98" x2="70" y2="98" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>沉淀 A</h3>
+      <p>气泡在上，线条沉淀于下</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="settle-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <rect x="25" y="18" width="70" height="28" rx="10" fill="white"/>
+        <circle cx="42" cy="32" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="56" cy="32" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="70" cy="32" r="4" fill="oklch(0.546 0.245 274)"/>
+        <rect x="25" y="52" width="70" height="12" rx="4" fill="white" opacity="0.7"/>
+        <rect x="25" y="70" width="70" height="12" rx="4" fill="white" opacity="0.5"/>
+        <rect x="25" y="88" width="50" height="12" rx="4" fill="white" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>沉淀 B</h3>
+      <p>层叠效果，逐渐沉淀</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="settle-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <path d="M30 20 Q30 14 37 14 L83 14 Q90 14 90 20 L90 50 Q90 56 83 56 L50 56 L42 68 L42 56 L37 56 Q30 56 30 50 Z" fill="white"/>
+        <circle cx="45" cy="35" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="60" cy="35" r="4" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="75" cy="35" r="4" fill="oklch(0.546 0.245 274)"/>
+        <path d="M60 62 L60 78 M52 70 L60 78 L68 70" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <rect x="30" y="82" width="60" height="18" rx="4" fill="white" opacity="0.85"/>
+        <line x1="38" y1="91" x2="82" y2="91" stroke="oklch(0.546 0.245 274)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>沉淀 C</h3>
+      <p>箭头向下，明确沉淀方向</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="settle-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="oklch(0.546 0.245 274)"/>
+        <path d="M30 15 L30 105 L60 85 L90 105 L90 15 Z" fill="white"/>
+        <circle cx="50" cy="40" r="5" fill="oklch(0.546 0.245 274)"/>
+        <circle cx="70" cy="40" r="5" fill="oklch(0.546 0.245 274)"/>
+        <line x1="40" y1="60" x2="80" y2="60" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="75" x2="80" y2="75" stroke="oklch(0.546 0.245 274)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>沉淀 D</h3>
+      <p>书签造型，知识沉淀</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: #f0f0f0; border-radius: 8px;">
+  <h4 style="margin: 0 0 8px 0;">设计理念总结</h4>
+  <ul style="margin: 0; padding-left: 20px; color: #555; line-height: 1.8;">
+    <li><strong>一体化设计</strong>：一个形状同时表达对话与笔记</li>
+    <li><strong>沉淀感</strong>：气泡尾巴向下，暗示"沉淀"</li>
+    <li><strong>极简</strong>：减少元素，增强识别度</li>
+  </ul>
+</div>

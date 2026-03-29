@@ -180,12 +180,23 @@ export default function ChatPage() {
 
   // Set initial conversation - default to new chat state
   useEffect(() => {
-    if (conversations && !currentConversationId && !isPendingNewChat) {
-      // Default to new conversation start page
+    if (!conversations) return
+
+    // If we have a persisted conversationId, verify it still exists in the list
+    if (currentConversationId) {
+      const exists = conversations.some((c) => c.id === currentConversationId)
+      if (!exists) {
+        // Conversation no longer exists, clear it and show new chat
+        setCurrentConversation(null)
+        setIsPendingNewChat(true)
+      }
+      // Otherwise keep the restored conversation — don't force new chat
+      return
+    }
+
+    // No conversation selected and not already pending new chat
+    if (!isPendingNewChat) {
       setIsPendingNewChat(true)
-    } else if (conversations && conversations.length === 0 && currentConversationId) {
-      // Clear current conversation if no conversations exist (all deleted)
-      setCurrentConversation(null)
     }
   }, [conversations, currentConversationId, isPendingNewChat, setCurrentConversation, setIsPendingNewChat])
 

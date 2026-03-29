@@ -1,0 +1,117 @@
+<h2>图标重新设计</h2>
+<p class="subtitle">使用正确的品牌色：紫色 #7C3AED</p>
+
+<div style="background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+  <h3 style="margin: 0 0 12px 0;">品牌色分析</h3>
+  <table style="width: 100%; font-size: 14px;">
+    <tr>
+      <td style="padding: 8px; color: #666;">Primary (实际使用)</td>
+      <td style="padding: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 24px; height: 24px; background: #7C3AED; border-radius: 4px;"></div>
+          <strong>#7C3AED (紫色)</strong>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; color: #666;">Primary (设计文档)</td>
+      <td style="padding: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 24px; height: 24px; background: #0891B2; border-radius: 4px;"></div>
+          <span style="color: #999;">#0891B2 (青色) - 未使用</span>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h3>新设计方案</h3>
+<div class="cards">
+  <div class="card" data-choice="design-a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#7C3AED"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#7C3AED"/>
+        <circle cx="60" cy="37" r="4" fill="#7C3AED"/>
+        <circle cx="72" cy="37" r="4" fill="#7C3AED"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 A: 经典方案</h3>
+      <p>之前的方案，改用品牌紫色</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="design-b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#6D28D9;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="url(#grad1)"/>
+        <path d="M28 28 Q28 22 34 22 L86 22 Q92 22 92 28 L92 46 Q92 52 86 52 L42 52 L36 62 L36 52 L34 52 Q28 52 28 46 Z" fill="white"/>
+        <circle cx="48" cy="37" r="4" fill="#7C3AED"/>
+        <circle cx="60" cy="37" r="4" fill="#7C3AED"/>
+        <circle cx="72" cy="37" r="4" fill="#7C3AED"/>
+        <line x1="28" y1="72" x2="92" y2="72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="86" x2="92" y2="86" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="100" x2="65" y2="100" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 B: 渐变效果</h3>
+      <p>紫色渐变，更有层次感</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="design-c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#7C3AED"/>
+        <path d="M25 30 Q25 18 37 18 L83 18 Q95 18 95 30 L95 50 Q95 62 83 62 L40 62 L32 78 L32 62 L37 62 Q25 62 25 50 Z" fill="white"/>
+        <circle cx="45" cy="40" r="5" fill="#7C3AED"/>
+        <circle cx="60" cy="40" r="5" fill="#7C3AED"/>
+        <circle cx="75" cy="40" r="5" fill="#7C3AED"/>
+        <line x1="25" y1="78" x2="95" y2="78" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="25" y1="92" x2="75" y2="92" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 C: 大气泡</h3>
+      <p>更大的对话气泡，更突出</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="design-d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f5;padding:40px;display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <rect x="10" y="10" width="100" height="100" rx="12" fill="#7C3AED"/>
+        <rect x="25" y="22" width="70" height="32" rx="10" fill="white"/>
+        <circle cx="45" cy="38" r="5" fill="#7C3AED"/>
+        <circle cx="60" cy="38" r="5" fill="#7C3AED"/>
+        <circle cx="75" cy="38" r="5" fill="#7C3AED"/>
+        <line x1="25" y1="70" x2="95" y2="70" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="25" y1="85" x2="95" y2="85" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="25" y1="100" x2="70" y2="100" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 D: 简洁版</h3>
+      <p>无尾巴气泡，更简洁</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">颜色对比</h3>
+<div style="display: flex; gap: 8px; margin-top: 16px;">
+  <div style="flex: 1; height: 40px; background: #7C3AED; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 500;">#7C3AED Primary</div>
+  <div style="flex: 1; height: 40px; background: #8B5CF6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 500;">#8B5CF6 Violet</div>
+  <div style="flex: 1; height: 40px; background: #6D28D9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 500;">#6D28D9 Deep</div>
+</div>

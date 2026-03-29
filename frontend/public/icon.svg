@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- 对话气泡：左上直角，右上圆弧(7px)，右下直角，左下圆弧(25px) -->
+  <path d="M15 15 
+           L88 15 
+           Q95 15 95 22 
+           L95 47 
+           L22 47 
+           Q15 47 15 40 
+           Z" 
+        fill="#3B82F6"/>
+  <!-- 三个点 -->
+  <circle cx="38" cy="31" r="5" fill="white"/>
+  <circle cx="55" cy="31" r="5" fill="white"/>
+  <circle cx="72" cy="31" r="5" fill="white"/>
+  <!-- 沉淀层 -->
+  <rect x="15" y="58" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
+  <rect x="15" y="73" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
+  <rect x="15" y="88" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+</svg>
