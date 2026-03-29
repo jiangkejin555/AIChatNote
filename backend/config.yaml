@@ -78,3 +78,9 @@ smtp:
   from_name: "AI Chat Note"  # sender display name
   use_tls: true         # Use TLS for secure connection
   enabled: true        # Enable/disable email verification feature
+
+# Notion Integration
+notion:
+  client_id: ""
+  client_secret: ""
+  redirect_uri: "http://localhost:3000/settings/integrations/notion/callback"

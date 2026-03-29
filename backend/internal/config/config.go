@@ -21,7 +21,14 @@ type Config struct {
 	TitleGenerator TitleGeneratorConfig `yaml:"title_generator"`
 	Context        ContextConfig        `yaml:"context"`
 	OAuth          OAuthConfig          `yaml:"oauth"`
+	Notion         NotionConfig         `mapstructure:"notion" yaml:"notion"`
 	SMTP           SMTPConfig           `yaml:"smtp"`
+}
+
+type NotionConfig struct {
+	ClientID     string `mapstructure:"client_id" yaml:"client_id"`
+	ClientSecret string `mapstructure:"client_secret" yaml:"client_secret"`
+	RedirectURI  string `mapstructure:"redirect_uri" yaml:"redirect_uri"`
 }
 
 type ServerConfig struct {
@@ -251,6 +258,17 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("QQ_ENABLED"); v != "" {
 		cfg.OAuth.QQ.Enabled = strings.ToLower(v) == "true"
+	}
+
+	// Notion integration
+	if v := os.Getenv("NOTION_CLIENT_ID"); v != "" {
+		cfg.Notion.ClientID = v
+	}
+	if v := os.Getenv("NOTION_CLIENT_SECRET"); v != "" {
+		cfg.Notion.ClientSecret = v
+	}
+	if v := os.Getenv("NOTION_REDIRECT_URI"); v != "" {
+		cfg.Notion.RedirectURI = v
 	}
 
 	// SMTP configuration
