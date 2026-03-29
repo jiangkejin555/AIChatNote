@@ -31,6 +31,7 @@ import {
   Languages,
   LogOut,
   ChevronUp,
+  Blocks,
 } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications'
 import { Button } from '@/components/ui/button'
@@ -225,6 +226,10 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
               <Settings className="h-4 w-4" />
               <span>{t('sidebar.settings')}</span>
             </Link>
+            <Link href="/settings/integrations" className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-accent text-sm">
+              <Blocks className="h-4 w-4" />
+              <span>Integrations</span>
+            </Link>
             <button
               onClick={() => setShowLogoutConfirm(true)}
               className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-destructive/10 text-destructive text-sm"
@@ -380,6 +385,17 @@ function UserDropdownMenu({ user, initials, sidebarCollapsed, onLogout }: UserDr
             >
               <Settings className="h-4 w-4 text-muted-foreground" />
               <span>{t('sidebar.settings')}</span>
+            </Link>
+            <Link
+              href="/settings/integrations"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                'transition-all duration-200 hover:bg-accent/60',
+                'text-sm text-popover-foreground'
+              )}
+            >
+              <Blocks className="h-4 w-4 text-muted-foreground" />
+              <span>Integrations</span>
             </Link>
             <Link
               href="/account"
