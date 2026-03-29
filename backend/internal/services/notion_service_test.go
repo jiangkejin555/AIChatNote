@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/chat-note/backend/internal/config"
+	"github.com/chat-note/backend/internal/crypto"
 	"github.com/chat-note/backend/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -150,4 +151,73 @@ func TestNotionService_HandleCallback_PageError(t *testing.T) {
 	err = service.HandleCallback("test-code", 1)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create app page")
+}
+
+func TestNotionService_SyncNote_Success(t *testing.T) {
+	cfg := &config.NotionConfig{}
+	mockRepo := new(MockIntegrationRepository)
+	mockTransport := new(MockRoundTripper)
+	httpClient := &http.Client{Transport: mockTransport}
+
+	encryptionKey := "12345678901234567890123456789012"
+	service, err := NewNotionService(cfg, encryptionKey, mockRepo, httpClient)
+	assert.NoError(t, err)
+
+	// Setup mock integration
+	appPageID := "app-page-id"
+	workspaceID := "workspace-id"
+	cryptoHelper, _ := crypto.NewAESCrypto(encryptionKey)
+	encryptedToken, _ := cryptoHelper.Encrypt("test-access-token")
+
+	integration := &models.Integration{
+		UserID:               1,
+		Provider:             "notion",
+		AccessTokenEncrypted: encryptedToken,
+		NotionWorkspaceID:    &workspaceID,
+		NotionAppPageID:      &appPageID,
+	}
+
+	mockRepo.On("GetByUserIDAndProvider", uint(1), "notion").Return(integration, nil)
+
+	// Mock archive page (PATCH)
+	mockTransport.On("RoundTrip", mock.MatchedBy(func(req *http.Request) bool {
+		return req.Method == "PATCH" && req.URL.Path == "/v1/pages/old-page-id"
+	})).Return(&http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewBufferString(`{}`)),
+	}, nil).Once()
+
+	// Mock create page (POST)
+	pageResponse := `{"id": "new-page-id"}`
+	mockTransport.On("RoundTrip", mock.MatchedBy(func(req *http.Request) bool {
+		return req.Method == "POST" && req.URL.Path == "/v1/pages"
+	})).Return(&http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewBufferString(pageResponse)),
+	}, nil).Once()
+
+	existingPageID := "old-page-id"
+	newPageID, err := service.SyncNote("Test Note", "Content", 1, &existingPageID)
+	
+	assert.NoError(t, err)
+	assert.Equal(t, "new-page-id", newPageID)
+	
+	mockRepo.AssertExpectations(t)
+	mockTransport.AssertExpectations(t)
+}
+
+func TestNotionService_SyncNote_NoIntegration(t *testing.T) {
+	cfg := &config.NotionConfig{}
+	mockRepo := new(MockIntegrationRepository)
+	httpClient := &http.Client{}
+
+	service, err := NewNotionService(cfg, "12345678901234567890123456789012", mockRepo, httpClient)
+	assert.NoError(t, err)
+
+	mockRepo.On("GetByUserIDAndProvider", uint(1), "notion").Return(nil, errors.New("not found"))
+
+	_, err = service.SyncNote("Test Note", "Content", 1, nil)
+	
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to fetch integration")
 }
