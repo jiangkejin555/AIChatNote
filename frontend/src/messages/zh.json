@@ -39,5 +39,104 @@
     "aiGenerating": "AI笔记生成中...",
     "aiGenerateSuccess": "笔记生成完成",
     "aiGenerateFailed": "AI总结失败"
+  },
+  "helpFeedback": {
+    "title": "帮助与反馈",
+    "helpTab": "使用帮助",
+    "feedbackTab": "意见反馈"
+  },
+  "about": {
+    "help": {
+      "overview": "产品简介",
+      "overviewContent": "AI Chat Note 是一款智能对话笔记工具，帮助您将 LLM 对话内容高效转化为结构化笔记，支持多模型管理、知识库构建和灵活导出，让 AI 对话的价值得以最大化利用。",
+      "features": "核心功能",
+      "featuresList": {
+        "multiModel": {
+          "title": "多模型支持",
+          "desc": "同时管理多个 AI 模型，灵活切换不同模型进行对话，满足不同场景需求"
+        },
+        "noteSave": {
+          "title": "笔记保存",
+          "desc": "将重要对话一键保存为笔记，支持自动生成摘要和手动编辑整理"
+        },
+        "knowledgeBase": {
+          "title": "知识库管理",
+          "desc": "通过文件夹和标签系统组织笔记，快速检索和回顾历史知识"
+        },
+        "export": {
+          "title": "灵活导出",
+          "desc": "支持多种格式导出笔记内容，方便在不同平台和工具间共享使用"
+        }
+      },
+      "quickStart": "快速上手",
+      "quickStartSteps": {
+        "step1": "在设置中添加您常用的 AI 模型提供商和 API 密钥",
+        "step2": "创建新对话，选择模型并开始与 AI 交流",
+        "step3": "将有价值的对话保存为笔记，使用文件夹和标签进行整理"
+      },
+      "faq": "常见问题",
+      "faqList": {
+        "q1": {
+          "q": "如何添加新的 AI 模型？",
+          "a": "进入「模型管理」页面，点击「添加模型」，填写提供商信息和 API 密钥即可。系统支持 OpenAI 兼容接口。"
+        },
+        "q2": {
+          "q": "对话数据存储在哪里？",
+          "a": "所有对话和笔记数据存储在您自部署的服务器数据库中，我们不会上传或分享您的数据。"
+        },
+        "q3": {
+          "q": "支持哪些 AI 模型？",
+          "a": "支持所有兼容 OpenAI API 格式的模型，包括 GPT 系列、Claude 系列、DeepSeek、通义千问等主流模型。"
+        },
+        "q4": {
+          "q": "如何导出笔记？",
+          "a": "在笔记列表中选择需要导出的笔记，点击导出按钮，支持 Markdown 等常用格式。"
+        }
+      }
+    },
+    "feedback": {
+      "satisfaction": "满意度评价",
+      "satisfactionDesc": "请为我们的产品打分，帮助我们持续改进",
+      "satisfactionPlaceholder": "请输入您的使用感受和建议（可选）",
+      "submitRating": "提交评价",
+      "updateRating": "更新评价",
+      "ratingSuccess": "评价提交成功",
+      "ratingFailed": "请先选择评分星级",
+      "submitFeedback": "提交反馈",
+      "feedbackType": "反馈类型",
+      "bugReport": "问题报告",
+      "featureSuggestion": "功能建议",
+      "other": "其他",
+      "title_placeholder": "标题",
+      "description_placeholder": "详细描述",
+      "contact_placeholder": "联系方式（可选）",
+      "submit": "提交",
+      "feedbackSuccess": "反馈提交成功，感谢您的宝贵意见",
+      "feedbackFailed": "请填写标题和详细描述",
+      "feedbackHistory": "反馈记录",
+      "status": {
+        "pending": "待处理",
+        "in_progress": "处理中",
+        "resolved": "已解决",
+        "closed": "已关闭"
+      },
+      "featureVoting": "功能投票",
+      "noFeatures": "暂无功能投票",
+      "votes": "票",
+      "vote": "投票",
+      "unvote": "取消",
+      "voteSuccess": "投票成功",
+      "unvoteSuccess": "已取消投票",
+      "voteFailed": "操作失败，请重试",
+      "featureStatus": {
+        "planned": "计划中",
+        "in_progress": "开发中",
+        "completed": "已完成"
+      },
+      "detailDescription": "详细描述",
+      "detailCreatedAt": "提交于",
+      "detailUpdatedAt": "更新于",
+      "contactLabel": "联系方式"
+    }
   }
 }

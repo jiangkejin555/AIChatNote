@@ -9,14 +9,39 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
-import { Star, ThumbsUp, MessageSquare, Send, History, HelpCircle, Sparkles, Rocket, CheckCircle, Lightbulb } from 'lucide-react'
+import {
+  Star,
+  ThumbsUp,
+  MessageSquare,
+  Send,
+  History,
+  HelpCircle,
+  Sparkles,
+  Rocket,
+  CheckCircle,
+  Lightbulb,
+  BookOpen,
+  MessageCircleHeart,
+  ChevronRight,
+  Calendar,
+  Mail,
+  Tag,
+  FileText,
+} from 'lucide-react'
 import { feedbackApi, SatisfactionRating, Feedback, FeatureRequest } from '@/lib/api/feedback'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function HelpFeedbackPage() {
   const t = useTranslations()
   const [activeTab, setActiveTab] = useState<'help' | 'feedback'>('help')
-  
+
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
   const [existingRating, setExistingRating] = useState<SatisfactionRating | null>(null)
@@ -27,6 +52,7 @@ export default function HelpFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null)
 
   useEffect(() => {
     loadData()
@@ -141,67 +167,101 @@ export default function HelpFeedbackPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b bg-background sticky top-0 z-10 shrink-0">
-        <div className="flex items-center justify-center gap-4 p-4 max-w-4xl mx-auto">
-          <h1 className="text-xl font-semibold">{t('helpFeedback.title')}</h1>
+      {/* Header - matching account page */}
+      <div className="border-b bg-gradient-to-r from-background via-background to-muted/20 sticky top-0 z-10 shrink-0 backdrop-blur-sm">
+        <div className="flex items-center justify-center p-4 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <HelpCircle className="h-5 w-5" />
+            </div>
+            <h1 className="text-xl font-semibold tracking-tight">{t('helpFeedback.title')}</h1>
+          </div>
         </div>
       </div>
 
-      <div className="bg-background">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex gap-1 p-1">
+      {/* Tab Bar - styled segmented control */}
+      <div className="border-b bg-background/80 backdrop-blur-sm shrink-0">
+        <div className="max-w-2xl mx-auto px-4 py-2">
+          <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
             <Button
-              variant={activeTab === 'help' ? 'default' : 'ghost'}
+              variant="ghost"
               onClick={() => setActiveTab('help')}
-              className="flex-1"
+              className={`flex-1 rounded-lg transition-all duration-200 ${
+                activeTab === 'help'
+                  ? 'bg-background shadow-sm text-primary font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              <HelpCircle className="h-4 w-4 mr-2" />
+              <BookOpen className="h-4 w-4 mr-2" />
               {t('helpFeedback.helpTab')}
             </Button>
             <Button
-              variant={activeTab === 'feedback' ? 'default' : 'ghost'}
+              variant="ghost"
               onClick={() => setActiveTab('feedback')}
-              className="flex-1"
+              className={`flex-1 rounded-lg transition-all duration-200 ${
+                activeTab === 'feedback'
+                  ? 'bg-background shadow-sm text-primary font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
+              <MessageCircleHeart className="h-4 w-4 mr-2" />
               {t('helpFeedback.feedbackTab')}
             </Button>
           </div>
-          <div className="border-b" />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex flex-col items-center max-w-2xl mx-auto space-y-6">
           {activeTab === 'help' ? (
             <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <HelpCircle className="h-5 w-5" />
-                    {t('about.help.overview')}
-                  </CardTitle>
+              {/* Overview Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <HelpCircle className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      {t('about.help.overview')}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{t('about.help.overviewContent')}</p>
+                <CardContent className="pt-5">
+                  <p className="text-muted-foreground leading-relaxed">
+                    {t('about.help.overviewContent')}
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5" />
-                    {t('about.help.features')}
-                  </CardTitle>
+              {/* Features Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      {t('about.help.features')}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border/50">
                     {features.map(({ key, icon: Icon }) => (
-                      <div key={key} className="flex gap-3 p-3 rounded-lg bg-muted/50">
-                        <Icon className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <div
+                        key={key}
+                        className="p-5 flex items-start gap-4 group hover:bg-muted/30 transition-colors duration-200"
+                      >
+                        <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200 shrink-0">
+                          <Icon className="h-4 w-4" />
+                        </div>
                         <div>
-                          <h4 className="font-medium">{t(`about.help.featuresList.${key}.title`)}</h4>
-                          <p className="text-sm text-muted-foreground">{t(`about.help.featuresList.${key}.desc`)}</p>
+                          <h4 className="text-sm font-medium">{t(`about.help.featuresList.${key}.title`)}</h4>
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            {t(`about.help.featuresList.${key}.desc`)}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -209,40 +269,63 @@ export default function HelpFeedbackPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Rocket className="h-5 w-5" />
-                    {t('about.help.quickStart')}
-                  </CardTitle>
+              {/* Quick Start Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <Rocket className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      {t('about.help.quickStart')}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <ol className="space-y-3">
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border/50">
                     {quickStartSteps.map((step, index) => (
-                      <li key={step} className="flex gap-3">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm">
+                      <div
+                        key={step}
+                        className="p-5 flex items-center gap-4 group hover:bg-muted/30 transition-colors duration-200"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-sm font-semibold">
                           {index + 1}
                         </span>
-                        <span className="text-muted-foreground">{t(`about.help.quickStartSteps.${step}`)}</span>
-                      </li>
+                        <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+                          {t(`about.help.quickStartSteps.${step}`)}
+                        </span>
+                      </div>
                     ))}
-                  </ol>
+                  </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <HelpCircle className="h-5 w-5" />
-                    {t('about.help.faq')}
-                  </CardTitle>
+              {/* FAQ Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <Lightbulb className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      {t('about.help.faq')}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border/50">
                     {faqItems.map((item) => (
-                      <div key={item} className="space-y-1">
-                        <h4 className="font-medium">{t(`about.help.faqList.${item}.q`)}</h4>
-                        <p className="text-sm text-muted-foreground">{t(`about.help.faqList.${item}.a`)}</p>
+                      <div
+                        key={item}
+                        className="p-5 group hover:bg-muted/30 transition-colors duration-200"
+                      >
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <span className="text-primary">Q:</span>
+                          {t(`about.help.faqList.${item}.q`)}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-2 leading-relaxed pl-5">
+                          {t(`about.help.faqList.${item}.a`)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -251,24 +334,37 @@ export default function HelpFeedbackPage() {
             </>
           ) : (
             <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5" />
-                    {t('about.feedback.satisfaction')}
-                  </CardTitle>
-                  <CardDescription>{t('about.feedback.satisfactionDesc')}</CardDescription>
+              {/* Satisfaction Rating Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <Star className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-semibold">
+                        {t('about.feedback.satisfaction')}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        {t('about.feedback.satisfactionDesc')}
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-1">
+                <CardContent className="pt-5 space-y-4">
+                  <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         onClick={() => setRating(star)}
-                        className="focus:outline-none"
+                        className="p-1 rounded-lg hover:bg-muted/50 transition-colors duration-200 focus:outline-none"
                       >
                         <Star
-                          className={`h-8 w-8 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
+                          className={`h-7 w-7 transition-colors duration-200 ${
+                            star <= rating
+                              ? 'fill-yellow-400 text-yellow-400 dark:fill-yellow-500 dark:text-yellow-500'
+                              : 'text-muted-foreground/40 hover:text-muted-foreground'
+                          }`}
                         />
                       </button>
                     ))}
@@ -278,6 +374,7 @@ export default function HelpFeedbackPage() {
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     rows={3}
+                    className="resize-none"
                   />
                   <Button onClick={handleRatingSubmit} disabled={loading || rating === 0}>
                     {existingRating ? t('about.feedback.updateRating') : t('about.feedback.submitRating')}
@@ -285,37 +382,40 @@ export default function HelpFeedbackPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    {t('about.feedback.submitFeedback')}
-                  </CardTitle>
+              {/* Submit Feedback Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <MessageSquare className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      {t('about.feedback.submitFeedback')}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="pt-5 space-y-5">
                   <div className="space-y-2">
-                    <Label>{t('about.feedback.feedbackType')}</Label>
+                    <Label className="text-sm font-medium">{t('about.feedback.feedbackType')}</Label>
                     <RadioGroup
                       value={feedbackType}
                       onValueChange={(v) => setFeedbackType(v as 'bug' | 'feature' | 'other')}
                       className="flex gap-4"
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="bug" id="bug" />
-                        <Label htmlFor="bug">{t('about.feedback.bugReport')}</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="feature" id="feature" />
-                        <Label htmlFor="feature">{t('about.feedback.featureSuggestion')}</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="other" id="other" />
-                        <Label htmlFor="other">{t('about.feedback.other')}</Label>
-                      </div>
+                      {(['bug', 'feature', 'other'] as const).map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <RadioGroupItem value={type} id={type} />
+                          <Label htmlFor={type} className="text-sm cursor-pointer">
+                            {t(`about.feedback.${type === 'bug' ? 'bugReport' : type === 'feature' ? 'featureSuggestion' : 'other'}`)}
+                          </Label>
+                        </div>
+                      ))}
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="title">{t('about.feedback.title_placeholder')}</Label>
+                    <Label htmlFor="title" className="text-sm font-medium">
+                      {t('about.feedback.title_placeholder')}
+                    </Label>
                     <Input
                       id="title"
                       value={feedbackTitle}
@@ -323,16 +423,21 @@ export default function HelpFeedbackPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="description">{t('about.feedback.description_placeholder')}</Label>
+                    <Label htmlFor="description" className="text-sm font-medium">
+                      {t('about.feedback.description_placeholder')}
+                    </Label>
                     <Textarea
                       id="description"
                       value={feedbackDescription}
                       onChange={(e) => setFeedbackDescription(e.target.value)}
                       rows={4}
+                      className="resize-none"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="contact">{t('about.feedback.contact_placeholder')}</Label>
+                    <Label htmlFor="contact" className="text-sm font-medium">
+                      {t('about.feedback.contact_placeholder')}
+                    </Label>
                     <Input
                       id="contact"
                       value={feedbackContact}
@@ -346,26 +451,48 @@ export default function HelpFeedbackPage() {
                 </CardContent>
               </Card>
 
+              {/* Feedback History Card */}
               {feedbacks.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <History className="h-5 w-5" />
-                      {t('about.feedback.feedbackHistory')} ({feedbacks.length})
-                    </CardTitle>
+                <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                        <History className="h-5 w-5" />
+                      </div>
+                      <CardTitle className="text-lg font-semibold">
+                        {t('about.feedback.feedbackHistory')}
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                          ({feedbacks.length})
+                        </span>
+                      </CardTitle>
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-border/50">
                       {feedbacks.map((fb) => (
-                        <div key={fb.id} className="flex items-start justify-between p-3 rounded-lg bg-muted/50">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{fb.title}</span>
-                              {getStatusBadge(fb.status)}
+                        <div
+                          key={fb.id}
+                          className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200 cursor-pointer active:scale-[0.99]"
+                          onClick={() => setSelectedFeedback(fb)}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200 shrink-0">
+                              <MessageSquare className="h-4 w-4" />
                             </div>
-                            <p className="text-sm text-muted-foreground line-clamp-1">{fb.description}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(fb.created_at).toLocaleDateString()}</p>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium truncate">{fb.title}</span>
+                                {getStatusBadge(fb.status)}
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                {fb.description}
+                              </p>
+                              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                                {new Date(fb.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
                         </div>
                       ))}
                     </div>
@@ -373,35 +500,142 @@ export default function HelpFeedbackPage() {
                 </Card>
               )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ThumbsUp className="h-5 w-5" />
-                    {t('about.feedback.featureVoting')}
-                  </CardTitle>
+              {/* Feedback Detail Dialog */}
+              <Dialog
+                open={!!selectedFeedback}
+                onOpenChange={(open) => !open && setSelectedFeedback(null)}
+              >
+                <DialogContent className="sm:max-w-lg">
+                  {selectedFeedback && (
+                    <>
+                      <DialogHeader>
+                        <div className="flex items-center gap-3 pr-6">
+                          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary shrink-0">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <DialogTitle className="truncate text-base">
+                              {selectedFeedback.title}
+                            </DialogTitle>
+                            <DialogDescription className="mt-0.5">
+                              #{selectedFeedback.id}
+                            </DialogDescription>
+                          </div>
+                        </div>
+                      </DialogHeader>
+
+                      <div className="space-y-4 pt-1">
+                        {/* Status & Type Row */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(selectedFeedback.status)}
+                          </div>
+                          <div className="h-4 w-px bg-border" />
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Tag className="h-3.5 w-3.5" />
+                            {selectedFeedback.type === 'bug'
+                              ? t('about.feedback.bugReport')
+                              : selectedFeedback.type === 'feature'
+                                ? t('about.feedback.featureSuggestion')
+                                : t('about.feedback.other')}
+                          </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t" />
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            {t('about.feedback.detailDescription')}
+                          </label>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {selectedFeedback.description}
+                          </p>
+                        </div>
+
+                        {/* Contact */}
+                        {selectedFeedback.contact && (
+                          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm text-muted-foreground">
+                              {t('about.feedback.contactLabel')}: {selectedFeedback.contact}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Timestamps */}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>
+                              {t('about.feedback.detailCreatedAt')}{' '}
+                              {new Date(selectedFeedback.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                          {selectedFeedback.updated_at !== selectedFeedback.created_at && (
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>
+                                {t('about.feedback.detailUpdatedAt')}{' '}
+                                {new Date(selectedFeedback.updated_at).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              {/* Feature Voting Card */}
+              <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+                <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <ThumbsUp className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      {t('about.feedback.featureVoting')}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                   {featureRequests.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">{t('about.feedback.noFeatures')}</p>
+                    <div className="py-12 flex flex-col items-center gap-2 text-muted-foreground">
+                      <ThumbsUp className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm">{t('about.feedback.noFeatures')}</p>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="divide-y divide-border/50">
                       {featureRequests.map((feature) => (
-                        <div key={feature.id} className="flex items-start justify-between p-3 rounded-lg bg-muted/50">
-                          <div className="space-y-1 flex-1">
+                        <div
+                          key={feature.id}
+                          className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200"
+                        >
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium">{feature.title}</span>
+                              <span className="text-sm font-medium">{feature.title}</span>
                               {getFeatureStatusBadge(feature.status)}
                             </div>
-                            <p className="text-sm text-muted-foreground">{feature.description}</p>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {feature.description}
+                            </p>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
-                            <span className="text-sm text-muted-foreground">{feature.vote_count} {t('about.feedback.votes')}</span>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                              {feature.vote_count} {t('about.feedback.votes')}
+                            </span>
                             <Button
                               variant={feature.has_voted ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => handleVote(feature.id, feature.has_voted)}
+                              className="transition-all duration-200"
                             >
-                              <ThumbsUp className={`h-4 w-4 mr-1 ${feature.has_voted ? 'fill-current' : ''}`} />
+                              <ThumbsUp
+                                className={`h-3.5 w-3.5 mr-1 ${feature.has_voted ? 'fill-current' : ''}`}
+                              />
                               {feature.has_voted ? t('about.feedback.unvote') : t('about.feedback.vote')}
                             </Button>
                           </div>
