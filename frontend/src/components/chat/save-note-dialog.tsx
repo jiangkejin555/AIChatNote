@@ -19,6 +19,9 @@ import { useTranslations } from '@/i18n'
 import { MessageSelector } from './message-selector'
 import { formatMessagesAsHtml } from '@/lib/markdown-utils'
 import type { Message, Folder as FolderType } from '@/types'
+import { useQuery } from '@tanstack/react-query'
+import { integrationService } from '@/services/integration'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface SaveNoteDialogProps {
   open: boolean
@@ -43,6 +46,14 @@ export function SaveNoteDialog({
   const [tagInput, setTagInput] = useState('')
   const [folderId, setFolderId] = useState<number | null>(null)
   const [selectedMessageIds, setSelectedMessageIds] = useState<number[]>([])
+  const [syncToNotion, setSyncToNotion] = useState(false)
+
+  // Notion status query
+  const { data: notionStatus } = useQuery({
+    queryKey: ['notion-status'],
+    queryFn: () => integrationService.getNotionStatus(),
+    enabled: open,
+  })
 
   // Hooks
   const { startGeneration } = useAsyncNoteGeneration()
@@ -97,6 +108,7 @@ export function SaveNoteDialog({
       setTags([])
       setTagInput('')
       setFolderId(null)
+      setSyncToNotion(false)
     }
   }, [open])
 
@@ -158,6 +170,7 @@ export function SaveNoteDialog({
         tags,
         folder_id: folderId ?? undefined,
         source_conversation_id: conversationId || undefined,
+        sync_to_notion: syncToNotion,
       })
       onSuccess?.()
     } catch {
@@ -311,6 +324,23 @@ export function SaveNoteDialog({
               )}
             </div>
           </div>
+
+          {/* Sync Options */}
+          {notionStatus?.connected && (
+            <div className="flex items-center gap-2 mt-4 ml-17">
+              <Checkbox
+                id="sync-notion"
+                checked={syncToNotion}
+                onCheckedChange={(checked) => setSyncToNotion(checked === true)}
+              />
+              <label
+                htmlFor="sync-notion"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                {t('saveNote.syncToNotion') || 'Sync to Notion'}
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons Footer */}

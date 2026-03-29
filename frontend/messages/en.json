@@ -151,6 +151,7 @@
     "enterTagPlaceholder": "Enter tag",
     "directSaveBtn": "Direct Save",
     "aiSummaryBtn": "AI Summary Save",
+    "syncToNotion": "Sync to Notion on save",
     "saving": "Saving...",
     "aiSaving": "AI summarizing and saving...",
     "pleaseSelectMessage": "Please select at least one message",
@@ -353,6 +354,9 @@
     "addTag": "Add tag",
     "noteCount": "{count} notes",
     "toc": "Table of Contents",
+    "syncToNotion": "Sync to Notion",
+    "syncNotionSuccess": "Synced to Notion successfully",
+    "syncNotionFailed": "Failed to sync to Notion",
     "folderActions": {
       "rename": "Rename",
       "copy": "Copy",

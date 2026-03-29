@@ -248,6 +248,8 @@ export interface Note {
   content: string
   tags: string[]
   source_conversation_id: number | null
+  notion_page_id?: string
+  notion_last_sync_at?: string
   created_at: string
   updated_at: string
 }
@@ -258,6 +260,7 @@ export interface CreateNoteRequest {
   tags?: string[]
   folder_id?: number
   source_conversation_id?: number
+  sync_to_notion?: boolean
 }
 
 export interface UpdateNoteRequest {
@@ -265,6 +268,7 @@ export interface UpdateNoteRequest {
   content?: string
   tags?: string[]
   folder_id?: number
+  sync_to_notion?: boolean
 }
 
 export interface GenerateNoteRequest {
@@ -321,6 +325,7 @@ export interface Tag {
 // API Response types
 export interface ApiResponse<T> {
   data: T
+  warning?: string
 }
 
 export interface PaginatedResponse<T> {

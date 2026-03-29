@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { useNote, useUpdateNote, useDeleteNote, useCreateNote, useFolders, useNotes } from '@/hooks'
+import { useNote, useUpdateNote, useDeleteNote, useCreateNote, useFolders, useNotes, useSyncNoteToNotion } from '@/hooks'
 import { useNotesStore } from '@/stores'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import {
   Calendar,
   Clock,
   FileText,
+  BookOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -64,6 +65,7 @@ export function NoteDetail() {
   const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
   const createNote = useCreateNote()
+  const syncToNotion = useSyncNoteToNotion()
 
   // Form state
   const [title, setTitle] = useState('')
@@ -165,7 +167,7 @@ export function NoteDetail() {
           folder_id: folderId ? parseInt(folderId) : undefined,
         })
         stopCreating()
-        setSelectedNote(result.id)
+        setSelectedNote(result.note.id)
         toast.success(t('notes.createSuccess'))
       } else if (selectedNoteId) {
         // Update existing note
@@ -217,6 +219,11 @@ export function NoteDetail() {
     setDeleteDialogOpen(false)
   }
 
+  const handleSyncNotion = () => {
+    if (!selectedNoteId) return
+    syncToNotion.mutate(selectedNoteId)
+  }
+
   // Loading state
   if (!isCreating && isLoading) {
     return (
@@ -262,6 +269,22 @@ export function NoteDetail() {
       })
     }
 
+    let syncStatus: 'Unsynced' | 'Synced' | 'Modified' = 'Unsynced'
+    if (note.notion_page_id) {
+      if (!note.notion_last_sync_at) {
+        syncStatus = 'Modified'
+      } else {
+        const syncAt = new Date(note.notion_last_sync_at).getTime()
+        const updatedAt = new Date(note.updated_at).getTime()
+        syncStatus = syncAt >= updatedAt ? 'Synced' : 'Modified'
+      }
+    }
+
+    const notionIconColor =
+      syncStatus === 'Synced' ? 'text-green-500' :
+      syncStatus === 'Modified' ? 'text-orange-500' :
+      'text-muted-foreground'
+
     return (
       <div className="flex-1 flex flex-col bg-background">
         {/* Header with meta info */}
@@ -302,6 +325,21 @@ export function NoteDetail() {
             <div className="flex items-center justify-between gap-4 mt-4">
               <TagList tags={note.tags} />
               <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSyncNotion}
+                  disabled={syncToNotion.isPending}
+                  className="cursor-pointer gap-1.5"
+                  title={t('notes.syncToNotion') || 'Sync to Notion'}
+                >
+                  {syncToNotion.isPending ? (
+                    <Loader2 className={`h-4 w-4 animate-spin ${notionIconColor}`} />
+                  ) : (
+                    <BookOpen className={`h-4 w-4 ${notionIconColor}`} />
+                  )}
+                  <span className="hidden sm:inline">Notion</span>
+                </Button>
                 <Button
                   variant="default"
                   size="sm"

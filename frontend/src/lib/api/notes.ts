@@ -26,6 +26,8 @@ interface BackendNote {
   content: string
   tags: BackendNoteTag[]
   source_conversation_id: number | null
+  notion_page_id?: string
+  notion_last_sync_at?: string
   created_at: string
   updated_at: string
 }
@@ -68,14 +70,20 @@ export const notesApi = {
     return convertNote(response.data.data)
   },
 
-  create: async (data: CreateNoteRequest): Promise<Note> => {
+  create: async (data: CreateNoteRequest): Promise<{ note: Note; warning?: string }> => {
     const response = await apiClient.post<ApiResponse<BackendNote>>('/notes', data)
-    return convertNote(response.data.data)
+    return {
+      note: convertNote(response.data.data),
+      warning: response.data.warning
+    }
   },
 
-  update: async (id: number, data: UpdateNoteRequest): Promise<Note> => {
+  update: async (id: number, data: UpdateNoteRequest): Promise<{ note: Note; warning?: string }> => {
     const response = await apiClient.put<ApiResponse<BackendNote>>(`/notes/${id}`, data)
-    return convertNote(response.data.data)
+    return {
+      note: convertNote(response.data.data),
+      warning: response.data.warning
+    }
   },
 
   delete: async (id: number): Promise<void> => {
@@ -135,5 +143,9 @@ export const notesApi = {
   copyNote: async (id: number): Promise<Note> => {
     const response = await apiClient.post<ApiResponse<BackendNote>>(`/notes/${id}/copy`)
     return convertNote(response.data.data)
+  },
+
+  syncNoteToNotion: async (id: number): Promise<void> => {
+    await apiClient.post(`/notes/${id}/sync/notion`)
   },
 }

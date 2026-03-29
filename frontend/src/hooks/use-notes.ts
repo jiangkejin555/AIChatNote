@@ -37,9 +37,12 @@ export function useCreateNote() {
 
   return useMutation({
     mutationFn: (data: CreateNoteRequest) => notesApi.create(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       queryClient.invalidateQueries({ queryKey: ['tags'] })
+      if (data.warning) {
+        toast.warning(data.warning)
+      }
     },
     onError: () => {
       const t = getT()
@@ -54,9 +57,12 @@ export function useUpdateNote() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateNoteRequest }) =>
       notesApi.update(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       queryClient.invalidateQueries({ queryKey: ['tags'] })
+      if (data.warning) {
+        toast.warning(data.warning)
+      }
     },
     onError: () => {
       const t = getT()
@@ -301,6 +307,22 @@ export function useBatchDeleteNotes() {
     },
     onError: () => {
       toast.error(t('notes.deleteFailed'))
+    },
+  })
+}
+
+export function useSyncNoteToNotion() {
+  const queryClient = useQueryClient()
+  const t = getT()
+
+  return useMutation({
+    mutationFn: (id: number) => notesApi.syncNoteToNotion(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] })
+      toast.success(t('notes.syncNotionSuccess') || 'Synced to Notion successfully')
+    },
+    onError: () => {
+      toast.error(t('notes.syncNotionFailed') || 'Failed to sync to Notion')
     },
   })
 }

@@ -17,7 +17,7 @@ export {
   useSyncProviderModels,
 } from './use-providers'
 export { useConversations, useConversation, useMessages, useCreateConversation, useUpdateConversation, useDeleteConversation, useSendMessage, useRegenerateMessage, useMarkAsSaved, useGenerateTitle, useUpdateConversationModel, useSearchConversations } from './use-conversations'
-export { useNotes, useNote, useCreateNote, useUpdateNote, useDeleteNote, useAsyncNoteGeneration, useExportNote, useExportNotes, useImportMarkdown, useCopyNote, useMoveNote, useBatchMoveNotes, useBatchDeleteNotes } from './use-notes'
+export { useNotes, useNote, useCreateNote, useUpdateNote, useDeleteNote, useAsyncNoteGeneration, useExportNote, useExportNotes, useImportMarkdown, useCopyNote, useMoveNote, useBatchMoveNotes, useBatchDeleteNotes, useSyncNoteToNotion } from './use-notes'
 export { useFolders, useFolder, useCreateFolder, useUpdateFolder, useDeleteFolder, useCopyFolder, useMoveFolder } from './use-folders'
 export { useTags } from './use-tags'
 export { useStreamChat } from './use-stream-chat'

@@ -150,6 +150,7 @@
     "enterTagPlaceholder": "输入标签",
     "directSaveBtn": "直接保存",
     "aiSummaryBtn": "AI总结保存",
+    "syncToNotion": "保存时同步到 Notion",
     "saving": "正在保存...",
     "aiSaving": "正在AI总结并保存...",
     "pleaseSelectMessage": "请至少选择一条消息",
@@ -349,6 +350,9 @@
     "addTag": "添加标签",
     "noteCount": "{count} 篇笔记",
     "toc": "目录",
+    "syncToNotion": "同步到 Notion",
+    "syncNotionSuccess": "同步到 Notion 成功",
+    "syncNotionFailed": "同步到 Notion 失败",
     "folderActions": {
       "rename": "重命名",
       "copy": "拷贝",
