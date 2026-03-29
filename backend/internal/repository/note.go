@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/models"
 	"gorm.io/gorm"
@@ -61,6 +63,13 @@ func (r *NoteRepository) FindByIDAndUserID(id, userID uint) (*models.Note, error
 
 func (r *NoteRepository) Update(note *models.Note) error {
 	return database.DB.Save(note).Error
+}
+
+func (r *NoteRepository) UpdateNotionStatus(noteID uint, notionPageID *string, lastSyncAt *time.Time) error {
+	return database.DB.Model(&models.Note{}).Where("id = ?", noteID).Updates(map[string]interface{}{
+		"notion_page_id":      notionPageID,
+		"notion_last_sync_at": lastSyncAt,
+	}).Error
 }
 
 func (r *NoteRepository) Delete(id, userID uint) error {

@@ -18,6 +18,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type MockNotionService struct{}
+
+func (m *MockNotionService) GetAuthURL() string {
+	return "http://mock-auth-url"
+}
+
+func (m *MockNotionService) HandleCallback(code string, userID uint) error {
+	return nil
+}
+
+func (m *MockNotionService) SyncNote(noteTitle string, noteContent string, userID uint, existingPageID *string) (string, error) {
+	return "mock-page-id", nil
+}
+
 func setupNoteTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	gin.SetMode(gin.TestMode)
 	cleanup := testutil.SetupTestDB(t)
@@ -30,7 +44,8 @@ func setupNoteTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	emailSvc := services.NewEmailService(&config.SMTPConfig{})
 	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 	aiService := services.NewAIService(true)
-	noteHandler := NewNoteHandler(aiService)
+	mockNotionService := &MockNotionService{}
+	noteHandler := NewNoteHandler(aiService, mockNotionService)
 	folderHandler := NewFolderHandler()
 	tagHandler := NewTagHandler()
 

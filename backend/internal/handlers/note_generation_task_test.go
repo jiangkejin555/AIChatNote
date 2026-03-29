@@ -26,7 +26,7 @@ func setupNoteGenerationTestRouter(t *testing.T) (*gin.Engine, *config.Config, f
 	cfg := testutil.TestConfig()
 	jwtService := crypto.NewJWTService(cfg)
 	aiService := services.NewAIService(true)
-	noteHandler := NewNoteHandler(aiService)
+	noteHandler := NewNoteHandler(aiService, nil)
 
 	router := gin.New()
 	api := router.Group("/api")

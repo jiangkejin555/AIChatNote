@@ -75,7 +75,7 @@ func main() {
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
 	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto, contextConfigService)
-	noteHandler := handlers.NewNoteHandler(aiService)
+	
 	folderHandler := handlers.NewFolderHandler()
 	tagHandler := handlers.NewTagHandler()
 	userSettingsHandler := handlers.NewUserSettingsHandler(contextConfigService)
@@ -97,6 +97,7 @@ func main() {
 		log.Fatalf("Failed to initialize NotionService: %v", err)
 	}
 	integrationHandler := handlers.NewIntegrationHandler(integrationRepo, notionService)
+	noteHandler := handlers.NewNoteHandler(aiService, notionService)
 
 	// Setup router
 	r := gin.New()
@@ -196,6 +197,7 @@ func main() {
 			notes.DELETE("/:id", noteHandler.Delete)
 			notes.GET("/:id/export", noteHandler.Export)
 			notes.POST("/:id/copy", noteHandler.Copy)
+			notes.POST("/:id/sync/notion", noteHandler.SyncNoteToNotion)
 			notes.POST("/export", noteHandler.ExportBatch)
 			notes.POST("/import", noteHandler.Import)
 			notes.POST("/batch-delete", noteHandler.BatchDelete)

@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"time"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,16 +26,18 @@ type NoteHandler struct {
 	tagRepo    *repository.TagRepository
 	convRepo   *repository.ConversationRepository
 	aiService  *services.AIService
+	notionService services.NotionService
 	taskRepo   *repository.NoteGenerationTaskRepository
 }
 
-func NewNoteHandler(aiService *services.AIService) *NoteHandler {
+func NewNoteHandler(aiService *services.AIService, notionService services.NotionService) *NoteHandler {
 	return &NoteHandler{
 		noteRepo:   repository.NewNoteRepository(),
 		folderRepo: repository.NewFolderRepository(),
 		tagRepo:    repository.NewTagRepository(),
 		convRepo:   repository.NewConversationRepository(),
 		aiService:  aiService,
+		notionService: notionService,
 		taskRepo:   repository.NewNoteGenerationTaskRepository(),
 	}
 }
@@ -45,6 +48,8 @@ type CreateNoteRequest struct {
 	Tags                 []string `json:"tags"`
 	FolderID             *uint    `json:"folder_id"`
 	SourceConversationID *uint    `json:"source_conversation_id"`
+	SyncToNotion         bool     `json:"sync_to_notion"`
+
 }
 
 type UpdateNoteRequest struct {
@@ -52,6 +57,8 @@ type UpdateNoteRequest struct {
 	Content  string   `json:"content"`
 	Tags     []string `json:"tags"`
 	FolderID *uint    `json:"folder_id"`
+	SyncToNotion bool     `json:"sync_to_notion"`
+
 }
 
 type BatchDeleteRequest struct {
@@ -61,6 +68,7 @@ type BatchDeleteRequest struct {
 type BatchMoveRequest struct {
 	IDs            []uint `json:"ids" binding:"required"`
 	TargetFolderID *uint  `json:"target_folder_id"`
+
 }
 
 // List returns notes with optional filters
@@ -105,6 +113,7 @@ func (h *NoteHandler) Create(c *gin.Context) {
 		Content:              req.Content,
 		FolderID:             req.FolderID,
 		SourceConversationID: req.SourceConversationID,
+
 	}
 
 	// Build tags slice
@@ -123,9 +132,31 @@ func (h *NoteHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// Auto-sync to Notion if requested
+	var syncWarning string
+	if req.SyncToNotion {
+		newPageID, err := h.notionService.SyncNote(note.Title, note.Content, userID, nil)
+		if err != nil {
+			utils.LogOperationError("NoteHandler", "Create_SyncNotion", err, "noteID", note.ID, "userID", userID)
+			// We continue here because the note was created, even if sync failed
+			syncWarning = "Note saved locally, but Notion sync failed: " + err.Error()
+		} else {
+			now := time.Now()
+			note.NotionPageID = &newPageID
+			note.NotionLastSyncAt = &now
+			if err := h.noteRepo.UpdateNotionStatus(note.ID, &newPageID, &now); err != nil {
+				utils.LogOperationError("NoteHandler", "Create_UpdateNotionStatus", err, "noteID", note.ID)
+			}
+		}
+	}
+
 	utils.LogOperationSuccess("NoteHandler", "Create", "noteID", note.ID, "userID", userID, "title", note.Title, "tagCount", len(req.Tags))
 
-	c.JSON(http.StatusCreated, gin.H{"data": note})
+	if syncWarning != "" {
+		c.JSON(http.StatusCreated, gin.H{"data": note, "warning": syncWarning})
+	} else {
+		c.JSON(http.StatusCreated, gin.H{"data": note})
+	}
 }
 
 // Get returns a specific note
@@ -201,8 +232,30 @@ func (h *NoteHandler) Update(c *gin.Context) {
 		}
 	}
 
+	// Auto-sync to Notion if requested
+	var syncWarning string
+	if req.SyncToNotion {
+		newPageID, err := h.notionService.SyncNote(note.Title, note.Content, userID, note.NotionPageID)
+		if err != nil {
+			utils.LogOperationError("NoteHandler", "Update_SyncNotion", err, "noteID", note.ID, "userID", userID)
+			// We continue here because the note was updated locally
+			syncWarning = "Note saved locally, but Notion sync failed: " + err.Error()
+		} else {
+			now := time.Now()
+			note.NotionPageID = &newPageID
+			note.NotionLastSyncAt = &now
+			if err := h.noteRepo.UpdateNotionStatus(note.ID, &newPageID, &now); err != nil {
+				utils.LogOperationError("NoteHandler", "Update_UpdateNotionStatus", err, "noteID", note.ID)
+			}
+		}
+	}
+
 	utils.LogOperationSuccess("NoteHandler", "Update", "noteID", note.ID, "userID", userID, "title", note.Title)
-	c.JSON(http.StatusOK, gin.H{"data": note})
+	if syncWarning != "" {
+		c.JSON(http.StatusOK, gin.H{"data": note, "warning": syncWarning})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"data": note})
+	}
 }
 
 // Delete deletes a note
@@ -244,6 +297,7 @@ func (h *NoteHandler) Copy(c *gin.Context) {
 		Content:              note.Content,
 		FolderID:             note.FolderID,
 		SourceConversationID: note.SourceConversationID,
+
 	}
 
 	if err := h.noteRepo.Create(newNote); err != nil {
@@ -503,8 +557,8 @@ func (h *NoteHandler) generateNoteAsync(taskID, userID, conversationID uint) {
 	newNote := &models.Note{
 		UserID:               userID,
 		Title:                note.Title,
-		Content:              note.Content,
 		SourceConversationID: &conversationID,
+		Content:              note.Content,
 	}
 
 	var tags []models.NoteTag
@@ -757,4 +811,38 @@ func (h *TagHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": tags})
+}
+
+func (h *NoteHandler) SyncNoteToNotion(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
+		return
+	}
+
+	note, err := h.noteRepo.FindByIDAndUserID(uint(noteID), userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
+		return
+	}
+
+	newPageID, err := h.notionService.SyncNote(note.Title, note.Content, userID, note.NotionPageID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to sync note to Notion: %v", err)})
+		return
+	}
+
+	now := time.Now()
+	if err := h.noteRepo.UpdateNotionStatus(note.ID, &newPageID, &now); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update note in database"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Sync successful", "notion_page_id": newPageID})
 }
