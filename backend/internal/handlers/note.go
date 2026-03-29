@@ -4,13 +4,13 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"time"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/chat-note/backend/internal/middleware"
 	"github.com/chat-note/backend/internal/models"
@@ -21,24 +21,24 @@ import (
 )
 
 type NoteHandler struct {
-	noteRepo   *repository.NoteRepository
-	folderRepo *repository.FolderRepository
-	tagRepo    *repository.TagRepository
-	convRepo   *repository.ConversationRepository
-	aiService  *services.AIService
+	noteRepo      *repository.NoteRepository
+	folderRepo    *repository.FolderRepository
+	tagRepo       *repository.TagRepository
+	convRepo      *repository.ConversationRepository
+	aiService     *services.AIService
 	notionService services.NotionService
-	taskRepo   *repository.NoteGenerationTaskRepository
+	taskRepo      *repository.NoteGenerationTaskRepository
 }
 
 func NewNoteHandler(aiService *services.AIService, notionService services.NotionService) *NoteHandler {
 	return &NoteHandler{
-		noteRepo:   repository.NewNoteRepository(),
-		folderRepo: repository.NewFolderRepository(),
-		tagRepo:    repository.NewTagRepository(),
-		convRepo:   repository.NewConversationRepository(),
-		aiService:  aiService,
+		noteRepo:      repository.NewNoteRepository(),
+		folderRepo:    repository.NewFolderRepository(),
+		tagRepo:       repository.NewTagRepository(),
+		convRepo:      repository.NewConversationRepository(),
+		aiService:     aiService,
 		notionService: notionService,
-		taskRepo:   repository.NewNoteGenerationTaskRepository(),
+		taskRepo:      repository.NewNoteGenerationTaskRepository(),
 	}
 }
 
@@ -49,16 +49,14 @@ type CreateNoteRequest struct {
 	FolderID             *uint    `json:"folder_id"`
 	SourceConversationID *uint    `json:"source_conversation_id"`
 	SyncToNotion         bool     `json:"sync_to_notion"`
-
 }
 
 type UpdateNoteRequest struct {
-	Title    string   `json:"title"`
-	Content  string   `json:"content"`
-	Tags     []string `json:"tags"`
-	FolderID *uint    `json:"folder_id"`
+	Title        string   `json:"title"`
+	Content      string   `json:"content"`
+	Tags         []string `json:"tags"`
+	FolderID     *uint    `json:"folder_id"`
 	SyncToNotion bool     `json:"sync_to_notion"`
-
 }
 
 type BatchDeleteRequest struct {
@@ -68,7 +66,6 @@ type BatchDeleteRequest struct {
 type BatchMoveRequest struct {
 	IDs            []uint `json:"ids" binding:"required"`
 	TargetFolderID *uint  `json:"target_folder_id"`
-
 }
 
 // List returns notes with optional filters
@@ -113,7 +110,6 @@ func (h *NoteHandler) Create(c *gin.Context) {
 		Content:              req.Content,
 		FolderID:             req.FolderID,
 		SourceConversationID: req.SourceConversationID,
-
 	}
 
 	// Build tags slice
@@ -297,7 +293,6 @@ func (h *NoteHandler) Copy(c *gin.Context) {
 		Content:              note.Content,
 		FolderID:             note.FolderID,
 		SourceConversationID: note.SourceConversationID,
-
 	}
 
 	if err := h.noteRepo.Create(newNote); err != nil {

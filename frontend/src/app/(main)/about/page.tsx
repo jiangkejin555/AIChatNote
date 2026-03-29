@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from '@/i18n'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import {
   Sparkles,
   Building2,
@@ -14,7 +13,12 @@ import {
   Github,
   Scale,
   Package,
-  ExternalLink
+  ExternalLink,
+  Heart,
+  ChevronRight,
+  Globe,
+  Calendar,
+  FileText,
 } from 'lucide-react'
 import { feedbackApi, Version } from '@/lib/api/feedback'
 
@@ -38,11 +42,11 @@ export default function AboutPage() {
   const getChangeIcon = (type: string) => {
     switch (type) {
       case 'feature':
-        return <Sparkles className="h-4 w-4 text-green-500" />
+        return <Sparkles className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
       case 'improvement':
-        return <Sparkles className="h-4 w-4 text-blue-500" />
+        return <Sparkles className="h-4 w-4 text-blue-500 dark:text-blue-400" />
       case 'fix':
-        return <Sparkles className="h-4 w-4 text-orange-500" />
+        return <Sparkles className="h-4 w-4 text-orange-500 dark:text-orange-400" />
       default:
         return null
     }
@@ -50,155 +54,261 @@ export default function AboutPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b bg-background sticky top-0 z-10 shrink-0">
+      {/* Header - matching other pages */}
+      <div className="border-b bg-gradient-to-r from-background via-background to-muted/20 sticky top-0 z-10 shrink-0 backdrop-blur-sm">
         <div className="flex items-center justify-center p-4 max-w-4xl mx-auto">
-          <h1 className="text-xl font-semibold">{t('about.title')}</h1>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <Heart className="h-5 w-5" />
+            </div>
+            <h1 className="text-xl font-semibold tracking-tight">{t('about.title')}</h1>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-4 py-8">
-            <h2 className="text-3xl font-bold">AI Chat Note</h2>
-            <p className="text-xl text-muted-foreground">{t('about.tagline')}</p>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                {t('about.companyInfo.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('about.companyInfo.companyName')}</span>
-                <span className="font-medium">AI Chat Note Team</span>
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex flex-col items-center max-w-2xl mx-auto space-y-6">
+          {/* Brand Hero Card */}
+          <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5 dark:from-card dark:via-card dark:to-primary/5 transition-all duration-300 hover:shadow-xl">
+            <CardContent className="p-8 md:p-10 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary mb-5">
+                <Sparkles className="h-8 w-8" />
               </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('about.companyInfo.foundedDate')}</span>
-                <span className="font-medium">2024</span>
-              </div>
-              <Separator />
-              <div className="space-y-1">
-                <span className="text-muted-foreground">{t('about.companyInfo.mission')}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {t('about.teamIntro.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('about.teamIntro.content')}
+              <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                AI Chat Note
+              </h2>
+              <p className="text-lg text-muted-foreground mt-3 leading-relaxed">
+                {t('about.tagline')}
               </p>
+              <div className="mt-5 flex items-center justify-center gap-3">
+                <Badge variant="secondary" className="px-3 py-1 text-xs">
+                  {currentVersion ? currentVersion.version : 'v1.0.0'}
+                </Badge>
+                <span className="text-xs text-muted-foreground/60">•</span>
+                <span className="text-xs text-muted-foreground/60">{t('about.companyInfo.foundedDate')}</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                {t('about.contact.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  {t('about.contact.email')}
-                </span>
-                <a href="mailto:aichatnote.service@gmail.com" className="text-primary hover:underline">
-                  {t('about.contact.emailValue')}
-                </a>
+          {/* Mission & Team Card */}
+          <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">
+                    {t('about.teamIntro.title')}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {t('about.companyInfo.mission')}
+                  </CardDescription>
+                </div>
               </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Github className="h-4 w-4" />
-                  {t('about.contact.github')}
-                </span>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/50">
+                <div className="p-5 flex items-start gap-4 group hover:bg-muted/30 transition-colors duration-200">
+                  <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200 shrink-0">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">{t('about.companyInfo.title')}</label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('about.companyInfo.companyName')}
+                    </p>
+                  </div>
+                </div>
+                <div className="p-5 group hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200 shrink-0">
+                      <Heart className="h-4 w-4" />
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors duration-200">
+                      {t('about.teamIntro.content')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Card */}
+          <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                  <Mail className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">
+                    {t('about.contact.title')}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {t('about.contact.email')}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/50">
+                <div className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">{t('about.contact.email')}</label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        aichatnote.service@gmail.com
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="mailto:aichatnote.service@gmail.com"
+                    className="text-primary hover:underline text-sm flex items-center gap-1"
+                  >
+                    {t('about.contact.emailValue')}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <div className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                      <Github className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">{t('about.contact.github')}</label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('about.contact.githubValue')}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://github.com/aichatnotes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline text-sm flex items-center gap-1"
+                  >
+                    {t('about.contact.githubValue')}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Legal Card */}
+          <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                  <Scale className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">
+                    {t('about.legal.title')}
+                  </CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/50">
                 <a
-                  href="https://github.com/aichatnotes"
+                  href="/terms"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline flex items-center gap-1"
+                  className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200 cursor-pointer active:scale-[0.99]"
                 >
-                  {t('about.contact.githubValue')}
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="h-5 w-5" />
-                {t('about.legal.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <a href="/terms" target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline">
-                    {t('about.legal.termsOfService')}
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </Button>
-                </a>
-                <a href="/privacy" target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline">
-                    {t('about.legal.privacyPolicy')}
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </Button>
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                {t('about.version.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {currentVersion ? (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t('about.version.currentVersion')}</span>
-                    <Badge variant="secondary">{currentVersion.version}</Badge>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium">{t('about.legal.termsOfService')}</span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t('about.version.releaseDate')}</span>
-                    <span className="font-medium">{currentVersion.release_date}</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+                </a>
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200 cursor-pointer active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                      <Globe className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium">{t('about.legal.privacyPolicy')}</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Version Card */}
+          <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                  <Package className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">
+                    {t('about.version.title')}
+                  </CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {currentVersion ? (
+                <div className="divide-y divide-border/50">
+                  <div className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                        <Package className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm font-medium">{t('about.version.currentVersion')}</span>
+                    </div>
+                    <Badge variant="secondary" className="px-3">{currentVersion.version}</Badge>
+                  </div>
+                  <div className="p-5 flex items-center justify-between gap-4 group hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                        <Calendar className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm font-medium">{t('about.version.releaseDate')}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{currentVersion.release_date}</span>
                   </div>
                   {currentVersion.changes && currentVersion.changes.length > 0 && (
-                    <>
-                      <Separator />
-                      <div className="space-y-2">
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-medium">Changelog</span>
+                      </div>
+                      <div className="ml-11 space-y-2.5">
                         {currentVersion.changes.map((change, idx) => (
-                          <div key={idx} className="flex items-start gap-2 text-sm">
+                          <div key={idx} className="flex items-start gap-2.5 text-sm">
                             {getChangeIcon(change.type)}
-                            <span>{change.description}</span>
+                            <span className="text-muted-foreground leading-relaxed">
+                              {change.description}
+                            </span>
                           </div>
                         ))}
                       </div>
-                    </>
+                    </div>
                   )}
-                </>
+                </div>
               ) : (
-                <p className="text-muted-foreground text-center py-4">
-                  {t('about.version.currentVersion')}: v1.0.0
-                </p>
+                <div className="p-8 flex flex-col items-center gap-2 text-muted-foreground">
+                  <Package className="h-8 w-8 text-muted-foreground/40" />
+                  <p className="text-sm">{t('about.version.currentVersion')}: v1.0.0</p>
+                </div>
               )}
             </CardContent>
           </Card>

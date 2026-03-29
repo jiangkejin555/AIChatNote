@@ -597,7 +597,11 @@
         "planned": "计划中",
         "in_progress": "开发中",
         "completed": "已上线"
-      }
+      },
+      "detailDescription": "详细描述",
+      "detailCreatedAt": "提交于",
+      "detailUpdatedAt": "更新于",
+      "contactLabel": "联系方式"
     }
   },
   "helpFeedback": {

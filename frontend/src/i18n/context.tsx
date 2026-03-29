@@ -62,10 +62,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return value
   }, [locale])
 
-  // Prevent hydration mismatch
+  // Prevent hydration mismatch — use real t with default locale so users see translations immediately
   if (!mounted) {
     return (
-      <I18nContext.Provider value={{ locale: defaultLocale, setLocale: () => {}, t: (key) => key }}>
+      <I18nContext.Provider value={{ locale: defaultLocale, setLocale: () => {}, t }}>
         {children}
       </I18nContext.Provider>
     )

@@ -513,7 +513,7 @@ export default function HelpFeedbackPage() {
                           <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary shrink-0">
                             <FileText className="h-5 w-5" />
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <DialogTitle className="truncate text-base">
                               {selectedFeedback.title}
                             </DialogTitle>
@@ -524,12 +524,10 @@ export default function HelpFeedbackPage() {
                         </div>
                       </DialogHeader>
 
-                      <div className="space-y-4 pt-1">
-                        {/* Status & Type Row */}
+                      <div className="space-y-5 pt-1">
+                        {/* Status & Type */}
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(selectedFeedback.status)}
-                          </div>
+                          {getStatusBadge(selectedFeedback.status)}
                           <div className="h-4 w-px bg-border" />
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Tag className="h-3.5 w-3.5" />
@@ -541,47 +539,44 @@ export default function HelpFeedbackPage() {
                           </div>
                         </div>
 
-                        {/* Divider */}
-                        <div className="border-t" />
-
                         {/* Description */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <div>
+                          <p className="text-[13px] font-semibold text-foreground/80 mb-2">
                             {t('about.feedback.detailDescription')}
-                          </label>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          </p>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
                             {selectedFeedback.description}
                           </p>
                         </div>
 
-                        {/* Contact */}
-                        {selectedFeedback.contact && (
-                          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
-                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                            <span className="text-sm text-muted-foreground">
-                              {t('about.feedback.contactLabel')}: {selectedFeedback.contact}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Timestamps */}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>
-                              {t('about.feedback.detailCreatedAt')}{' '}
-                              {new Date(selectedFeedback.created_at).toLocaleString()}
-                            </span>
-                          </div>
-                          {selectedFeedback.updated_at !== selectedFeedback.created_at && (
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5" />
+                        {/* Footer: Contact + Timestamps */}
+                        <div className="border-t pt-4 space-y-2">
+                          {selectedFeedback.contact && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Mail className="h-3.5 w-3.5 shrink-0" />
                               <span>
-                                {t('about.feedback.detailUpdatedAt')}{' '}
-                                {new Date(selectedFeedback.updated_at).toLocaleString()}
+                                {selectedFeedback.contact}
                               </span>
                             </div>
                           )}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground/70">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3 w-3" />
+                              <span>
+                                {t('about.feedback.detailCreatedAt')}{' '}
+                                {new Date(selectedFeedback.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                            {selectedFeedback.updated_at !== selectedFeedback.created_at && (
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3 w-3" />
+                                <span>
+                                  {t('about.feedback.detailUpdatedAt')}{' '}
+                                  {new Date(selectedFeedback.updated_at).toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </>

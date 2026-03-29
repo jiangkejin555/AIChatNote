@@ -601,7 +601,11 @@
         "planned": "Planned",
         "in_progress": "In Progress",
         "completed": "Completed"
-      }
+      },
+      "detailDescription": "Description",
+      "detailCreatedAt": "Created",
+      "detailUpdatedAt": "Updated",
+      "contactLabel": "Contact"
     }
   },
   "helpFeedback": {
