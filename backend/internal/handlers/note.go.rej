@@ -1,0 +1,36 @@
+@@ -990,3 +990,35 @@
+ 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update note folder"})
+ 	}
+ }
++
++func (h *NoteHandler) SyncNoteToNotion(c *gin.Context) {
++	userID, exists := c.Get("userID")
++	if !exists {
++		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
++		return
++	}
++
++	noteID, err := strconv.ParseUint(c.Param("id"), 10, 32)
++	if err != nil {
++		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
++		return
++	}
++
++	note, err := h.noteRepo.GetNoteByID(uint(noteID))
++	if err != nil || note.UserID != userID.(uint) {
++		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
++		return
++	}
++
++	newPageID, err := h.notionService.SyncNote(note.Title, note.Content, userID.(uint), note.NotionPageID)
++	if err != nil {
++		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to sync note to Notion: %v", err)})
++		return
++	}
++
++	if err := h.noteRepo.UpdateNotionSyncStatus(uint(noteID), newPageID); err != nil {
++		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update sync status"})
++		return
++	}
++
++	c.JSON(http.StatusOK, gin.H{"message": "Sync successful", "notion_page_id": newPageID})

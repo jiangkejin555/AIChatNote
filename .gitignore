@@ -1,2 +1,6 @@
 frontend.git.backup/
 .worktrees/
+.claude/
+.coco/
+.trae/
+openspec/
