@@ -9,6 +9,12 @@ import (
 	"github.com/chat-note/backend/internal/database"
 	"github.com/chat-note/backend/internal/handlers"
 	"github.com/chat-note/backend/internal/middleware"
+
+	"net/http"
+	"time"
+
+	"github.com/chat-note/backend/internal/repository"
+
 	"github.com/chat-note/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -82,6 +88,15 @@ func main() {
 	feedbackHandler := handlers.NewFeedbackHandler()
 	featureHandler := handlers.NewFeatureHandler()
 	versionHandler := handlers.NewVersionHandler()
+
+	// Initialize Integration handler
+	integrationRepo := repository.NewIntegrationRepository()
+	notionHttpClient := &http.Client{Timeout: 10 * time.Second}
+	notionService, err := services.NewNotionService(&cfg.Notion, cfg.Encryption.Key, integrationRepo, notionHttpClient)
+	if err != nil {
+		log.Fatalf("Failed to initialize NotionService: %v", err)
+	}
+	integrationHandler := handlers.NewIntegrationHandler(integrationRepo, notionService)
 
 	// Setup router
 	r := gin.New()
@@ -251,6 +266,16 @@ func main() {
 		{
 			versions.GET("", versionHandler.List)
 			versions.GET("/current", versionHandler.GetCurrent)
+		}
+
+		// Integration routes
+		integrations := api.Group("/integrations")
+		integrations.Use(middleware.Auth(jwtService))
+		{
+			integrations.GET("/notion/auth-url", integrationHandler.GetNotionAuthURL)
+			integrations.POST("/notion/callback", integrationHandler.NotionCallback)
+			integrations.GET("/notion/status", integrationHandler.GetNotionStatus)
+			integrations.DELETE("/notion/disconnect", integrationHandler.DisconnectNotion)
 		}
 	}
 
