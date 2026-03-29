@@ -39,5 +39,104 @@
     "aiGenerating": "AI note generating...",
     "aiGenerateSuccess": "Note generated successfully",
     "aiGenerateFailed": "AI summarization failed"
+  },
+  "helpFeedback": {
+    "title": "Help & Feedback",
+    "helpTab": "Help",
+    "feedbackTab": "Feedback"
+  },
+  "about": {
+    "help": {
+      "overview": "Overview",
+      "overviewContent": "AI Chat Note is an intelligent conversation note-taking tool that helps you efficiently transform LLM conversations into structured notes. It supports multi-model management, knowledge base building, and flexible export to maximize the value of your AI conversations.",
+      "features": "Core Features",
+      "featuresList": {
+        "multiModel": {
+          "title": "Multi-Model Support",
+          "desc": "Manage multiple AI models simultaneously and flexibly switch between them for different scenarios"
+        },
+        "noteSave": {
+          "title": "Note Saving",
+          "desc": "Save important conversations as notes with one click, with auto-generated summaries and manual editing"
+        },
+        "knowledgeBase": {
+          "title": "Knowledge Base",
+          "desc": "Organize notes with folders and tags for quick retrieval and review of historical knowledge"
+        },
+        "export": {
+          "title": "Flexible Export",
+          "desc": "Export notes in multiple formats for easy sharing across different platforms and tools"
+        }
+      },
+      "quickStart": "Quick Start",
+      "quickStartSteps": {
+        "step1": "Add your preferred AI model providers and API keys in Settings",
+        "step2": "Create a new conversation, select a model, and start chatting with AI",
+        "step3": "Save valuable conversations as notes and organize them with folders and tags"
+      },
+      "faq": "FAQ",
+      "faqList": {
+        "q1": {
+          "q": "How to add a new AI model?",
+          "a": "Go to the Models page, click Add Model, and fill in the provider information and API key. The system supports OpenAI-compatible APIs."
+        },
+        "q2": {
+          "q": "Where is conversation data stored?",
+          "a": "All conversation and note data is stored in your self-hosted server database. We do not upload or share your data."
+        },
+        "q3": {
+          "q": "Which AI models are supported?",
+          "a": "All models compatible with the OpenAI API format are supported, including GPT series, Claude series, DeepSeek, Qwen, and other mainstream models."
+        },
+        "q4": {
+          "q": "How to export notes?",
+          "a": "Select the notes you want to export from the notes list, click the export button, and choose from formats like Markdown."
+        }
+      }
+    },
+    "feedback": {
+      "satisfaction": "Satisfaction Rating",
+      "satisfactionDesc": "Please rate our product to help us improve",
+      "satisfactionPlaceholder": "Share your experience and suggestions (optional)",
+      "submitRating": "Submit Rating",
+      "updateRating": "Update Rating",
+      "ratingSuccess": "Rating submitted successfully",
+      "ratingFailed": "Please select a star rating first",
+      "submitFeedback": "Submit Feedback",
+      "feedbackType": "Feedback Type",
+      "bugReport": "Bug Report",
+      "featureSuggestion": "Feature Request",
+      "other": "Other",
+      "title_placeholder": "Title",
+      "description_placeholder": "Description",
+      "contact_placeholder": "Contact (optional)",
+      "submit": "Submit",
+      "feedbackSuccess": "Feedback submitted successfully. Thank you for your input!",
+      "feedbackFailed": "Please fill in the title and description",
+      "feedbackHistory": "Feedback History",
+      "status": {
+        "pending": "Pending",
+        "in_progress": "In Progress",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "featureVoting": "Feature Voting",
+      "noFeatures": "No feature requests yet",
+      "votes": "votes",
+      "vote": "Vote",
+      "unvote": "Unvote",
+      "voteSuccess": "Vote submitted",
+      "unvoteSuccess": "Vote removed",
+      "voteFailed": "Operation failed, please try again",
+      "featureStatus": {
+        "planned": "Planned",
+        "in_progress": "In Progress",
+        "completed": "Completed"
+      },
+      "detailDescription": "Description",
+      "detailCreatedAt": "Created",
+      "detailUpdatedAt": "Updated",
+      "contactLabel": "Contact"
+    }
   }
 }
