@@ -283,14 +283,14 @@ export function NoteDetail() {
 
     const notionIconColor =
       syncStatus === 'Synced' ? 'text-blue-500 dark:text-blue-400' :
-      syncStatus === 'Modified' ? 'text-orange-500 dark:text-orange-400' :
-      'text-muted-foreground'
+        syncStatus === 'Modified' ? 'text-orange-500 dark:text-orange-400' :
+          'text-muted-foreground'
 
     return (
       <div className="flex-1 flex flex-col bg-background">
         {/* Header with meta info */}
         <div className="border-b bg-card/50 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="max-w-4xl mx-auto px-15 py-4">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
               <FolderOpen className="h-4 w-4" />
@@ -380,7 +380,7 @@ export function NoteDetail() {
 
         {/* Content area */}
         <div className="flex-1 overflow-auto">
-          <div className="max-w-4xl mx-auto px-6 py-6">
+          <div className="max-w-4xl mx-auto px-15 py-6">
             {/* Main content - same width as header */}
             <div className="border rounded-lg p-6 bg-card shadow-sm">
               <NoteViewer
@@ -420,7 +420,7 @@ export function NoteDetail() {
     <div className="flex-1 flex flex-col bg-background">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="max-w-4xl mx-auto px-15 py-4">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
             <FolderOpen className="h-4 w-4" />
@@ -479,7 +479,7 @@ export function NoteDetail() {
 
       {/* Content - Edit Mode */}
       <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto px-6 py-6">
+        <div className="max-w-4xl mx-auto px-15 py-6">
           {/* Editor - same width as header */}
           <div className="border rounded-lg bg-card shadow-sm overflow-hidden">
             <NoteEditor

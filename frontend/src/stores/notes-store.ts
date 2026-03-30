@@ -13,6 +13,7 @@ interface NotesState {
   selectedNoteForAction: number | null
   selectedFolderForAction: number | null
   isGeneratingNote: boolean
+  notesListCollapsed: boolean
   setSelectedFolder: (folderId: number | null) => void
   setSelectedTag: (tag: string | null) => void
   setSearchQuery: (query: string) => void
@@ -29,6 +30,8 @@ interface NotesState {
   setSelectedNoteForAction: (noteId: number | null) => void
   setSelectedFolderForAction: (folderId: number | null) => void
   setIsGeneratingNote: (generating: boolean) => void
+  toggleNotesList: () => void
+  setNotesListCollapsed: (collapsed: boolean) => void
 }
 
 export const useNotesStore = create<NotesState>()(
@@ -45,6 +48,7 @@ export const useNotesStore = create<NotesState>()(
       selectedNoteForAction: null,
       selectedFolderForAction: null,
       isGeneratingNote: false,
+      notesListCollapsed: false,
       setSelectedFolder: (folderId) =>
         set({
           selectedFolderId: folderId,
@@ -126,11 +130,20 @@ export const useNotesStore = create<NotesState>()(
         set({
           isGeneratingNote: generating,
         }),
+      toggleNotesList: () =>
+        set((state) => ({
+          notesListCollapsed: !state.notesListCollapsed,
+        })),
+      setNotesListCollapsed: (collapsed) =>
+        set({
+          notesListCollapsed: collapsed,
+        }),
     }),
     {
       name: 'notes-store',
       partialize: (state) => ({
         expandedFolderIds: Array.from(state.expandedFolderIds),
+        notesListCollapsed: state.notesListCollapsed,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && Array.isArray((state as unknown as { expandedFolderIds: number[] }).expandedFolderIds)) {
