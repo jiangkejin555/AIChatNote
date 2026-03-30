@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -170,6 +171,27 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("GIN_MODE"); v != "" {
 		cfg.Server.GinMode = v
+	}
+	// DATABASE_URL takes precedence over individual DB_* variables
+	if v := os.Getenv("DATABASE_URL"); v != "" {
+		if u, err := url.Parse(v); err == nil {
+			cfg.Database.Host = u.Hostname()
+			if p := u.Port(); p != "" {
+				cfg.Database.Port, _ = strconv.Atoi(p)
+			}
+			cfg.Database.User = u.User.Username()
+			cfg.Database.Password, _ = u.User.Password()
+			// dbname is the path without leading "/"
+			if u.Path != "" {
+				cfg.Database.DBName = strings.TrimPrefix(u.Path, "/")
+			}
+			if u.Scheme == "postgresql" || u.Scheme == "postgres" {
+				cfg.Database.SSLMode = "disable"
+				if q := u.Query(); q.Get("sslmode") != "" {
+					cfg.Database.SSLMode = q.Get("sslmode")
+				}
+			}
+		}
 	}
 	if v := os.Getenv("DB_HOST"); v != "" {
 		cfg.Database.Host = v
