@@ -79,7 +79,7 @@ func main() {
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
 	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto, contextConfigService)
-	
+
 	folderHandler := handlers.NewFolderHandler()
 	tagHandler := handlers.NewTagHandler()
 	userSettingsHandler := handlers.NewUserSettingsHandler(contextConfigService)

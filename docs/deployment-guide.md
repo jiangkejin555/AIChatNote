@@ -479,7 +479,7 @@ RDS PostgreSQL：
 3. **配置环境变量**
    ```bash
    # 在 Vercel Dashboard 中设置：
-   NEXT_PUBLIC_API_URL=https://ai-chat-note-backend.railway.app
+   NEXT_PUBLIC_API_URL=https://aichatnode-production.up.railway.app
    ```
 
 4. **部署**
