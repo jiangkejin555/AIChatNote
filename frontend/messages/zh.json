@@ -683,5 +683,17 @@
       "aiTask": "AI 任务",
       "error": "错误"
     }
+  },
+  "notionCallback": {
+    "connecting": "正在连接 Notion",
+    "connectingDesc": "请稍候，正在完成身份验证...",
+    "success": "连接成功",
+    "successDesc": "Notion 账号已成功连接，即将返回设置页面...",
+    "failed": "连接失败",
+    "failedDesc": "无法完成 Notion 连接，请重试。",
+    "returnToSettings": "返回设置",
+    "noCode": "未收到 Notion 的授权码。",
+    "authCancelled": "认证失败或已取消。",
+    "retryConnect": "重试连接"
   }
 }

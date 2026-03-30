@@ -18,6 +18,7 @@ import {
   FolderInput,
   FileDown,
   Trash2,
+  BookOpen,
 } from 'lucide-react'
 import { useTranslations, getSavedLocale } from '@/i18n'
 
@@ -49,6 +50,12 @@ export function NoteCard({
     locale: dateLocale,
   })
 
+  // Determine Notion sync status
+  const isNotionSynced = !!note.notion_page_id
+  const isNotionModified = isNotionSynced && note.notion_last_sync_at
+    ? new Date(note.notion_last_sync_at).getTime() < new Date(note.updated_at).getTime()
+    : false
+
   return (
     <div
       className={cn(
@@ -59,9 +66,14 @@ export function NoteCard({
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-medium text-sm line-clamp-1 flex-1">
-          {note.title || t('notes.untitledNote')}
-        </h3>
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <h3 className="font-medium text-sm line-clamp-1">
+            {note.title || t('notes.untitledNote')}
+          </h3>
+          {isNotionSynced && !isNotionModified && (
+            <BookOpen className="h-3 w-3 shrink-0 text-blue-500 dark:text-blue-400" />
+          )}
+        </div>
         <span className="text-xs text-muted-foreground shrink-0">
           {formattedDate}
         </span>

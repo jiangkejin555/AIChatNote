@@ -24,6 +24,7 @@ import {
   Clock,
   FileText,
   BookOpen,
+  Check,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -281,8 +282,8 @@ export function NoteDetail() {
     }
 
     const notionIconColor =
-      syncStatus === 'Synced' ? 'text-green-500' :
-      syncStatus === 'Modified' ? 'text-orange-500' :
+      syncStatus === 'Synced' ? 'text-blue-500 dark:text-blue-400' :
+      syncStatus === 'Modified' ? 'text-orange-500 dark:text-orange-400' :
       'text-muted-foreground'
 
     return (
@@ -330,11 +331,20 @@ export function NoteDetail() {
                   size="sm"
                   onClick={handleSyncNotion}
                   disabled={syncToNotion.isPending}
-                  className="cursor-pointer gap-1.5"
+                  className={cn(
+                    'cursor-pointer gap-1.5 transition-all duration-300',
+                    syncStatus === 'Synced' && 'border-blue-200 bg-blue-50/80 text-blue-600 hover:bg-blue-100 hover:border-blue-300 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-400 dark:hover:bg-blue-950/50 dark:hover:border-blue-700',
+                    syncStatus === 'Modified' && 'border-orange-200 bg-orange-50/80 text-orange-600 hover:bg-orange-100 hover:border-orange-300 dark:border-orange-800 dark:bg-orange-950/30 dark:text-orange-400 dark:hover:bg-orange-950/50 dark:hover:border-orange-700',
+                  )}
                   title={t('notes.syncToNotion') || 'Sync to Notion'}
                 >
                   {syncToNotion.isPending ? (
                     <Loader2 className={`h-4 w-4 animate-spin ${notionIconColor}`} />
+                  ) : syncStatus === 'Synced' ? (
+                    <span className="relative">
+                      <BookOpen className="h-4 w-4" />
+                      <Check className="absolute -bottom-1 -right-1 h-2.5 w-2.5 text-blue-500 dark:text-blue-400 fill-blue-500 dark:fill-blue-400" />
+                    </span>
                   ) : (
                     <BookOpen className={`h-4 w-4 ${notionIconColor}`} />
                   )}

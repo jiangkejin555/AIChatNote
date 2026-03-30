@@ -687,5 +687,17 @@
       "aiTask": "AI Task",
       "error": "Error"
     }
+  },
+  "notionCallback": {
+    "connecting": "Connecting to Notion",
+    "connectingDesc": "Please wait while we complete the authentication...",
+    "success": "Connection Successful",
+    "successDesc": "Your Notion account has been connected. Redirecting to settings...",
+    "failed": "Connection Failed",
+    "failedDesc": "Unable to complete the Notion connection. Please try again.",
+    "returnToSettings": "Return to Settings",
+    "noCode": "No authorization code received from Notion.",
+    "authCancelled": "Authentication failed or was cancelled.",
+    "retryConnect": "Retry Connection"
   }
 }
