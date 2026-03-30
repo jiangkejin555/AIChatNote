@@ -30,6 +30,7 @@ RUN apk --no-cache add ca-certificates tzdata
 
 # Copy binary from builder
 COPY --from=builder /app/main .
+COPY --from=builder /app/config.yaml .
 
 # Create non-root user
 RUN adduser -D -g '' appuser

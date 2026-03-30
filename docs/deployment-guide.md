@@ -443,6 +443,17 @@ RDS PostgreSQL：
    TITLE_GENERATOR_MODEL=deepseek-chat
    ```
 
+   ```
+   # 密钥生成方式
+   # JWT Secret
+   openssl rand -base64 48
+
+   # JWT Refresh Secret
+   openssl rand -base64 48
+
+   # Encryption Key (必须恰好 32 字节)
+   openssl rand -base64 32 | head -c 32
+   ```
 5. **获取后端地址**
    - Railway 会自动分配域名，例如：`https://ai-chat-note-backend.railway.app`
 

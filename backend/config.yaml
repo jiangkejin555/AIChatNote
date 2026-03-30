@@ -99,6 +99,6 @@ oauth:
 
 # Notion Integration
 notion:
-  client_id: "333d872b-594c-81d5-8e73-0037bbcf6917"
+  client_id: ""
   client_secret: ""  # Set via NOTION_CLIENT_SECRET environment variable
   redirect_uri: "http://localhost:3000/auth/notion/callback"
