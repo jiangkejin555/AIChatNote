@@ -70,8 +70,12 @@ func main() {
 	// Initialize email service
 	emailService := services.NewEmailService(&cfg.SMTP)
 
+	// Initialize OAuth service
+	oauthService := services.NewOAuthService(&cfg.OAuth)
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(jwtService, verificationCodeService, emailService)
+	oauthHandler := handlers.NewOAuthHandler(oauthService, jwtService)
 	providerHandler := handlers.NewProviderHandler(aesCrypto)
 	providerModelHandler := handlers.NewProviderModelHandler()
 	conversationHandler := handlers.NewConversationHandler(cfg, aesCrypto, contextConfigService)
@@ -125,6 +129,22 @@ func main() {
 			auth.POST("/refresh", authHandler.Refresh)
 			auth.POST("/email/code", authHandler.SendVerificationCode)
 			auth.POST("/email/login", authHandler.VerifyCodeAndLogin)
+		}
+
+		// OAuth routes (public)
+		oauth := api.Group("/oauth")
+		{
+			oauth.GET("/:provider/auth-url", oauthHandler.GetAuthURL)
+			oauth.POST("/:provider/callback", oauthHandler.HandleCallback)
+		}
+
+		// OAuth routes (protected)
+		oauthProtected := api.Group("/oauth")
+		oauthProtected.Use(middleware.Auth(jwtService))
+		{
+			oauthProtected.GET("/accounts", oauthHandler.GetLinkedAccounts)
+			oauthProtected.DELETE("/:provider/unlink", oauthHandler.UnlinkAccount)
+			oauthProtected.GET("/:provider/bind", oauthHandler.BindAccount)
 		}
 
 		// Auth routes (protected)

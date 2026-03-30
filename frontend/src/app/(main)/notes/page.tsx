@@ -25,7 +25,7 @@ function NotesPageContent() {
         <NotesSidebar />
         {/* TOC - absolute positioned to the right of sidebar */}
         {!notesListCollapsed && (note || isEditing) && tocContent && (
-          <div className="absolute left-full top-52 pl-4 hidden xl:block">
+          <div className="absolute left-full top-40 pl-4 hidden xl:block">
             <TocSidebar content={tocContent} className="w-36" />
           </div>
         )}

@@ -601,7 +601,7 @@ export function Sidebar() {
                 alt="AI Chat Note"
                 className="w-8 h-8"
               />
-              <h1 className="text-lg font-semibold text-sidebar-foreground tracking-tight">
+              <h1 className="text-lg font-semibold text-sidebar-foreground tracking-tight whitespace-nowrap">
                 AI Chat Note
               </h1>
             </div>

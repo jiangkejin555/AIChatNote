@@ -79,6 +79,24 @@ smtp:
   use_tls: true         # Use TLS for secure connection
   enabled: true        # Enable/disable email verification feature
 
+# OAuth Configuration
+oauth:
+  google:
+    client_id: ""          # Google OAuth Client ID
+    client_secret: ""      # Google OAuth Client Secret
+    redirect_uri: "http://localhost:3000/callback/google"
+    enabled: false
+  github:
+    client_id: ""          # GitHub OAuth Client ID
+    client_secret: ""      # GitHub OAuth Client Secret
+    redirect_uri: "http://localhost:3000/callback/github"
+    enabled: false
+  qq:
+    client_id: ""          # QQ App ID
+    client_secret: ""      # QQ App Key
+    redirect_uri: "http://localhost:3000/callback/qq"
+    enabled: false
+
 # Notion Integration
 notion:
   client_id: "333d872b-594c-81d5-8e73-0037bbcf6917"

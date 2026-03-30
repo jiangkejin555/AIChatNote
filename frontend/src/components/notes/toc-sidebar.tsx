@@ -79,7 +79,22 @@ export function TocSidebar({ content, className }: TocSidebarProps) {
   }, [headings, content])
 
   const scrollToHeading = useCallback((id: string) => {
-    const element = document.getElementById(id)
+    // Try finding by ID first (assigned by observer effect)
+    let element = document.getElementById(id)
+
+    // Fallback: find by index in the actual rendered note viewer
+    if (!element) {
+      const match = id.match(/^heading-(\d+)$/)
+      if (match) {
+        const index = parseInt(match[1])
+        const viewerHeadings = document.querySelectorAll('.note-viewer h1, .note-viewer h2, .note-viewer h3')
+        element = viewerHeadings[index] as HTMLElement | null
+        if (element) {
+          element.id = id
+        }
+      }
+    }
+
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' })
       setActiveId(id)
@@ -93,11 +108,11 @@ export function TocSidebar({ content, className }: TocSidebarProps) {
 
   return (
     <div className={cn('shrink-0', className)}>
-      <div className="sticky top-20">
+      <div className="sticky top-4">
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           {t('notes.toc')}
         </h4>
-        <nav className="space-y-1">
+        <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-14rem)]">
           {headings.map((heading) => {
             const isTruncated = truncatedIds.has(heading.id)
             return (
