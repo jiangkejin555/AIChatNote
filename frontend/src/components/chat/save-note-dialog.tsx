@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { FolderTreeSelector } from '@/components/notes/folder-tree-selector'
-import { X, Sparkles, FileText, Loader2, Folder } from 'lucide-react'
+import { X, Sparkles, FileText, Loader2, Folder, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from '@/i18n'
 import { MessageSelector } from './message-selector'
@@ -21,7 +21,7 @@ import { formatMessagesAsHtml } from '@/lib/markdown-utils'
 import type { Message, Folder as FolderType } from '@/types'
 import { useQuery } from '@tanstack/react-query'
 import { integrationService } from '@/services/integration'
-import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 
 interface SaveNoteDialogProps {
   open: boolean
@@ -324,58 +324,73 @@ export function SaveNoteDialog({
               )}
             </div>
           </div>
-
-          {/* Sync Options */}
-          {notionStatus?.connected && (
-            <div className="flex items-center gap-2 mt-4 ml-17">
-              <Checkbox
-                id="sync-notion"
-                checked={syncToNotion}
-                onCheckedChange={(checked) => setSyncToNotion(checked === true)}
-              />
-              <label
-                htmlFor="sync-notion"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-              >
-                {t('saveNote.syncToNotion') || 'Sync to Notion'}
-              </label>
-            </div>
-          )}
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="shrink-0 flex justify-center gap-4 p-4 border-t bg-muted/30">
-          <Button
-            variant="outline"
-            onClick={handleDirectSave}
-            disabled={isSaving}
-            className="cursor-pointer min-w-[120px] h-9 transition-all duration-200
-              hover:bg-blue-100 hover:text-blue-600 hover:border-blue-400
-              dark:hover:bg-blue-900/30 dark:hover:text-blue-400 dark:hover:border-blue-600"
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <FileText className="h-4 w-4 mr-2" />
-            )}
-            {t('saveNote.directSaveBtn')}
-          </Button>
-          <Button
-            onClick={handleAiSummarySave}
-            disabled={isSaving}
-            className="cursor-pointer min-w-[120px] h-9
-              bg-gradient-to-r from-blue-500 to-sky-500
-              hover:from-blue-600 hover:to-sky-600
-              text-white border-0 shadow-md shadow-blue-500/20
-              transition-all duration-200"
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
-            )}
-            {t('saveNote.aiSummaryBtn')}
-          </Button>
+        <div className="shrink-0 relative flex items-center justify-center px-5 py-3.5 border-t bg-muted/30">
+          {/* Buttons - truly centered */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDirectSave}
+              disabled={isSaving}
+              className="cursor-pointer min-w-[100px] h-7 text-[11px] transition-all duration-200
+                hover:bg-primary/10 hover:text-primary hover:border-primary/40
+                dark:hover:bg-primary/20 dark:hover:text-primary dark:hover:border-primary/50"
+            >
+              {isSaving ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <FileText className="h-3 w-3 mr-1" />
+              )}
+              {t('saveNote.directSaveBtn')}
+            </Button>
+            <Button
+              onClick={handleAiSummarySave}
+              disabled={isSaving}
+              className="cursor-pointer min-w-[100px] h-7 text-[11px]
+                bg-gradient-to-r from-primary/90 to-primary
+                hover:from-primary hover:to-primary
+                text-primary-foreground border-0 shadow-sm shadow-primary/20
+                transition-all duration-200"
+            >
+              {isSaving ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Sparkles className="h-3 w-3 mr-1" />
+              )}
+              {t('saveNote.aiSummaryBtn')}
+            </Button>
+          </div>
+
+          {/* Sync to Notion - 绝对定位在右侧 */}
+          {notionStatus?.connected && (
+            <label
+              htmlFor="sync-notion"
+              className="absolute right-5 flex items-center gap-2 cursor-pointer select-none group"
+            >
+              <span
+                className={cn(
+                  'inline-flex items-center justify-center h-[18px] w-[18px] rounded-[4px] border transition-all duration-200',
+                  syncToNotion
+                    ? 'bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/25'
+                    : 'border-muted-foreground/30 group-hover:border-primary/50 bg-background'
+                )}
+              >
+                {syncToNotion && <Check className="h-3 w-3" strokeWidth={3} />}
+              </span>
+              <input
+                id="sync-notion"
+                type="checkbox"
+                checked={syncToNotion}
+                onChange={(e) => setSyncToNotion(e.target.checked)}
+                className="sr-only"
+              />
+              <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground leading-none transition-colors duration-150">
+                {t('saveNote.syncToNotion') || 'Sync to Notion'}
+              </span>
+            </label>
+          )}
         </div>
       </DialogContent>
     </Dialog>

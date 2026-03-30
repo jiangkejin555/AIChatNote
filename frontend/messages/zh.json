@@ -163,7 +163,7 @@
     "enterTagPlaceholder": "输入标签",
     "directSaveBtn": "直接保存",
     "aiSummaryBtn": "AI总结保存",
-    "syncToNotion": "保存时同步到 Notion",
+    "syncToNotion": "同步至 Notion",
     "saving": "正在保存...",
     "aiSaving": "正在AI总结并保存...",
     "pleaseSelectMessage": "请至少选择一条消息",

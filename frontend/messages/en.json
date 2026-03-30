@@ -164,7 +164,7 @@
     "enterTagPlaceholder": "Enter tag",
     "directSaveBtn": "Direct Save",
     "aiSummaryBtn": "AI Summary Save",
-    "syncToNotion": "Sync to Notion on save",
+    "syncToNotion": "Sync to Notion",
     "saving": "Saving...",
     "aiSaving": "AI summarizing and saving...",
     "pleaseSelectMessage": "Please select at least one message",
