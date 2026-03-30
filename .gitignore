@@ -3,6 +3,7 @@ frontend.git.backup/
 .claude/
 .coco/
 .trae/
+.superpowers/
 openspec/
 node_modules/
 package-lock.json
