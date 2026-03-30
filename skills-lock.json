@@ -1,10 +1,10 @@
 {
   "version": 1,
   "skills": {
-    "web-design-guidelines": {
-      "source": "vercel-labs/agent-skills",
+    "app-icon": {
+      "source": "code-with-beto/skills",
       "sourceType": "github",
-      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+      "computedHash": "dc551a26318622c831286711961a4cab90e134bf3378083d9cfe1e52bb466524"
     },
     "frontend-design": {
       "source": ".coco/skills/frontend-design",
@@ -15,6 +15,11 @@
       "source": ".coco/skills/ui-ux-pro-max",
       "sourceType": "local",
       "computedHash": "b120bc7a8ee9aebf35a752ee959afe3303e979a3b15454a742b0d67447f57b75"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
     }
   }
 }

@@ -1,0 +1,113 @@
+<h2>知识地层 (Knowledge Layers) 概念优化</h2>
+<p class="subtitle">为了让每一层都能明确代表“知识”，我们对“地层”进行了视觉上的具象化。以下是三种如何将“知识”融入层叠结构的方案：</p>
+
+<div class="cards">
+  <!-- Option 1: 层叠的书本/文档 (Stacked Books/Docs) -->
+  <div class="card" data-choice="layer_books" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- Base book -->
+        <path d="M 25 80 L 60 95 L 95 80 L 95 90 L 60 105 L 25 90 Z" fill="#3B82F6" opacity="0.6"/>
+        <path d="M 25 80 L 60 95 L 95 80 L 60 65 Z" fill="#2563EB" opacity="0.4"/>
+        <line x1="30" y1="80" x2="55" y2="90" stroke="#FFFFFF" stroke-width="1" opacity="0.2"/>
+        
+        <!-- Middle book -->
+        <path d="M 25 65 L 60 80 L 95 65 L 95 75 L 60 90 L 25 75 Z" fill="#6366F1" opacity="0.8"/>
+        <path d="M 25 65 L 60 80 L 95 65 L 60 50 Z" fill="#4F46E5" opacity="0.6"/>
+        <line x1="35" y1="65" x2="55" y2="73" stroke="#FFFFFF" stroke-width="1.5" opacity="0.4"/>
+        <line x1="45" y1="60" x2="65" y2="68" stroke="#FFFFFF" stroke-width="1.5" opacity="0.4"/>
+        
+        <!-- Top book -->
+        <path d="M 25 50 L 60 65 L 95 50 L 95 60 L 60 75 L 25 60 Z" fill="#9333EA" />
+        <path d="M 25 50 L 60 65 L 95 50 L 60 35 Z" fill="#A855F7" />
+        <!-- Markdown/Text lines on top cover -->
+        <line x1="45" y1="48" x2="70" y2="58" stroke="#FFFFFF" stroke-width="2" opacity="0.9" stroke-linecap="round"/>
+        <line x1="40" y1="52" x2="60" y2="60" stroke="#FFFFFF" stroke-width="2" opacity="0.7" stroke-linecap="round"/>
+        <line x1="55" y1="44" x2="80" y2="54" stroke="#FFFFFF" stroke-width="2" opacity="0.9" stroke-linecap="round"/>
+        
+        <!-- New knowledge dropping in as a page/card -->
+        <polygon points="60,10 75,18 60,26 45,18" fill="#C084FC" />
+        <line x1="52" y1="18" x2="62" y2="23" stroke="#FFFFFF" stroke-width="1"/>
+        <path d="M 60 28 L 60 35" stroke="#C084FC" stroke-width="1.5" stroke-dasharray="2 2" />
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A. 书籍/文档叠层</h3>
+      <p>最直观的表达。每一层都是一本厚厚的“书”或一块“笔记板”。顶层的表面带有类似代码或 Markdown 的横线，代表具体的知识内容。</p>
+    </div>
+  </div>
+
+  <!-- Option 2: 发光的数据卡片 (Glowing Data Cards) -->
+  <div class="card" data-choice="layer_cards" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- Floating cards -->
+        <!-- Layer 1 -->
+        <rect x="30" y="80" width="60" height="15" rx="2" fill="#1e1e2e" stroke="#3B82F6" stroke-width="1.5" transform="skewX(-15)"/>
+        <circle cx="45" cy="88" r="3" fill="#3B82F6" transform="skewX(-15)"/>
+        <line x1="55" y1="88" x2="80" y2="88" stroke="#3B82F6" stroke-width="2" transform="skewX(-15)" opacity="0.6"/>
+        
+        <!-- Layer 2 -->
+        <rect x="35" y="60" width="60" height="15" rx="2" fill="#1e1e2e" stroke="#8B5CF6" stroke-width="1.5" transform="skewX(-15)"/>
+        <circle cx="50" cy="68" r="3" fill="#8B5CF6" transform="skewX(-15)"/>
+        <line x1="60" y1="68" x2="85" y2="68" stroke="#8B5CF6" stroke-width="2" transform="skewX(-15)" opacity="0.8"/>
+        
+        <!-- Layer 3 (Active) -->
+        <rect x="40" y="40" width="60" height="15" rx="2" fill="#4F46E5" stroke="#C084FC" stroke-width="1" transform="skewX(-15)"/>
+        <polygon points="55,48 50,44 50,52" fill="#FFFFFF" transform="skewX(-15)"/> <!-- Play/AI icon -->
+        <line x1="65" y1="46" x2="90" y2="46" stroke="#FFFFFF" stroke-width="2" transform="skewX(-15)"/>
+        <line x1="65" y1="50" x2="80" y2="50" stroke="#FFFFFF" stroke-width="2" transform="skewX(-15)" opacity="0.6"/>
+        
+        <!-- Connecting beams -->
+        <line x1="70" y1="55" x2="70" y2="60" stroke="#C084FC" stroke-width="1" stroke-dasharray="2 2"/>
+        <line x1="65" y1="75" x2="65" y2="80" stroke="#8B5CF6" stroke-width="1" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B. 智能数据卡片</h3>
+      <p>每一层化作一张张带有 UI 元素的“AI 知识卡片”（左侧是图标/节点，右侧是文字线）。层与层之间悬浮，更符合现代 App 界面和 AI 对话的特征。</p>
+    </div>
+  </div>
+
+  <!-- Option 3: 神经元/网络层 (Neural/Graph Layers) -->
+  <div class="card" data-choice="layer_graph" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- Base Layer Grid -->
+        <polygon points="60,75 95,90 60,105 25,90" fill="none" stroke="#3B82F6" stroke-width="1" opacity="0.4"/>
+        <circle cx="60" cy="90" r="2" fill="#3B82F6" />
+        <circle cx="45" cy="85" r="1.5" fill="#3B82F6" />
+        <circle cx="75" cy="95" r="1.5" fill="#3B82F6" />
+        <line x1="45" y1="85" x2="60" y2="90" stroke="#3B82F6" stroke-width="1" opacity="0.5"/>
+        <line x1="60" y1="90" x2="75" y2="95" stroke="#3B82F6" stroke-width="1" opacity="0.5"/>
+        
+        <!-- Middle Layer Grid -->
+        <polygon points="60,55 95,70 60,85 25,70" fill="rgba(99, 102, 241, 0.1)" stroke="#6366F1" stroke-width="1.5"/>
+        <circle cx="60" cy="70" r="3" fill="#6366F1" />
+        <circle cx="40" cy="75" r="2" fill="#6366F1" />
+        <circle cx="80" cy="65" r="2" fill="#6366F1" />
+        <circle cx="65" cy="60" r="2" fill="#6366F1" />
+        <line x1="60" y1="70" x2="40" y2="75" stroke="#6366F1" stroke-width="1"/>
+        <line x1="60" y1="70" x2="80" y2="65" stroke="#6366F1" stroke-width="1"/>
+        <line x1="60" y1="70" x2="65" y2="60" stroke="#6366F1" stroke-width="1"/>
+        
+        <!-- Top Layer Grid -->
+        <polygon points="60,35 95,50 60,65 25,50" fill="rgba(168, 85, 247, 0.2)" stroke="#C084FC" stroke-width="2"/>
+        <circle cx="60" cy="50" r="4" fill="#E879F9" />
+        <circle cx="35" cy="55" r="3" fill="#C084FC" />
+        <circle cx="85" cy="45" r="3" fill="#C084FC" />
+        <line x1="60" y1="50" x2="35" y2="55" stroke="#E879F9" stroke-width="1.5"/>
+        <line x1="60" y1="50" x2="85" y2="45" stroke="#E879F9" stroke-width="1.5"/>
+        
+        <!-- Vertical Connections (Knowledge mapping across layers) -->
+        <line x1="60" y1="50" x2="60" y2="70" stroke="#FFFFFF" stroke-width="1" opacity="0.6"/>
+        <line x1="60" y1="70" x2="60" y2="90" stroke="#FFFFFF" stroke-width="1" opacity="0.4"/>
+        <line x1="35" y1="55" x2="40" y2="75" stroke="#C084FC" stroke-width="1" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>C. 知识图谱网络层</h3>
+      <p>不使用实体的块，而是将每一层画作一层“知识图谱/神经网络”。层与层之间有垂直连线，代表知识被结构化、并产生了关联。</p>
+    </div>
+  </div>
+</div>

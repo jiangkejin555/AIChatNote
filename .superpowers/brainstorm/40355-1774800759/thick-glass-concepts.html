@@ -1,0 +1,119 @@
+<h2>厚重玻璃态叠加 (方案 A1 细化)</h2>
+<p class="subtitle">根据您的要求，我们增加了玻璃面板的厚度体积感，并将发光的数据线条移至视觉中心，形成夹在玻璃内部的科技感。</p>
+
+<div class="cards">
+  <!-- Option A1-1: Centered Node Lines (中间发光节点) -->
+  <div class="card" data-choice="a1_thick_nodes" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 250px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- Layer 1 (Bottom) - Thick -->
+        <polygon points="30,85 70,105 110,85 70,65" fill="#1E3A8A" opacity="0.6"/>
+        <polygon points="30,85 70,105 70,115 30,95" fill="#172554" opacity="0.8"/>
+        <polygon points="110,85 70,105 70,115 110,95" fill="#1E40AF" opacity="0.8"/>
+        <polygon points="30,85 70,105 110,85 70,65" fill="none" stroke="#3B82F6" stroke-width="1.5" opacity="0.5"/>
+        <!-- Centered Data inside Bottom Layer -->
+        <line x1="50" y1="85" x2="65" y2="92" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <circle cx="65" cy="92" r="2.5" fill="#60A5FA" opacity="0.6"/>
+        <line x1="75" y1="92" x2="90" y2="85" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <circle cx="75" cy="92" r="2.5" fill="#60A5FA" opacity="0.6"/>
+
+        <!-- Layer 2 (Middle) - Thick -->
+        <polygon points="30,65 70,85 110,65 70,45" fill="#4338CA" opacity="0.7"/>
+        <polygon points="30,65 70,85 70,95 30,75" fill="#312E81" opacity="0.9"/>
+        <polygon points="110,65 70,85 70,95 110,75" fill="#3730A3" opacity="0.9"/>
+        <polygon points="30,65 70,85 110,65 70,45" fill="none" stroke="#818CF8" stroke-width="1.5" opacity="0.7"/>
+        <!-- Centered Data inside Middle Layer -->
+        <line x1="55" y1="62" x2="85" y2="62" stroke="#A5B4FC" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+        <line x1="60" y1="68" x2="80" y2="68" stroke="#A5B4FC" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+        <circle cx="55" cy="62" r="2" fill="#FFFFFF"/>
+        <circle cx="85" cy="62" r="2" fill="#FFFFFF"/>
+
+        <!-- Layer 3 (Top) - Thick & Brightest -->
+        <polygon points="30,45 70,65 110,45 70,25" fill="#9333EA" opacity="0.8"/>
+        <polygon points="30,45 70,65 70,75 30,55" fill="#7E22CE" opacity="0.95"/>
+        <polygon points="110,45 70,65 70,75 110,55" fill="#6B21A8" opacity="0.95"/>
+        <polygon points="30,45 70,65 110,45 70,25" fill="none" stroke="#D8B4FE" stroke-width="2"/>
+        <!-- Top Edge Highlights -->
+        <line x1="30" y1="45" x2="70" y2="65" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8"/>
+        <line x1="70" y1="65" x2="110" y2="45" stroke="#FFFFFF" stroke-width="1.5" opacity="0.5"/>
+        <!-- Centered Glowing Data inside Top Layer -->
+        <line x1="50" y1="45" x2="90" y2="45" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" style="filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.8));"/>
+        <line x1="60" y1="53" x2="80" y2="53" stroke="#F3E8FF" stroke-width="3" stroke-linecap="round" style="filter: drop-shadow(0px 0px 3px rgba(216,180,254,0.8));"/>
+        <line x1="65" y1="37" x2="75" y2="37" stroke="#F3E8FF" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A1-1 夹心核心 (中心轴对齐)</h3>
+      <p>每一层玻璃板都明显加厚，数据线和节点（模拟代码/文本行）像被封存在琥珀或玻璃内部，严格对齐在每一层的中心。</p>
+    </div>
+  </div>
+
+  <!-- Option A1-2: Central Data Pillar (贯穿中心的数据柱) -->
+  <div class="card" data-choice="a1_thick_pillar" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 250px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- Connecting Core Light Pillar -->
+        <polygon points="65,30 75,30 75,100 65,100" fill="#FFFFFF" opacity="0.15" />
+        <line x1="70" y1="20" x2="70" y2="110" stroke="#E879F9" stroke-width="2" style="filter: drop-shadow(0px 0px 5px rgba(232,121,249,0.8));"/>
+
+        <!-- Layer 1 (Bottom) - Thick -->
+        <polygon points="30,85 70,105 110,85 70,65" fill="#2563EB" opacity="0.5"/>
+        <polygon points="30,85 70,105 70,112 30,92" fill="#1E3A8A" opacity="0.8"/>
+        <polygon points="110,85 70,105 70,112 110,92" fill="#1D4ED8" opacity="0.8"/>
+        <polygon points="30,85 70,105 110,85 70,65" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.6"/>
+        <circle cx="70" cy="85" r="6" fill="#3B82F6" opacity="0.8"/>
+
+        <!-- Layer 2 (Middle) - Thick -->
+        <polygon points="35,65 70,82 105,65 70,48" fill="#6366F1" opacity="0.6"/>
+        <polygon points="35,65 70,82 70,89 35,72" fill="#4338CA" opacity="0.9"/>
+        <polygon points="105,65 70,82 70,89 105,72" fill="#4F46E5" opacity="0.9"/>
+        <polygon points="35,65 70,82 105,65 70,48" fill="none" stroke="#A5B4FC" stroke-width="1.5" opacity="0.8"/>
+        <circle cx="70" cy="65" r="8" fill="#818CF8" opacity="0.9"/>
+
+        <!-- Layer 3 (Top) - Thick -->
+        <polygon points="40,45 70,60 100,45 70,30" fill="#A855F7" opacity="0.8"/>
+        <polygon points="40,45 70,60 70,67 40,52" fill="#7E22CE" opacity="1"/>
+        <polygon points="100,45 70,60 70,67 100,52" fill="#9333EA" opacity="1"/>
+        <polygon points="40,45 70,60 100,45 70,30" fill="none" stroke="#F3E8FF" stroke-width="2"/>
+        <circle cx="70" cy="45" r="10" fill="#FFFFFF" style="filter: drop-shadow(0px 0px 8px rgba(255,255,255,1));"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A1-2 能量中轴 (提炼感)</h3>
+      <p>玻璃板变得更厚且呈现梯形（越往上越精炼）。发光的数据不仅位于每一层中间，更有一道光柱贯穿三层中心，代表散乱知识被串联提炼。</p>
+    </div>
+  </div>
+
+  <!-- Option A1-3: Transparent Blocks (全透视发光块) -->
+  <div class="card" data-choice="a1_thick_blocks" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 250px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- Layer 1 (Bottom) - Transparent Box -->
+        <polygon points="25,80 70,100 115,80 70,60" fill="rgba(59, 130, 246, 0.2)" stroke="#3B82F6" stroke-width="1.5"/>
+        <polygon points="25,80 70,100 70,115 25,95" fill="rgba(37, 99, 235, 0.3)" stroke="#1D4ED8" stroke-width="1"/>
+        <polygon points="115,80 70,100 70,115 115,95" fill="rgba(29, 78, 216, 0.3)" stroke="#1E40AF" stroke-width="1"/>
+        <!-- Glowing Data embedded -->
+        <path d="M 45 80 L 70 90 L 95 80" fill="none" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+
+        <!-- Layer 2 (Middle) - Transparent Box -->
+        <polygon points="25,55 70,75 115,55 70,35" fill="rgba(99, 102, 241, 0.25)" stroke="#818CF8" stroke-width="1.5"/>
+        <polygon points="25,55 70,75 70,90 25,70" fill="rgba(79, 70, 229, 0.4)" stroke="#4338CA" stroke-width="1"/>
+        <polygon points="115,55 70,75 70,90 115,70" fill="rgba(67, 56, 202, 0.4)" stroke="#3730A3" stroke-width="1"/>
+        <!-- Glowing Data embedded -->
+        <path d="M 50 55 L 70 65 L 90 55" fill="none" stroke="#C7D2FE" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+
+        <!-- Layer 3 (Top) - Transparent Box -->
+        <polygon points="25,30 70,50 115,30 70,10" fill="rgba(168, 85, 247, 0.3)" stroke="#D8B4FE" stroke-width="2"/>
+        <polygon points="25,30 70,50 70,65 25,45" fill="rgba(147, 51, 234, 0.5)" stroke="#7E22CE" stroke-width="1"/>
+        <polygon points="115,30 70,50 70,65 115,45" fill="rgba(126, 34, 206, 0.5)" stroke="#6B21A8" stroke-width="1"/>
+        <!-- Glowing Data embedded -->
+        <path d="M 55 30 L 70 40 L 85 30" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" style="filter: drop-shadow(0px 0px 3px rgba(255,255,255,1));"/>
+        <circle cx="70" cy="40" r="3" fill="#FFFFFF"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A1-3 全透视立方块</h3>
+      <p>每一层都变成了具有清晰边框的“透明立方体”。光线（代表知识数据）完全被包裹在几何体的内部中央，从底部的暗淡逐渐过渡到顶层的明亮刺眼。</p>
+    </div>
+  </div>
+</div>

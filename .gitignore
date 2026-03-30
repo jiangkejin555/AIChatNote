@@ -4,3 +4,5 @@ frontend.git.backup/
 .coco/
 .trae/
 openspec/
+node_modules/
+package-lock.json

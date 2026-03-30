@@ -1,0 +1,146 @@
+<h2>B1 & B2 深度打磨版 (书籍与文件夹优化)</h2>
+<p class="subtitle">针对您提出的“书籍样式不明显、白边太刺眼”以及“文件夹颜色需要优化”的问题，我们对这两个方向进行了深度的细节调整和扩展。</p>
+
+<div class="cards">
+  <!-- Option B1-A: Refined Books - Translucent pages -->
+  <div class="card" data-choice="b1_refined_books_glass" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 260px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- Notebook 1 (Bottom) -->
+        <path d="M 25 85 L 65 100 L 115 85 L 75 70 Z" fill="#1E3A8A" opacity="0.5"/>
+        <!-- Soft/Translucent pages edge -->
+        <path d="M 25 85 L 65 100 L 65 108 L 25 93 Z" fill="rgba(147, 197, 253, 0.15)"/>
+        <path d="M 65 100 L 115 85 L 115 93 L 65 108 Z" fill="rgba(147, 197, 253, 0.1)"/>
+        <!-- Page lines (subtle) -->
+        <path d="M 25 89 L 65 104 M 65 104 L 115 89" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+        <!-- Spine bottom edge -->
+        <path d="M 25 93 L 65 108 L 65 111 L 25 96 Z" fill="#172554"/>
+        <path d="M 65 108 L 115 93 L 115 96 L 65 111 Z" fill="#172554"/>
+        <!-- Spine detail (Book binding) -->
+        <path d="M 25 85 L 35 88 L 35 100 L 25 96 Z" fill="#1E40AF" opacity="0.6"/>
+
+        <!-- Notebook 2 (Middle) -->
+        <path d="M 25 65 L 65 80 L 115 65 L 75 50 Z" fill="#4338CA" opacity="0.7"/>
+        <!-- Soft/Translucent pages edge -->
+        <path d="M 25 65 L 65 80 L 65 88 L 25 73 Z" fill="rgba(165, 180, 252, 0.2)"/>
+        <path d="M 65 80 L 115 65 L 115 73 L 65 88 Z" fill="rgba(165, 180, 252, 0.15)"/>
+        <!-- Page lines -->
+        <path d="M 25 69 L 65 84 M 65 84 L 115 69" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
+        <!-- Spine bottom edge -->
+        <path d="M 25 73 L 65 88 L 65 91 L 25 76 Z" fill="#312E81"/>
+        <path d="M 65 88 L 115 73 L 115 76 L 65 91 Z" fill="#312E81"/>
+        <!-- Spine detail (Book binding) -->
+        <path d="M 25 65 L 35 68 L 35 80 L 25 76 Z" fill="#3730A3" opacity="0.8"/>
+
+        <!-- Notebook 3 (Top) -->
+        <path d="M 25 45 L 65 60 L 115 45 L 75 30 Z" fill="#9333EA"/>
+        <!-- Soft/Translucent pages edge (Brighter but not white) -->
+        <path d="M 25 45 L 65 60 L 65 68 L 25 53 Z" fill="rgba(216, 180, 254, 0.3)"/>
+        <path d="M 65 60 L 115 45 L 115 53 L 65 68 Z" fill="rgba(216, 180, 254, 0.2)"/>
+        <!-- Page lines -->
+        <path d="M 25 49 L 65 64 M 65 64 L 115 49" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>
+        <!-- Spine bottom edge -->
+        <path d="M 25 53 L 65 68 L 65 71 L 25 56 Z" fill="#581C87"/>
+        <path d="M 65 68 L 115 53 L 115 56 L 65 71 Z" fill="#581C87"/>
+        <!-- Spine detail (Book binding) -->
+        <path d="M 25 45 L 35 48 L 35 60 L 25 56 Z" fill="#7E22CE"/>
+        
+        <!-- Note content & Ribbon -->
+        <rect x="55" y="41" width="30" height="2" rx="1" fill="#FFFFFF" transform="rotate(20 55 41)"/>
+        <rect x="52" y="46" width="20" height="2" rx="1" fill="#E9D5FF" transform="rotate(20 52 46)"/>
+        <!-- Bookmark ribbon hanging down -->
+        <path d="M 90 52 L 95 48 L 95 65 L 92 62 L 90 65 Z" fill="#C084FC"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B1-1. 琉璃光感笔记本</h3>
+      <p>强化了“书本”特征（增加了左侧的书脊装订线结构，垂下的书签带）。同时将原本刺眼的纯白色纸张侧边改为了<b>半透明的微光玻璃质感</b>，通过细微的横线表现“页层”。</p>
+    </div>
+  </div>
+
+  <!-- Option B1-B: Refined Books - Open Book Style -->
+  <div class="card" data-choice="b1_refined_books_open" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 260px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- Stacked books below -->
+        <path d="M 20 80 L 70 90 L 120 80 L 120 90 L 70 100 L 20 90 Z" fill="#1E3A8A" opacity="0.6"/>
+        <path d="M 20 65 L 70 75 L 120 65 L 120 75 L 70 85 L 20 75 Z" fill="#4338CA" opacity="0.8"/>
+        
+        <!-- Top Book: Open like a glowing UI -->
+        <!-- Left Page -->
+        <path d="M 20 50 Q 40 45 70 55 L 70 65 Q 40 55 20 60 Z" fill="#6B21A8" opacity="0.9"/>
+        <!-- Right Page -->
+        <path d="M 120 50 Q 100 45 70 55 L 70 65 Q 100 55 120 60 Z" fill="#9333EA"/>
+        <!-- Center Fold Glow -->
+        <line x1="70" y1="55" x2="70" y2="65" stroke="#FFFFFF" stroke-width="2" style="filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.8));"/>
+        
+        <!-- UI elements on pages -->
+        <line x1="30" y1="52" x2="60" y2="57" stroke="#E9D5FF" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="30" y1="56" x2="50" y2="59" stroke="#E9D5FF" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="80" y1="57" x2="110" y2="52" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" />
+        <line x1="80" y1="61" x2="100" y2="57" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" />
+        
+        <!-- Sparkling particle escaping from book -->
+        <circle cx="70" cy="40" r="3" fill="#FFFFFF" style="filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.8));"/>
+        <circle cx="60" cy="35" r="1.5" fill="#D8B4FE"/>
+        <circle cx="82" cy="45" r="2" fill="#E9D5FF"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B1-2. 展开的灵感笔记</h3>
+      <p>如果闭合的书本不够生动，顶层采用“翻开的笔记本”形态。左右两侧如羽翼般展开，中间折痕处发出高亮光芒，甚至有灵感光点溢出，表现“正在交互/生成”的动态。</p>
+    </div>
+  </div>
+
+  <!-- Option B2-A: High-tech Folder - Dark Gradient -->
+  <div class="card" data-choice="b2_refined_folder_dark" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 260px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <defs>
+          <linearGradient id="folderBack" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1E1B4B" />
+            <stop offset="100%" stop-color="#0F172A" />
+          </linearGradient>
+          <linearGradient id="folderFront" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4F46E5" opacity="0.3" />
+            <stop offset="100%" stop-color="#7E22CE" opacity="0.6" />
+          </linearGradient>
+          <linearGradient id="docGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#D8B4FE" />
+            <stop offset="100%" stop-color="#9333EA" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Back folder flap (Dark, sleek) -->
+        <path d="M 20 45 L 45 45 L 55 35 L 110 35 C 115 35 118 38 118 43 L 118 100 C 118 105 115 108 110 108 L 25 108 C 20 108 18 105 18 100 Z" fill="url(#folderBack)" stroke="#312E81" stroke-width="1"/>
+        <line x1="25" y1="46" x2="43" y2="46" stroke="#4F46E5" stroke-width="2"/>
+        
+        <!-- Documents stacked inside (Dark UI theme) -->
+        <!-- Doc 1 (Deepest) -->
+        <rect x="30" y="25" width="70" height="80" rx="3" fill="#172554" stroke="#1E3A8A" stroke-width="1" transform="rotate(-6 60 65)"/>
+        <!-- Doc 2 -->
+        <rect x="35" y="18" width="70" height="80" rx="3" fill="#312E81" stroke="#4338CA" stroke-width="1" transform="rotate(4 70 55)"/>
+        <!-- Doc 3 (Front, Active, Dark mode text) -->
+        <rect x="32" y="12" width="75" height="85" rx="4" fill="#0F172A" stroke="url(#docGlow)" stroke-width="2"/>
+        <!-- Text/UI on active document -->
+        <rect x="42" y="22" width="20" height="4" rx="2" fill="#D8B4FE"/>
+        <line x1="42" y1="35" x2="95" y2="35" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        <line x1="42" y1="43" x2="85" y2="43" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        <line x1="42" y1="51" x2="90" y2="51" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        <!-- AI processing element -->
+        <rect x="42" y="62" width="60" height="15" rx="3" fill="#2E287C" opacity="0.8"/>
+        <circle cx="52" cy="69.5" r="3" fill="#C084FC"/>
+        <line x1="60" y1="69.5" x2="95" y2="69.5" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
+
+        <!-- Front folder flap (Sleek Gradient Glass) -->
+        <path d="M 15 65 L 120 65 C 125 65 128 68 128 72 L 120 115 C 118 118 115 120 110 120 L 25 120 C 20 120 16 118 14 115 Z" fill="url(#folderFront)" stroke="#A855F7" stroke-width="1.5"/>
+        <!-- Front glass reflection line -->
+        <path d="M 22 75 L 110 75" stroke="#FFFFFF" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B2-1. 暗调科技文件夹</h3>
+      <p>重新调色。抛弃了塑料感的亮蓝色文件夹，改用<b>深邃暗夜蓝到紫色的高级渐变</b>。内部存放的“文档”也变为了暗色模式下的“UI卡片”，整体质感提升，更符合 AI 开发工具的极客/高级审美。</p>
+    </div>
+  </div>
+</div>

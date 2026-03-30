@@ -1,0 +1,136 @@
+<h2>核心概念探索：沉淀与积累</h2>
+<p class="subtitle">抛开之前的具体形态，我们回归到“沉淀与积累”这两个词的本质。以下是四种不同角度的隐喻草图，全部采用蓝紫渐变的科技感风格。</p>
+
+<div class="cards">
+  <!-- Option 1: 地质地层/千层糕 (Geological Layers / Stack) -->
+  <div class="card" data-choice="accumulation_layers" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- Base Layer (Oldest, darkest) -->
+        <path d="M 30 85 L 60 100 L 90 85 L 90 95 L 60 110 L 30 95 Z" fill="#3B82F6" opacity="0.6"/>
+        <path d="M 30 85 L 60 100 L 90 85 L 60 70 Z" fill="#2563EB" opacity="0.4"/>
+        
+        <!-- Middle Layer -->
+        <path d="M 30 70 L 60 85 L 90 70 L 90 80 L 60 95 L 30 80 Z" fill="#6366F1" opacity="0.8"/>
+        <path d="M 30 70 L 60 85 L 90 70 L 60 55 Z" fill="#4F46E5" opacity="0.6"/>
+        
+        <!-- Top Layer (Newest, brightest, most complex) -->
+        <path d="M 30 55 L 60 70 L 90 55 L 90 65 L 60 80 L 30 65 Z" fill="#9333EA" />
+        <path d="M 30 55 L 60 70 L 90 55 L 60 40 Z" fill="#A855F7" />
+        
+        <!-- Incoming data becoming a new layer -->
+        <polygon points="60,15 70,25 60,35 50,25" fill="#C084FC" opacity="0.8" />
+        <line x1="60" y1="35" x2="60" y2="45" stroke="#C084FC" stroke-width="2" stroke-dasharray="2 2" />
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>1. 知识地层 (堆叠叠加)</h3>
+      <p><b>隐喻：</b>像地质沉积岩一样，时间越久，积累的层级越丰富、越稳固。</p>
+      <p><b>视觉：</b>层层叠叠的几何板块，上方还有新的菱形（新的对话/知识）正在降落加入这个“技术栈”。</p>
+    </div>
+  </div>
+
+  <!-- Option 2: 树木年轮/生长 (Growth Rings / Tree) -->
+  <div class="card" data-choice="accumulation_rings" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradRings" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#C084FC" />
+            <stop offset="50%" stop-color="#818CF8" />
+            <stop offset="100%" stop-color="#3B82F6" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Outer rings -->
+        <circle cx="60" cy="60" r="40" fill="none" stroke="#3B82F6" stroke-width="1.5" opacity="0.4" stroke-dasharray="5 5"/>
+        <circle cx="60" cy="60" r="32" fill="none" stroke="#6366F1" stroke-width="2" opacity="0.6"/>
+        <circle cx="60" cy="60" r="24" fill="none" stroke="#8B5CF6" stroke-width="3" opacity="0.8"/>
+        
+        <!-- Solid core -->
+        <circle cx="60" cy="60" r="16" fill="url(#gradRings)" />
+        <circle cx="60" cy="60" r="6" fill="#FFFFFF" opacity="0.9"/>
+        
+        <!-- Accumulation nodes -->
+        <circle cx="60" cy="20" r="3" fill="#3B82F6" />
+        <circle cx="92" cy="60" r="4" fill="#6366F1" />
+        <circle cx="77" cy="84" r="5" fill="#8B5CF6" />
+        <circle cx="36" cy="60" r="3" fill="#8B5CF6" />
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>2. 科技年轮 (由内而外)</h3>
+      <p><b>隐喻：</b>积累就像树木的年轮，由核心向外一圈圈扩展，越来越丰满。</p>
+      <p><b>视觉：</b>发光的核心被同心圆环绕。某些环上带有高亮的“知识节点”，表现出非线性的、网状的增长感。</p>
+    </div>
+  </div>
+
+  <!-- Option 3: 能量沙漏 (Energy Hourglass) -->
+  <div class="card" data-choice="accumulation_hourglass" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- Glass Shell -->
+        <path d="M 35 20 Q 60 20 60 60 Q 60 100 35 100 L 85 100 Q 60 100 60 60 Q 60 20 85 20 Z" fill="none" stroke="#818CF8" stroke-width="1" opacity="0.5"/>
+        
+        <!-- Top: scattered fragments -->
+        <polygon points="45,30 50,35 40,38" fill="#C084FC" opacity="0.8"/>
+        <rect x="65" y="28" width="6" height="6" fill="#A855F7" rx="1" transform="rotate(15 68 31)"/>
+        <circle cx="55" cy="45" r="2.5" fill="#D8B4FE" />
+        <circle cx="70" cy="40" r="3" fill="#E879F9" />
+        
+        <!-- Falling stream -->
+        <line x1="60" y1="50" x2="60" y2="70" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+        <line x1="60" y1="75" x2="60" y2="78" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+        
+        <!-- Bottom: Solid accumulated base -->
+        <path d="M 40 85 Q 60 85 60 65 Q 60 85 80 85 L 85 100 L 35 100 Z" fill="#4F46E5" opacity="0.9"/>
+        <path d="M 45 92 L 75 92" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>3. 能量沙漏 (时间与转化)</h3>
+      <p><b>隐喻：</b>沙漏最能代表“时间的沉淀”。上方是散乱的思绪，经过狭窄的通道，在底部沉积成坚实的基座。</p>
+      <p><b>视觉：</b>极简的沙漏轮廓，底部的沙子不是散乱的，而是形成了一块发光的坚固能量块（代表结实的知识库）。</p>
+    </div>
+  </div>
+
+  <!-- Option 4: 数据库/记忆体 (Memory Core / Databank) -->
+  <div class="card" data-choice="accumulation_memory" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradMemory" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#4F46E5" />
+            <stop offset="50%" stop-color="#8B5CF6" />
+            <stop offset="100%" stop-color="#4F46E5" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Container -->
+        <rect x="30" y="20" width="60" height="80" rx="6" fill="none" stroke="#6366F1" stroke-width="2" opacity="0.4"/>
+        
+        <!-- Filled slots (Accumulation) -->
+        <!-- Bottom fully filled -->
+        <rect x="36" y="85" width="48" height="8" rx="2" fill="url(#gradMemory)" />
+        <rect x="36" y="73" width="48" height="8" rx="2" fill="url(#gradMemory)" opacity="0.9"/>
+        <rect x="36" y="61" width="48" height="8" rx="2" fill="url(#gradMemory)" opacity="0.8"/>
+        
+        <!-- Partially filled -->
+        <rect x="36" y="49" width="30" height="8" rx="2" fill="url(#gradMemory)" opacity="0.6"/>
+        
+        <!-- Empty slot waiting to be filled -->
+        <rect x="36" y="37" width="48" height="8" rx="2" fill="#1e1e2e" stroke="#4F46E5" stroke-width="1"/>
+        <rect x="36" y="25" width="48" height="8" rx="2" fill="#1e1e2e" stroke="#4F46E5" stroke-width="1"/>
+        
+        <!-- Data chip floating in -->
+        <rect x="50" y="5" width="16" height="8" rx="2" fill="#C084FC" />
+        <line x1="58" y1="15" x2="58" y2="22" stroke="#C084FC" stroke-width="1.5" stroke-dasharray="2 2" />
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>4. 记忆插槽 (结构化入库)</h3>
+      <p><b>隐喻：</b>知识就像被格式化的硬盘/内存条，一条条地插入插槽，底座越堆越高。</p>
+      <p><b>视觉：</b>非常直白的科技表达，像一个电池槽或者硬盘列阵。上方有一个新的数据块正在归位，体现“入库”的动作。</p>
+    </div>
+  </div>
+</div>

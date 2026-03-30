@@ -1,19 +1,27 @@
-<svg width="512" height="512" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <!-- 对话气泡：左上直角，右上圆弧(7px)，右下直角，左下圆弧(25px) -->
-  <path d="M15 18
-           L88 18
-           Q95 18 95 25
-           L95 50
-           L22 50
-           Q15 50 15 43
-           Z"
-        fill="#3B82F6"/>
-  <!-- 三个点 -->
-  <circle cx="38" cy="34" r="5" fill="white"/>
-  <circle cx="55" cy="34" r="5" fill="white"/>
-  <circle cx="72" cy="34" r="5" fill="white"/>
-  <!-- 沉淀层 -->
-  <rect x="15" y="62" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.7"/>
-  <rect x="15" y="76" width="80" height="8" rx="3" fill="#3B82F6" opacity="0.5"/>
-  <rect x="15" y="90" width="50" height="8" rx="3" fill="#3B82F6" opacity="0.35"/>
+<svg width="180" height="180" viewBox="22 22 96 89" xmlns="http://www.w3.org/2000/svg">
+  <!-- Notebook 1 (Bottom) - Deep Purple -->
+  <path d="M 25 80 L 65 95 L 115 80 L 75 65 Z" fill="#581C87" opacity="0.8"/>
+  <path d="M 25 80 L 65 95 L 65 105 L 25 90 Z" fill="rgba(216, 180, 254, 0.4)"/>
+  <path d="M 65 95 L 115 80 L 115 90 L 65 105 Z" fill="rgba(192, 132, 252, 0.3)"/>
+  <path d="M 25 90 L 65 105 L 65 108 L 25 93 Z" fill="#3B0764"/>
+  <path d="M 65 105 L 115 90 L 115 93 L 65 108 Z" fill="#3B0764"/>
+  <polygon points="40,86 48,89 48,103 44,100 40,103" fill="#A855F7"/>
+
+  <!-- Notebook 2 (Middle) - Indigo/Violet mix -->
+  <path d="M 25 60 L 65 75 L 115 60 L 75 45 Z" fill="#4338CA" opacity="0.9"/>
+  <path d="M 25 60 L 65 75 L 65 85 L 25 70 Z" fill="rgba(199, 210, 254, 0.6)"/>
+  <path d="M 65 75 L 115 60 L 115 70 L 65 85 Z" fill="rgba(165, 180, 252, 0.5)"/>
+  <path d="M 25 70 L 65 85 L 65 88 L 25 73 Z" fill="#312E81"/>
+  <path d="M 65 85 L 115 70 L 115 73 L 65 88 Z" fill="#312E81"/>
+
+  <!-- Notebook 3 (Top) - Bright Tech Blue -->
+  <path d="M 25 40 L 65 55 L 115 40 L 75 25 Z" fill="#3B82F6"/>
+  <path d="M 25 40 L 65 55 L 65 65 L 25 50 Z" fill="rgba(219, 234, 254, 0.9)"/>
+  <path d="M 65 55 L 115 40 L 115 50 L 65 65 Z" fill="rgba(191, 219, 254, 0.8)"/>
+  <path d="M 25 50 L 65 65 L 65 68 L 25 53 Z" fill="#1D4ED8"/>
+  <path d="M 65 65 L 115 50 L 115 53 L 65 68 Z" fill="#1D4ED8"/>
+  
+  <!-- Note content on top cover -->
+  <text x="70" y="35" fill="#e4e0ecff" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" text-anchor="middle" transform="matrix(0.866, 0.35, -0.866, 0.35, 47, 1)">Chat Note</text>
+  <polygon points="90,47 98,44 98,58 94,56 90,58" fill="#60A5FA"/>
 </svg>

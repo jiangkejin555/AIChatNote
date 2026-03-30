@@ -1,0 +1,119 @@
+<h2>紧凑版流体转化概念 (基于 E3)</h2>
+<p class="subtitle">我们为您调整了流体转化概念的比例，去除了松散的外部元素，将其约束在一个更紧凑、更适合做 App Icon 的轮廓中。</p>
+
+<div class="cards">
+  <!-- Option 1: 滴落结晶 (Drop to Crystal) -->
+  <div class="card" data-choice="e3_1" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradE3_1a" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#C084FC" />
+            <stop offset="100%" stop-color="#818CF8" />
+          </linearGradient>
+          <linearGradient id="gradE3_1b" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#818CF8" />
+            <stop offset="100%" stop-color="#3B82F6" />
+          </linearGradient>
+        </defs>
+        <!-- Background containment (squircle) -->
+        <rect x="15" y="15" width="90" height="90" rx="25" fill="#1e1e2e" />
+        
+        <!-- Fluid container merging into solid -->
+        <path d="M 40 30 Q 60 40 60 55 Q 60 70 40 85 L 80 85 Q 60 70 60 55 Q 60 40 80 30 Z" fill="url(#gradE3_1a)" opacity="0.8"/>
+        
+        <!-- Drops falling in tightly -->
+        <circle cx="50" cy="20" r="4" fill="#E879F9" />
+        <circle cx="70" cy="22" r="3" fill="#C084FC" />
+        <path d="M 60 25 Q 55 35 60 40 Q 65 35 60 25 Z" fill="#D8B4FE" />
+        
+        <!-- Solidified bottom (Document/Book spine) -->
+        <rect x="40" y="80" width="40" height="15" fill="url(#gradE3_1b)" rx="4"/>
+        <line x1="45" y1="85" x2="65" y2="85" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+        <line x1="45" y1="90" x2="75" y2="90" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E3.1 沙漏沉淀</h3>
+      <p>整体轮廓被约束在沙漏的流线型内，上方是掉落的水滴，底部沉淀为一本紧实的“书本/文档”块。</p>
+    </div>
+  </div>
+
+  <!-- Option 2: 球体包覆 (Sphere Encapsulation) -->
+  <div class="card" data-choice="e3_2" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradE3_2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="50%" stop-color="#6366F1" />
+            <stop offset="100%" stop-color="#3B82F6" />
+          </linearGradient>
+          <radialGradient id="glowE3_2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFFFFF" />
+            <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+          </radialGradient>
+        </defs>
+        <!-- Background containment -->
+        <rect x="15" y="15" width="90" height="90" rx="25" fill="#1e1e2e" />
+        
+        <!-- Fluid circle base -->
+        <circle cx="60" cy="60" r="35" fill="url(#gradE3_2)" opacity="0.9"/>
+        
+        <!-- Top area: scattered fluid shapes being pulled in -->
+        <path d="M 60 25 Q 70 35 60 50 Q 50 35 60 25 Z" fill="#FFFFFF" opacity="0.6" />
+        <circle cx="45" cy="35" r="5" fill="#C084FC" />
+        <circle cx="75" cy="40" r="4" fill="#A855F7" />
+        <circle cx="60" cy="18" r="3" fill="#D8B4FE" />
+        
+        <!-- Bottom area: structured geometry -->
+        <path d="M 40 65 L 80 65 L 80 85 Q 60 90 40 85 Z" fill="#1e1e2e" opacity="0.4"/>
+        <line x1="45" y1="70" x2="75" y2="70" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+        <line x1="45" y1="78" x2="65" y2="78" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+        
+        <!-- Core highlight -->
+        <circle cx="60" cy="55" r="15" fill="url(#glowE3_2)" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E3.2 浑圆滴变</h3>
+      <p>以一个完整的圆形/水滴为外轮廓，极度紧凑。上方是融入的流体，下方直接在球体内演化为笔记线条。</p>
+    </div>
+  </div>
+
+  <!-- Option 3: 微型反应釜 (Mini Reactor) -->
+  <div class="card" data-choice="e3_3" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px; border-radius: 20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradE3_3a" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E879F9" />
+            <stop offset="50%" stop-color="#A855F7" />
+            <stop offset="100%" stop-color="#4F46E5" />
+          </linearGradient>
+        </defs>
+        <!-- Background containment -->
+        <rect x="15" y="15" width="90" height="90" rx="25" fill="#1e1e2e" />
+        
+        <!-- Solid block with fluid cutout -->
+        <rect x="30" y="30" width="60" height="60" rx="12" fill="url(#gradE3_3a)" />
+        
+        <!-- Inner cavity -->
+        <path d="M 40 40 Q 60 55 60 70 Q 60 55 80 40 L 80 80 L 40 80 Z" fill="#1e1e2e" opacity="0.6"/>
+        
+        <!-- Particles entering the cavity -->
+        <circle cx="60" cy="35" r="4" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="50" cy="45" r="2.5" fill="#FFFFFF" opacity="0.6"/>
+        <circle cx="70" cy="48" r="2" fill="#FFFFFF" opacity="0.5"/>
+        
+        <!-- Bottom settled layer -->
+        <rect x="45" y="65" width="30" height="10" fill="#60A5FA" rx="2" />
+        <rect x="48" y="68" width="24" height="4" fill="#FFFFFF" rx="1" opacity="0.8"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E3.3 胶囊提炼</h3>
+      <p>将整个过程封在一个带圆角的方形图标框内（类似微型胶囊或芯片），流体从上注入空腔，在底部形成发光的数据块。</p>
+    </div>
+  </div>
+</div>

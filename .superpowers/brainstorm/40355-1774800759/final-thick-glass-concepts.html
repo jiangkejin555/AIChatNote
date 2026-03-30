@@ -1,0 +1,83 @@
+<h2>最终打磨：厚重紧凑的玻璃态封存 (无边框版)</h2>
+<p class="subtitle">根据您的指示，我们去除了外部的高亮边框，大幅增加了每一层的厚度，并极大地缩小了层间距，使其看起来像一个紧密咬合的高科技存储晶体块。</p>
+
+<div class="cards">
+  <!-- Final Version A: Clean & Blocky -->
+  <div class="card" data-choice="final_blocky" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 260px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- LAYER 1 (Bottom) - Extremely thick, close to Layer 2 -->
+        <!-- Top surface -->
+        <polygon points="30,85 70,105 110,85 70,65" fill="#1E3A8A" opacity="0.4"/>
+        <!-- Left thick side -->
+        <polygon points="30,85 70,105 70,125 30,105" fill="#0F172A" opacity="0.9"/>
+        <!-- Right thick side -->
+        <polygon points="110,85 70,105 70,125 110,105" fill="#172554" opacity="0.9"/>
+        
+        <!-- Centered Data inside Bottom Layer -->
+        <line x1="45" y1="92" x2="65" y2="102" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="65" cy="102" r="3" fill="#60A5FA" opacity="0.5"/>
+        <line x1="75" y1="102" x2="95" y2="92" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="75" cy="102" r="3" fill="#60A5FA" opacity="0.5"/>
+
+        <!-- LAYER 2 (Middle) - Extremely thick, stacked tightly on Layer 1 -->
+        <!-- Top surface -->
+        <polygon points="30,60 70,80 110,60 70,40" fill="#4338CA" opacity="0.5"/>
+        <!-- Left thick side -->
+        <polygon points="30,60 70,80 70,100 30,80" fill="#232159" opacity="0.95"/>
+        <!-- Right thick side -->
+        <polygon points="110,60 70,80 70,100 110,80" fill="#2E287C" opacity="0.95"/>
+        
+        <!-- Centered Data inside Middle Layer -->
+        <line x1="50" y1="70" x2="90" y2="70" stroke="#A5B4FC" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+        <circle cx="50" cy="70" r="2.5" fill="#A5B4FC"/>
+        <circle cx="90" cy="70" r="2.5" fill="#A5B4FC"/>
+
+        <!-- LAYER 3 (Top) - Extremely thick, stacked tightly on Layer 2 -->
+        <!-- Top surface -->
+        <polygon points="30,35 70,55 110,35 70,15" fill="#9333EA" opacity="0.6"/>
+        <!-- Left thick side -->
+        <polygon points="30,35 70,55 70,75 30,55" fill="#581C87" opacity="1"/>
+        <!-- Right thick side -->
+        <polygon points="110,35 70,55 70,75 110,55" fill="#4C1D95" opacity="1"/>
+        
+        <!-- Centered Glowing Data inside Top Layer -->
+        <line x1="45" y1="42" x2="95" y2="42" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" style="filter: drop-shadow(0px 0px 6px rgba(255,255,255,0.9));"/>
+        <line x1="60" y1="52" x2="80" y2="52" stroke="#E9D5FF" stroke-width="3" stroke-linecap="round" style="filter: drop-shadow(0px 0px 4px rgba(216,180,254,0.9));"/>
+        <line x1="65" y1="32" x2="75" y2="32" stroke="#E9D5FF" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 A: 沉稳无边框 (等距对齐)</h3>
+      <p>完全去除边框线。三层厚玻璃板紧紧压在一起，像一块沉甸甸的光学存储硬盘。内部发光数据完美封存在中心。底色较暗，让内部发光更明显。</p>
+    </div>
+  </div>
+
+  <!-- Final Version B: Slightly Beveled/Rounded for softer feel -->
+  <div class="card" data-choice="final_rounded" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 260px; border-radius: 20px;">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <!-- Layer 1 -->
+        <path d="M 32 85 L 68 103 C 69 103.5 71 103.5 72 103 L 108 85 L 108 105 C 108 106 107 107 106 107.5 L 72 124.5 C 71 125 69 125 68 124.5 L 34 107.5 C 33 107 32 106 32 105 Z" fill="#172554" opacity="0.9"/>
+        <path d="M 32 85 L 68 103 C 69 103.5 71 103.5 72 103 L 108 85 L 72 67 C 71 66.5 69 66.5 68 67 Z" fill="#1E3A8A" opacity="0.4"/>
+        <line x1="45" y1="92" x2="65" y2="102" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <line x1="75" y1="102" x2="95" y2="92" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+
+        <!-- Layer 2 -->
+        <path d="M 32 60 L 68 78 C 69 78.5 71 78.5 72 78 L 108 60 L 108 80 C 108 81 107 82 106 82.5 L 72 99.5 C 71 100 69 100 68 99.5 L 34 82.5 C 33 82 32 81 32 80 Z" fill="#2E287C" opacity="0.95"/>
+        <path d="M 32 60 L 68 78 C 69 78.5 71 78.5 72 78 L 108 60 L 72 42 C 71 41.5 69 41.5 68 42 Z" fill="#4338CA" opacity="0.5"/>
+        <line x1="50" y1="70" x2="90" y2="70" stroke="#A5B4FC" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+
+        <!-- Layer 3 -->
+        <path d="M 32 35 L 68 53 C 69 53.5 71 53.5 72 53 L 108 35 L 108 55 C 108 56 107 57 106 57.5 L 72 74.5 C 71 75 69 75 68 74.5 L 34 57.5 C 33 57 32 56 32 55 Z" fill="#4C1D95" opacity="1"/>
+        <path d="M 32 35 L 68 53 C 69 53.5 71 53.5 72 53 L 108 35 L 72 17 C 71 16.5 69 16.5 68 17 Z" fill="#9333EA" opacity="0.6"/>
+        <line x1="45" y1="42" x2="95" y2="42" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" style="filter: drop-shadow(0px 0px 6px rgba(255,255,255,0.9));"/>
+        <line x1="60" y1="52" x2="80" y2="52" stroke="#E9D5FF" stroke-width="3" stroke-linecap="round" style="filter: drop-shadow(0px 0px 4px rgba(216,180,254,0.9));"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>方案 B: 微圆角无边框 (柔和现代)</h3>
+      <p>在方案 A 的基础上，将极其尖锐的外围尖角做了微小的圆角处理。这会让它看起来更像现代 App Icon 的主流审美，厚重紧凑的同时不失圆润和亲和力。</p>
+    </div>
+  </div>
+</div>

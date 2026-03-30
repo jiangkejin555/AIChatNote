@@ -1,0 +1,128 @@
+<h2>概念 E (数据棱镜) 深度扩展</h2>
+<p class="subtitle">我们基于“散乱信息进入棱镜，折射/重塑为规整知识”的思路，为您深化了三种不同的视觉表现方向。</p>
+
+<div class="cards">
+  <!-- E1: 发光金字塔/钻石 -->
+  <div class="card" data-choice="e1" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradE1a" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#8B5CF6" opacity="0.3"/>
+            <stop offset="100%" stop-color="#3B82F6" opacity="0.9"/>
+          </linearGradient>
+          <linearGradient id="gradE1b" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#C084FC" opacity="0.4"/>
+            <stop offset="100%" stop-color="#4F46E5" opacity="1"/>
+          </linearGradient>
+        </defs>
+        <!-- Incoming raw chaotic paths -->
+        <path d="M 20 10 Q 30 25 45 40" fill="none" stroke="#A855F7" stroke-width="1" stroke-dasharray="2 2"/>
+        <path d="M 50 5 Q 55 20 55 35" fill="none" stroke="#818CF8" stroke-width="1.5" stroke-dasharray="1 3"/>
+        <path d="M 85 5 Q 75 25 65 35" fill="none" stroke="#60A5FA" stroke-width="1" stroke-dasharray="3 2"/>
+        <path d="M 100 15 Q 90 30 75 45" fill="none" stroke="#C084FC" stroke-width="1" stroke-dasharray="2 2"/>
+        
+        <!-- Chaotic nodes entering -->
+        <polygon points="20,8 24,12 18,14" fill="#A855F7" />
+        <rect x="48" y="3" width="4" height="4" fill="#818CF8" />
+        <circle cx="85" cy="5" r="2.5" fill="#60A5FA" />
+        <polygon points="100,13 103,17 97,17" fill="#C084FC" />
+        
+        <!-- 3D Prism/Diamond Structure -->
+        <!-- Back face -->
+        <polygon points="60,30 85,50 60,95" fill="url(#gradE1a)" />
+        <!-- Front faces -->
+        <polygon points="60,30 35,50 60,95" fill="url(#gradE1b)" />
+        <polygon points="35,50 60,40 85,50 60,95" fill="none" stroke="#E879F9" stroke-width="0.5" opacity="0.6"/>
+        <line x1="60" y1="30" x2="60" y2="40" stroke="#FFFFFF" stroke-width="0.5" opacity="0.8"/>
+        
+        <!-- Core light -->
+        <circle cx="60" cy="55" r="4" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="60" cy="55" r="10" fill="url(#gradE1b)" opacity="0.5" style="mix-blend-mode: screen;"/>
+        
+        <!-- Structured output beams -->
+        <rect x="45" y="100" width="30" height="3" fill="#60A5FA" rx="1" opacity="0.8"/>
+        <rect x="50" y="106" width="20" height="3" fill="#8B5CF6" rx="1" opacity="0.9"/>
+        <rect x="55" y="112" width="10" height="3" fill="#C084FC" rx="1" opacity="1"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E1. 钻石漏斗 (立体科技)</h3>
+      <p>采用类似倒置钻石或金字塔的 3D 结构。强调“高价值”和“提纯”的过程，视觉上更硬朗、有立体几何感。</p>
+    </div>
+  </div>
+
+  <!-- E2: 光学折射 (极简符号) -->
+  <div class="card" data-choice="e2" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <!-- 2D Minimalist Prism -->
+        <polygon points="60,20 100,80 20,80" fill="none" stroke="#4F46E5" stroke-width="3" />
+        <polygon points="60,20 100,80 20,80" fill="#3B82F6" opacity="0.1" />
+        
+        <!-- Input rays (chaotic angles) -->
+        <line x1="10" y1="40" x2="35" y2="55" stroke="#A855F7" stroke-width="2" stroke-linecap="round"/>
+        <line x1="15" y1="30" x2="40" y2="45" stroke="#C084FC" stroke-width="2" stroke-linecap="round"/>
+        <line x1="25" y1="20" x2="47" y2="35" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
+        
+        <!-- Refraction inside -->
+        <line x1="35" y1="55" x2="70" y2="60" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        <line x1="40" y1="45" x2="70" y2="50" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        <line x1="47" y1="35" x2="70" y2="40" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        
+        <!-- Output rays (aligned, parallel) -->
+        <line x1="85" y1="60" x2="115" y2="60" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="80" y1="50" x2="110" y2="50" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+        <line x1="75" y1="40" x2="105" y2="40" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E2. 光学折射 (极简符号)</h3>
+      <p>类似 Pink Floyd 专辑封面的光学折射效果。用最简单的 2D 三角形和线条，表达杂乱信息被“理顺为平行线”的秩序感，高度扁平化。</p>
+    </div>
+  </div>
+
+  <!-- E3: 流体转化 (有机动态) -->
+  <div class="card" data-choice="e3" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f0f16; display: flex; align-items: center; justify-content: center; height: 220px;">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gradE3" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#C084FC" />
+            <stop offset="50%" stop-color="#818CF8" />
+            <stop offset="100%" stop-color="#3B82F6" />
+          </linearGradient>
+          <filter id="glowE3">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
+        <!-- Scattered drops top -->
+        <circle cx="35" cy="15" r="4" fill="#C084FC" />
+        <circle cx="50" cy="8" r="6" fill="#A855F7" />
+        <circle cx="70" cy="12" r="3" fill="#D8B4FE" />
+        <circle cx="85" cy="20" r="5" fill="#E879F9" />
+        
+        <!-- Merging into central vessel/flow -->
+        <path d="M 25 35 Q 60 40 60 60 Q 60 80 40 90 L 80 90 Q 60 80 60 60 Q 60 40 95 35 Z" fill="url(#gradE3)" opacity="0.8" />
+        
+        <!-- Inner flow lines -->
+        <path d="M 40 35 Q 60 45 60 60 Q 60 75 48 85" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <path d="M 80 35 Q 60 45 60 60 Q 60 75 72 85" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+        
+        <!-- Outputting organized shape (e.g. a book/document icon formed by drops) -->
+        <rect x="45" y="95" width="30" height="15" fill="#3B82F6" rx="2" filter="url(#glowE3)"/>
+        <line x1="50" y1="100" x2="75" y2="100" stroke="#BFDBFE" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="50" y1="105" x2="70" y2="105" stroke="#BFDBFE" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E3. 流体转化 (有机动态)</h3>
+      <p>更柔和的形态，像是一个能量瓶。散乱的圆点（水滴）汇聚融合，最后在底部凝聚成一个具体的“文档/笔记”块的形态。</p>
+    </div>
+  </div>
+</div>
