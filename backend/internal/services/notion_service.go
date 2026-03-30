@@ -76,10 +76,16 @@ func (s *notionService) HandleCallback(code string, userID uint) error {
 		return fmt.Errorf("failed to encrypt token: %w", err)
 	}
 
-	// 3. Auto-create App Page "AIChatNote"
-	appPageID, err := s.createAppPage(tokenResp.AccessToken)
-	if err != nil {
-		return fmt.Errorf("failed to create app page: %w", err)
+	// 3. Reuse existing App Page or create a new one
+	var appPageID string
+	existing, _ := s.repo.GetByUserIDAndProvider(userID, "notion")
+	if existing != nil && existing.NotionAppPageID != nil && *existing.NotionAppPageID != "" {
+		appPageID = *existing.NotionAppPageID
+	} else {
+		appPageID, err = s.createAppPage(tokenResp.AccessToken)
+		if err != nil {
+			return fmt.Errorf("failed to create app page: %w", err)
+		}
 	}
 
 	// 4. Save Integration Data

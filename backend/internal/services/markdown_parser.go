@@ -2,11 +2,20 @@ package services
 
 import (
 	"bytes"
+	"html"
+	"regexp"
+	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 )
+
+var htmlTagRegex = regexp.MustCompile(`<[^>]*>`)
+
+func stripHTMLTags(s string) string {
+	return htmlTagRegex.ReplaceAllString(s, "")
+}
 
 func ParseMarkdownToNotionBlocks(md []byte) []map[string]interface{} {
 	reader := text.NewReader(md)
@@ -61,8 +70,19 @@ func ParseMarkdownToNotionBlocks(md []byte) []map[string]interface{} {
 				blocks = append(blocks, createBulletedListItemBlock(content))
 			}
 			return ast.WalkSkipChildren, nil
+		case *ast.HTMLBlock:
+			content := extractTextFromLines(node.Lines(), md)
+			text := stripHTMLTags(content)
+			text = html.UnescapeString(text)
+			for _, line := range strings.Split(text, "\n") {
+				line = strings.TrimSpace(line)
+				if line != "" {
+					blocks = append(blocks, createParagraphBlock(line))
+				}
+			}
+			return ast.WalkSkipChildren, nil
 		}
-		
+
 		return ast.WalkContinue, nil
 	})
 
@@ -84,7 +104,7 @@ func extractTextFromNode(node ast.Node, source []byte) string {
 				case *ast.String:
 					buf.Write(textNode.Value)
 				case *ast.CodeSpan:
-					// Just extract text
+					buf.Write(textNode.Text(source))
 				}
 			}
 		}
@@ -106,17 +126,17 @@ func createRichText(content string) []map[string]interface{} {
 	if content == "" {
 		content = " "
 	}
-	
+
 	runes := []rune(content)
 	var richTexts []map[string]interface{}
-	
+
 	// Notion has a 2000 character limit per rich text object
 	for len(runes) > 0 {
 		chunkSize := 2000
 		if len(runes) < chunkSize {
 			chunkSize = len(runes)
 		}
-		
+
 		chunk := string(runes[:chunkSize])
 		richTexts = append(richTexts, map[string]interface{}{
 			"type": "text",
@@ -124,10 +144,10 @@ func createRichText(content string) []map[string]interface{} {
 				"content": chunk,
 			},
 		})
-		
+
 		runes = runes[chunkSize:]
 	}
-	
+
 	return richTexts
 }
 
@@ -160,7 +180,7 @@ func createHeadingBlock(level int, content string) map[string]interface{} {
 
 func createCodeBlock(language string, content string) map[string]interface{} {
 	// Notion supports specific languages, we can just use the provided language
-	// or fallback to "plain_text" if not supported, but Notion API handles invalid languages 
+	// or fallback to "plain_text" if not supported, but Notion API handles invalid languages
 	// by falling back or throwing an error. We'll pass the string directly.
 	return map[string]interface{}{
 		"object": "block",
