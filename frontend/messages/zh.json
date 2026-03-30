@@ -67,7 +67,20 @@
     "simpleLongDesc": "保留最近 15 条消息，更多上下文",
     "summaryShortDesc": "摘要窗口 10 条，保留 5 条原始消息",
     "summaryNormalDesc": "摘要窗口 20 条，保留 10 条原始消息",
-    "summaryLongDesc": "摘要窗口 40 条，保留 20 条原始消息"
+    "summaryLongDesc": "摘要窗口 40 条，保留 20 条原始消息",
+    "integrationsTitle": "第三方连接",
+    "integrationsDesc": "连接外部服务，扩展应用功能",
+    "notionTitle": "Notion",
+    "notionDesc": "连接你的 Notion 账号，将笔记直接导出到 Notion 工作区",
+    "notionConnected": "已连接",
+    "notionConnectedDesc": "你的 Notion 账号已连接，现在可以将笔记导出到 Notion。",
+    "notionNotConnectedDesc": "Notion 尚未连接，连接账号后可启用 Notion 导出功能。",
+    "notionConnectFailed": "获取 Notion 连接状态失败，请重试",
+    "notionConnectStartFailed": "无法启动 Notion 连接",
+    "notionDisconnectSuccess": "Notion 已断开连接",
+    "notionDisconnectFailed": "断开 Notion 连接失败",
+    "connectNotion": "连接 Notion",
+    "disconnect": "断开连接"
   },
   "chat": {
     "selectModel": "选择模型",

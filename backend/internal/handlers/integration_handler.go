@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/chat-note/backend/internal/middleware"
@@ -50,7 +51,9 @@ func (h *IntegrationHandler) NotionCallback(c *gin.Context) {
 
 	err := h.notionService.HandleCallback(req.Code, userID)
 	if err != nil {
-		utils.SendError(c, http.StatusInternalServerError, "internal_error", "Failed to connect to Notion")
+		// Log detailed error for debugging
+		c.Error(err)
+		utils.SendError(c, http.StatusInternalServerError, "internal_error", fmt.Sprintf("Failed to connect to Notion: %v", err))
 		return
 	}
 

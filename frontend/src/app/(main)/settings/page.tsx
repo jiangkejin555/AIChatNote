@@ -10,12 +10,14 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import { Sun, Moon, Monitor, Settings, Languages, Type, CaseSensitive, Brain, Info, Sparkles, Palette, Clock } from 'lucide-react'
+import { Sun, Moon, Monitor, Settings, Languages, Type, CaseSensitive, Brain, Info, Sparkles, Palette, Clock, Link2, AlertCircle } from 'lucide-react'
 import { useI18n, localeNames } from '@/i18n'
 import { useUIStore, FONT_OPTIONS, type FontSize } from '@/stores/ui-store'
 import { useUserSettings } from '@/hooks/use-user-settings'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { integrationService } from '@/services/integration'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -32,10 +34,60 @@ export default function SettingsPage() {
   const { settings, loading, setContextMode, setMemoryLevel } = useUserSettings()
   const [mounted, setMounted] = useState(false)
 
+  // Notion integration state
+  const [notionConnected, setNotionConnected] = useState<boolean | null>(null)
+  const [notionLoading, setNotionLoading] = useState(true)
+  const [notionActionLoading, setNotionActionLoading] = useState(false)
+  const [notionError, setNotionError] = useState<string | null>(null)
+
   // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Fetch Notion connection status
+  const fetchNotionStatus = useCallback(async () => {
+    try {
+      setNotionLoading(true)
+      setNotionError(null)
+      const status = await integrationService.getNotionStatus()
+      setNotionConnected(status.connected)
+    } catch {
+      setNotionError(t('settings.notionConnectFailed'))
+    } finally {
+      setNotionLoading(false)
+    }
+  }, [t])
+
+  useEffect(() => {
+    if (mounted) {
+      fetchNotionStatus()
+    }
+  }, [mounted, fetchNotionStatus])
+
+  const handleConnectNotion = async () => {
+    try {
+      setNotionActionLoading(true)
+      const { url } = await integrationService.getNotionAuthUrl()
+      window.location.href = url
+    } catch {
+      toast.error(t('settings.notionConnectStartFailed'))
+      setNotionActionLoading(false)
+    }
+  }
+
+  const handleDisconnectNotion = async () => {
+    try {
+      setNotionActionLoading(true)
+      await integrationService.disconnectNotion()
+      toast.success(t('settings.notionDisconnectSuccess'))
+      setNotionConnected(false)
+    } catch {
+      toast.error(t('settings.notionDisconnectFailed'))
+    } finally {
+      setNotionActionLoading(false)
+    }
+  }
 
   const handleLanguageChange = (value: string | null) => {
     if (value && (value === 'zh' || value === 'en')) {
@@ -391,6 +443,71 @@ export default function SettingsPage() {
                       )}
                     </span>
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Third-party Connections Card */}
+          <Card className="w-full overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-muted/10 dark:from-card dark:via-card dark:to-muted/5 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="pb-4 border-b bg-gradient-to-r from-muted/30 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                  <Link2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">
+                    {t('settings.integrationsTitle')}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {t('settings.integrationsDesc')}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/50">
+                {/* Notion Integration */}
+                <div className="p-5 group hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-200">
+                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+                          <path d="M4.459 4.208c.745-.636 1.815-.745 3.32-.745h9.44c1.171 0 2.235.109 2.98.745.745.637.745 1.705.745 2.876v9.832c0 1.171 0 2.239-.745 2.876-.745.636-1.809.745-2.98.745H7.78c-1.505 0-2.575-.109-3.32-.745-.745-.637-.745-1.705-.745-2.876V7.084c0-1.171 0-2.239.744-2.876zm2.84 2.84v9.904h2.15v-6.72l4.87 6.72h1.92V7.048h-2.15v6.72l-4.87-6.72h-1.92z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Label className="font-medium">{t('settings.notionTitle')}</Label>
+                          {notionConnected === true && (
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium border border-emerald-500/20">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              {t('settings.notionConnected')}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('settings.notionDesc')}</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={notionConnected ? handleDisconnectNotion : handleConnectNotion}
+                      disabled={notionActionLoading}
+                      variant={notionConnected ? 'outline' : 'default'}
+                      className={cn(
+                        'shrink-0 min-w-[120px]',
+                        notionConnected && 'hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30'
+                      )}
+                    >
+                      {notionActionLoading && <span className="mr-2 h-4 w-4 animate-spin inline-block border-2 border-current border-t-transparent rounded-full" />}
+                      {notionConnected ? t('settings.disconnect') : t('settings.connectNotion')}
+                    </Button>
+                  </div>
+                  {notionError && (
+                    <div className="flex items-start gap-3 mt-3 ml-11 p-3 rounded-xl bg-destructive/10 text-destructive text-xs">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <p className="leading-relaxed">{notionError}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

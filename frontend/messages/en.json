@@ -68,7 +68,20 @@
     "simpleLongDesc": "Keeps last 15 messages, more context",
     "summaryShortDesc": "Summary window 10, keeps 5 raw messages",
     "summaryNormalDesc": "Summary window 20, keeps 10 raw messages",
-    "summaryLongDesc": "Summary window 40, keeps 20 raw messages"
+    "summaryLongDesc": "Summary window 40, keeps 20 raw messages",
+    "integrationsTitle": "Third-Party Connections",
+    "integrationsDesc": "Connect external services to extend app functionality",
+    "notionTitle": "Notion",
+    "notionDesc": "Connect your Notion account to export notes directly to your Notion workspace",
+    "notionConnected": "Connected",
+    "notionConnectedDesc": "Your Notion account is connected. You can now export notes to Notion.",
+    "notionNotConnectedDesc": "Notion is not connected. Connect your account to enable Notion export.",
+    "notionConnectFailed": "Failed to load Notion status. Please try again.",
+    "notionConnectStartFailed": "Failed to start Notion connection",
+    "notionDisconnectSuccess": "Notion disconnected successfully",
+    "notionDisconnectFailed": "Failed to disconnect Notion",
+    "connectNotion": "Connect Notion",
+    "disconnect": "Disconnect"
   },
   "chat": {
     "selectModel": "Select Model",

@@ -81,6 +81,6 @@ smtp:
 
 # Notion Integration
 notion:
-  client_id: ""
+  client_id: "333d872b-594c-81d5-8e73-0037bbcf6917"
   client_secret: ""
-  redirect_uri: "http://localhost:3000/settings/integrations/notion/callback"
+  redirect_uri: "http://localhost:3000/auth/notion/callback"

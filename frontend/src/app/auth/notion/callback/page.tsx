@@ -38,7 +38,7 @@ function NotionCallbackContent() {
         setStatus('success')
         // Redirect back to integrations page after a short delay
         setTimeout(() => {
-          router.push('/settings/integrations')
+          router.push('/settings')
         }, 2000)
       } catch (err: any) {
         console.error('Failed to handle Notion callback:', err)
@@ -89,7 +89,7 @@ function NotionCallbackContent() {
             </div>
             <h1 className="text-2xl font-bold mb-2">Connection Failed</h1>
             <p className="text-muted-foreground mb-6">{errorMessage}</p>
-            <Button onClick={() => router.push('/settings/integrations')} className="w-full">
+            <Button onClick={() => router.push('/settings')} className="w-full">
               Return to Settings
             </Button>
           </>
