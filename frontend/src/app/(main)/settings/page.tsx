@@ -37,14 +37,6 @@ export default function SettingsPage() {
     setMounted(true)
   }, [])
 
-  // Apply font settings to document
-  useEffect(() => {
-    if (mounted) {
-      document.documentElement.setAttribute('data-font-size', fontSize)
-      document.documentElement.setAttribute('data-font-family', fontFamily)
-    }
-  }, [mounted, fontSize, fontFamily])
-
   const handleLanguageChange = (value: string | null) => {
     if (value && (value === 'zh' || value === 'en')) {
       setLocale(value)

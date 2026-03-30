@@ -14,10 +14,16 @@ function MainLayoutContent({
   children: React.ReactNode
 }) {
   const { isAuthenticated, _hasHydrated } = useAuthStore()
-  const { sidebarOpen, setSidebarOpen, toggleSidebar } = useUIStore()
+  const { sidebarOpen, setSidebarOpen, toggleSidebar, fontSize, fontFamily } = useUIStore()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+
+  // Apply font settings to document
+  useEffect(() => {
+    if (fontSize) document.documentElement.setAttribute('data-font-size', fontSize)
+    if (fontFamily) document.documentElement.setAttribute('data-font-family', fontFamily)
+  }, [fontSize, fontFamily])
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {
