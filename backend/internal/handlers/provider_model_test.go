@@ -27,7 +27,7 @@ func setupProviderModelTest(t *testing.T) (*gin.Engine, *config.Config, func()) 
 	aesCrypto, _ := crypto.NewAESCrypto(cfg.Encryption.Key)
 
 	verificationCodeSvc := services.NewVerificationCodeService()
-	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	emailSvc := services.NewEmailService(&config.SMTPConfig{}, &config.ResendConfig{})
 	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 	providerHandler := NewProviderHandler(aesCrypto)
 	providerModelHandler := NewProviderModelHandler()

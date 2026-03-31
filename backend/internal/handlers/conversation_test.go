@@ -29,7 +29,7 @@ func setupConversationTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	contextConfigService := services.NewContextConfigService(cfg)
 
 	verificationCodeSvc := services.NewVerificationCodeService()
-	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	emailSvc := services.NewEmailService(&config.SMTPConfig{}, &config.ResendConfig{})
 	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 	convHandler := NewConversationHandler(cfg, aesCrypto, contextConfigService)
 

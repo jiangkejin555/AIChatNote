@@ -68,10 +68,10 @@ func main() {
 	verificationCodeService := services.NewVerificationCodeService()
 
 	// Initialize email service
-	emailService := services.NewEmailService(&cfg.SMTP)
+	emailService := services.NewEmailService(&cfg.SMTP, &cfg.Resend)
 
 	// Initialize OAuth service
-	oauthService := services.NewOAuthService(&cfg.OAuth)
+	oauthService := services.NewOAuthService(&cfg.OAuth, cfg.JWT.Secret)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(jwtService, verificationCodeService, emailService)

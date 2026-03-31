@@ -25,7 +25,7 @@ func setupAuthTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	cfg := testutil.TestConfig()
 	jwtService := crypto.NewJWTService(cfg)
 	verificationCodeSvc := services.NewVerificationCodeService()
-	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	emailSvc := services.NewEmailService(&config.SMTPConfig{}, &config.ResendConfig{})
 	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 
 	router := gin.New()

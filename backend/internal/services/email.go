@@ -2,8 +2,11 @@ package services
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"net/smtp"
 	"strings"
 	"time"
@@ -13,18 +16,20 @@ import (
 )
 
 type EmailService struct {
-	config *config.SMTPConfig
+	smtpConfig   *config.SMTPConfig
+	resendConfig *config.ResendConfig
 }
 
-func NewEmailService(cfg *config.SMTPConfig) *EmailService {
+func NewEmailService(smtpCfg *config.SMTPConfig, resendCfg *config.ResendConfig) *EmailService {
 	return &EmailService{
-		config: cfg,
+		smtpConfig:   smtpCfg,
+		resendConfig: resendCfg,
 	}
 }
 
 func (s *EmailService) SendVerificationCode(to, code string) error {
-	if !s.config.IsEnabled() {
-		return errors.New("SMTP service is not enabled")
+	if !s.IsEnabled() {
+		return errors.New("email service is not enabled")
 	}
 
 	subject := "您的验证码 - AI Chat Note"
@@ -34,24 +39,84 @@ func (s *EmailService) SendVerificationCode(to, code string) error {
 }
 
 func (s *EmailService) SendEmail(to, subject, body string) error {
-	if !s.config.IsEnabled() {
-		return errors.New("SMTP service is not enabled")
+	if s.resendConfig.IsEnabled() {
+		return s.sendViaResend(to, subject, body)
+	}
+	if s.smtpConfig.IsEnabled() {
+		return s.sendViaSMTP(to, subject, body)
+	}
+	return errors.New("email service is not enabled")
+}
+
+func (s *EmailService) sendViaResend(to, subject, body string) error {
+	fromName := s.resendConfig.FromName
+	if fromName == "" {
+		fromName = "AI Chat Note"
 	}
 
-	from := s.config.From
+	payload := map[string]interface{}{
+		"from":    fmt.Sprintf("%s <%s>", fromName, s.resendConfig.From),
+		"to":      []string{to},
+		"subject": subject,
+		"html":    body,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal email payload: %w", err)
+	}
+
+	start := time.Now()
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+s.resendConfig.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	latency := time.Since(start)
+
+	if err != nil {
+		utils.LogExternalCallError("EmailService", "Resend", err, "to", utils.MaskEmail(to))
+		return fmt.Errorf("resend API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("resend API returned status %d: %s", resp.StatusCode, string(respBody))
+		utils.LogExternalCallError("EmailService", "Resend", err, "to", utils.MaskEmail(to))
+		return err
+	}
+
+	utils.LogExternalCall("EmailService", "Resend", "email", latency, "to", utils.MaskEmail(to))
+	return nil
+}
+
+func (s *EmailService) sendViaSMTP(to, subject, body string) error {
+	from := s.smtpConfig.From
 	if from == "" {
-		from = s.config.Username
+		from = s.smtpConfig.Username
 	}
 
-	fromName := s.config.FromName
+	fromName := s.smtpConfig.FromName
 	if fromName == "" {
 		fromName = "AI Chat Note"
 	}
 
 	msg := s.buildMessage(from, fromName, to, subject, body)
 
+	addr := fmt.Sprintf("%s:%d", s.smtpConfig.Host, s.smtpConfig.Port)
+
+	var auth smtp.Auth
+	if s.smtpConfig.Username != "" && s.smtpConfig.Password != "" {
+		auth = smtp.PlainAuth("", s.smtpConfig.Username, s.smtpConfig.Password, s.smtpConfig.Host)
+	}
+
 	start := time.Now()
-	err := s.sendViaSMTP(from, to, []byte(msg))
+	err := smtp.SendMail(addr, auth, from, []string{to}, []byte(msg))
 	latency := time.Since(start)
 
 	if err != nil {
@@ -61,19 +126,6 @@ func (s *EmailService) SendEmail(to, subject, body string) error {
 
 	utils.LogExternalCall("EmailService", "SMTP", "email", latency, "to", utils.MaskEmail(to))
 	return nil
-}
-
-func (s *EmailService) sendViaSMTP(from, to string, msg []byte) error {
-	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
-
-	var auth smtp.Auth
-	if s.config.Username != "" && s.config.Password != "" {
-		auth = smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)
-	}
-
-	// For port 587 (STARTTLS), use smtp.SendMail which handles STARTTLS automatically
-	// For port 465 (TLS), we would need a different approach
-	return smtp.SendMail(addr, auth, from, []string{to}, msg)
 }
 
 func (s *EmailService) buildMessage(from, fromName, to, subject, body string) string {
@@ -147,11 +199,11 @@ func (s *EmailService) buildVerificationCodeEmail(code string) string {
         <h2>验证码通知</h2>
         <p>您好！</p>
         <p>您正在登录 <strong>AI Chat Note</strong>，您的验证码是：</p>
-        
+
         <div class="code-box">
             <span class="code">%s</span>
         </div>
-        
+
         <div class="warning">
             <strong>⚠️ 安全提示：</strong>
             <ul style="margin: 10px 0; padding-left: 20px;">
@@ -160,9 +212,9 @@ func (s *EmailService) buildVerificationCodeEmail(code string) string {
                 <li>如非本人操作，请忽略此邮件</li>
             </ul>
         </div>
-        
+
         <p>如果您没有请求此验证码，请忽略此邮件。</p>
-        
+
         <div class="footer">
             <p>此邮件由系统自动发送，请勿直接回复。</p>
             <p>&copy; %d AI Chat Note. All rights reserved.</p>
@@ -174,7 +226,7 @@ func (s *EmailService) buildVerificationCodeEmail(code string) string {
 }
 
 func (s *EmailService) IsEnabled() bool {
-	return s.config.IsEnabled()
+	return s.resendConfig.IsEnabled() || s.smtpConfig.IsEnabled()
 }
 
 func IsValidEmail(email string) bool {

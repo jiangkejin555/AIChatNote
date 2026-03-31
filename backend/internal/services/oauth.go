@@ -1,15 +1,17 @@
 package services
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/chat-note/backend/internal/config"
@@ -27,19 +29,18 @@ type OAuthUserInfo struct {
 }
 
 type OAuthService struct {
-	config                *config.OAuthConfig
-	userRepo              *repository.UserRepository
-	stateStore            map[string]time.Time
-	stateMutex            sync.RWMutex
-	stateExpiry           time.Duration
-	httpClient            *http.Client
+	config      *config.OAuthConfig
+	userRepo    *repository.UserRepository
+	hmacSecret  []byte
+	stateExpiry time.Duration
+	httpClient  *http.Client
 }
 
-func NewOAuthService(cfg *config.OAuthConfig) *OAuthService {
+func NewOAuthService(cfg *config.OAuthConfig, jwtSecret string) *OAuthService {
 	return &OAuthService{
-		config:     cfg,
-		userRepo:   repository.NewUserRepository(),
-		stateStore: make(map[string]time.Time),
+		config:      cfg,
+		userRepo:    repository.NewUserRepository(),
+		hmacSecret:  []byte(jwtSecret),
 		stateExpiry: 10 * time.Minute,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
@@ -47,60 +48,89 @@ func NewOAuthService(cfg *config.OAuthConfig) *OAuthService {
 	}
 }
 
-func (s *OAuthService) GenerateState() string {
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
+// GenerateState creates a self-contained HMAC-signed state token.
+// Format: nonce.timestamp.signature
+// No server-side storage needed — works across multiple instances and restarts.
+func (s *OAuthService) GenerateState(parts ...uint) string {
+	nonceBytes := make([]byte, 16)
+	if _, err := rand.Read(nonceBytes); err != nil {
 		utils.LogOperationError("OAuthService", "GenerateState", err)
 		return fmt.Sprintf("%d", time.Now().UnixNano())
 	}
-	state := hex.EncodeToString(bytes)
+	nonce := hex.EncodeToString(nonceBytes)
+	timestamp := time.Now().Unix()
 
-	s.stateMutex.Lock()
-	s.stateStore[state] = time.Now()
-	s.stateMutex.Unlock()
+	sig := s.computeHMAC(nonce, timestamp, parts...)
+	state := fmt.Sprintf("%s.%d.%s", nonce, timestamp, sig)
 
-	go s.cleanupExpiredStates()
+	// Prepend userID if provided (for BindAccount flow)
+	if len(parts) > 0 {
+		state = fmt.Sprintf("%d:%s", parts[0], state)
+	}
 
 	utils.LogInfo("OAuthService", "GenerateState", "state", state)
 	return state
 }
 
+// ValidateState verifies the HMAC signature and checks expiry.
+// Supports both plain state (nonce.timestamp.sig) and bind state (userID:nonce.timestamp.sig).
 func (s *OAuthService) ValidateState(state string) bool {
-	s.stateMutex.RLock()
-	createdAt, exists := s.stateStore[state]
-	s.stateMutex.RUnlock()
+	// Strip optional userID prefix for BindAccount flow
+	hmacPart := state
+	var userID uint
+	hasUserID := false
+	if idx := strings.Index(state, ":"); idx != -1 {
+		hmacPart = state[idx+1:]
+		if id, err := strconv.ParseUint(state[:idx], 10, 64); err == nil {
+			userID = uint(id)
+			hasUserID = true
+		}
+	}
 
-	if !exists {
-		utils.LogWarn("OAuthService", "ValidateState", "state", state, "reason", "state_not_found")
+	parts := strings.Split(hmacPart, ".")
+	if len(parts) != 3 {
+		utils.LogWarn("OAuthService", "ValidateState", "state", state, "reason", "invalid_format")
 		return false
 	}
 
-	if time.Since(createdAt) > s.stateExpiry {
-		s.stateMutex.Lock()
-		delete(s.stateStore, state)
-		s.stateMutex.Unlock()
+	nonce := parts[0]
+	timestamp, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		utils.LogWarn("OAuthService", "ValidateState", "state", state, "reason", "invalid_timestamp")
+		return false
+	}
+	sig := parts[2]
+
+	// Check expiry
+	if time.Since(time.Unix(timestamp, 0)) > s.stateExpiry {
 		utils.LogWarn("OAuthService", "ValidateState", "state", state, "reason", "state_expired")
 		return false
 	}
 
-	s.stateMutex.Lock()
-	delete(s.stateStore, state)
-	s.stateMutex.Unlock()
+	// Verify HMAC (with or without userID)
+	var expectedSig string
+	if hasUserID {
+		expectedSig = s.computeHMAC(nonce, timestamp, userID)
+	} else {
+		expectedSig = s.computeHMAC(nonce, timestamp)
+	}
+	if !hmac.Equal([]byte(sig), []byte(expectedSig)) {
+		utils.LogWarn("OAuthService", "ValidateState", "state", state, "reason", "invalid_signature")
+		return false
+	}
 
 	utils.LogInfo("OAuthService", "ValidateState", "state", state, "valid", true)
 	return true
 }
 
-func (s *OAuthService) cleanupExpiredStates() {
-	s.stateMutex.Lock()
-	defer s.stateMutex.Unlock()
-
-	now := time.Now()
-	for state, createdAt := range s.stateStore {
-		if now.Sub(createdAt) > s.stateExpiry {
-			delete(s.stateStore, state)
-		}
+func (s *OAuthService) computeHMAC(nonce string, timestamp int64, userParts ...uint) string {
+	mac := hmac.New(sha256.New, s.hmacSecret)
+	payload := fmt.Sprintf("%s.%d", nonce, timestamp)
+	if len(userParts) > 0 {
+		payload = fmt.Sprintf("%s.%d.%d", nonce, timestamp, userParts[0])
 	}
+	mac.Write([]byte(payload))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 func (s *OAuthService) GenerateAuthURL(provider, state string) (string, error) {

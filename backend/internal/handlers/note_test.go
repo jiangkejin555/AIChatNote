@@ -41,7 +41,7 @@ func setupNoteTest(t *testing.T) (*gin.Engine, *config.Config, func()) {
 	_ = cfg.Encryption.Key
 
 	verificationCodeSvc := services.NewVerificationCodeService()
-	emailSvc := services.NewEmailService(&config.SMTPConfig{})
+	emailSvc := services.NewEmailService(&config.SMTPConfig{}, &config.ResendConfig{})
 	authHandler := NewAuthHandler(jwtService, verificationCodeSvc, emailSvc)
 	aiService := services.NewAIService(true)
 	mockNotionService := &MockNotionService{}

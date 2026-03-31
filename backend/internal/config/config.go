@@ -24,6 +24,7 @@ type Config struct {
 	OAuth          OAuthConfig          `yaml:"oauth"`
 	Notion         NotionConfig         `mapstructure:"notion" yaml:"notion"`
 	SMTP           SMTPConfig           `yaml:"smtp"`
+	Resend         ResendConfig         `yaml:"resend"`
 }
 
 type NotionConfig struct {
@@ -64,6 +65,7 @@ type EncryptionConfig struct {
 	Key string `yaml:"key"`
 }
 
+// Cross-Origin Resource Sharing，跨源资源共享
 type CORSConfig struct {
 	FrontendURL string `yaml:"frontend_url"`
 }
@@ -82,10 +84,10 @@ type TitleGeneratorConfig struct {
 
 // ContextConfig defines conversation context processing settings
 type ContextConfig struct {
-	DefaultMode  string                `yaml:"default_mode"`  // summary | simple
-	DefaultLevel string                `yaml:"default_level"` // short | normal | long
-	Summary      ContextSummaryConfig  `yaml:"summary"`
-	Simple       ContextSimpleConfig   `yaml:"simple"`
+	DefaultMode  string               `yaml:"default_mode"`  // summary | simple
+	DefaultLevel string               `yaml:"default_level"` // short | normal | long
+	Summary      ContextSummaryConfig `yaml:"summary"`
+	Simple       ContextSimpleConfig  `yaml:"simple"`
 }
 
 // ContextSummaryConfig holds parameters for summary mode
@@ -317,6 +319,20 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("SMTP_ENABLED"); v != "" {
 		cfg.SMTP.Enabled = strings.ToLower(v) == "true"
+	}
+
+	// Resend configuration
+	if v := os.Getenv("RESEND_API_KEY"); v != "" {
+		cfg.Resend.APIKey = v
+	}
+	if v := os.Getenv("RESEND_FROM"); v != "" {
+		cfg.Resend.From = v
+	}
+	if v := os.Getenv("RESEND_FROM_NAME"); v != "" {
+		cfg.Resend.FromName = v
+	}
+	if v := os.Getenv("RESEND_ENABLED"); v != "" {
+		cfg.Resend.Enabled = strings.ToLower(v) == "true"
 	}
 }
 

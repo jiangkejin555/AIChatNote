@@ -446,6 +446,7 @@
       "failed": "OAuth 登录失败，请重试",
       "processing": "正在处理登录...",
       "callbackFailed": "登录失败，请重试",
+      "retry": "重试",
       "google": "Google",
       "github": "GitHub",
       "qq": "QQ"

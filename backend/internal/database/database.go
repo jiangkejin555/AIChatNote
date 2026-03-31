@@ -84,6 +84,7 @@ func Migrate() error {
 		&models.Notification{},
 		&models.NoteGenerationTask{},
 		&models.Integration{},
+		&models.OAuthAccount{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)

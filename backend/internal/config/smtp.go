@@ -14,3 +14,14 @@ type SMTPConfig struct {
 func (c *SMTPConfig) IsEnabled() bool {
 	return c.Enabled && c.Host != "" && c.Username != "" && c.Password != ""
 }
+
+type ResendConfig struct {
+	APIKey   string `yaml:"api_key"`
+	From     string `yaml:"from"`
+	FromName string `yaml:"from_name"`
+	Enabled  bool   `yaml:"enabled"`
+}
+
+func (c *ResendConfig) IsEnabled() bool {
+	return c.Enabled && c.APIKey != "" && c.From != ""
+}

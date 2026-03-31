@@ -450,6 +450,7 @@
       "failed": "OAuth login failed, please try again",
       "processing": "Processing login...",
       "callbackFailed": "Login failed, please try again",
+      "retry": "Retry",
       "google": "Google",
       "github": "GitHub",
       "qq": "QQ"

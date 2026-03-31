@@ -250,7 +250,7 @@ func (h *OAuthHandler) BindAccount(c *gin.Context) {
 		return
 	}
 
-	state := fmt.Sprintf("%d:%s", userID, h.oauthService.GenerateState())
+	state := h.oauthService.GenerateState(userID)
 
 	authURL, err := h.oauthService.GenerateAuthURL(provider, state)
 	if err != nil {
