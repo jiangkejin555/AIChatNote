@@ -90,6 +90,16 @@ func TestParseAIResponse(t *testing.T) {
 			content: "",
 			wantErr: true,
 		},
+		{
+			name:    "JSON in code block with markdown content containing backticks",
+			content: "```json\n{\"title\": \"Go Notes\", \"content\": \"## Code\\n\\n```go\\nfmt.Println(\\\"hi\\\")\\n```\\n\\nDone\", \"tags\": [\"go\"]}\n```",
+			wantErr: false,
+			expected: &GeneratedNote{
+				Title:   "Go Notes",
+				Content: "## Code\n\n```go\nfmt.Println(\"hi\")\n```\n\nDone",
+				Tags:    []string{"go"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -124,12 +134,17 @@ func TestExtractJSON(t *testing.T) {
 		{
 			name:     "JSON in json code block",
 			content:  "```json\n{\"key\": \"value\"}\n```",
-			expected: "\n{\"key\": \"value\"}\n",
+			expected: `{"key": "value"}`,
 		},
 		{
 			name:     "JSON in plain code block",
 			content:  "```\n{\"key\": \"value\"}\n```",
-			expected: "\n{\"key\": \"value\"}\n",
+			expected: `{"key": "value"}`,
+		},
+		{
+			name:     "JSON with markdown code blocks in content field",
+			content:  "```json\n{\"title\": \"Test\", \"content\": \"some code:\\n```python\\nprint('hi')\\n```\\nmore text\", \"tags\": [\"go\"]}\n```",
+			expected: "{\"title\": \"Test\", \"content\": \"some code:\\n```python\\nprint('hi')\\n```\\nmore text\", \"tags\": [\"go\"]}",
 		},
 		{
 			name:     "no code block",

@@ -40,6 +40,8 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    env_file:
+      - .env
 
 volumes:
   postgres_data:

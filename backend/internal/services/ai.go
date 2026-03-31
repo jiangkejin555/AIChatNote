@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/chat-note/backend/internal/crypto"
@@ -222,8 +223,6 @@ func buildSummaryPrompt(conversationTitle, conversationText string) string {
 }
 
 func parseAIResponse(content string) (*GeneratedNote, error) {
-	// Try to extract JSON from the response
-	// Sometimes the AI wraps JSON in markdown code blocks
 	jsonContent := extractJSON(content)
 
 	var note GeneratedNote
@@ -234,35 +233,65 @@ func parseAIResponse(content string) (*GeneratedNote, error) {
 	return &note, nil
 }
 
+// extractJSON extracts a JSON object from the AI response.
+// It uses brace-counting with string-awareness to correctly find the
+// outermost {...} boundary, even when the JSON content field contains
+// markdown code blocks (triple backticks) that would confuse simple
+// pattern matching.
 func extractJSON(content string) string {
-	// Try to extract JSON from markdown code blocks
-	// Look for ```json ... ``` or ``` ... ```
-	start := 0
-	end := len(content)
+	trimmed := strings.TrimSpace(content)
 
-	// Find ```json or ```
-	for i := 0; i < len(content)-6; i++ {
-		if content[i:i+7] == "```json" {
-			start = i + 7
-			// Find closing ```
-			for j := start; j < len(content)-2; j++ {
-				if content[j:j+3] == "```" {
-					end = j
-					return content[start:end]
-				}
-			}
-		} else if content[i:i+3] == "```" && (i == 0 || content[i-1] == '\n') {
-			start = i + 3
-			// Find closing ```
-			for j := start; j < len(content)-2; j++ {
-				if content[j:j+3] == "```" {
-					end = j
-					return content[start:end]
-				}
+	// Fast path: already valid JSON
+	if trimmed[0] == '{' {
+		var discard json.RawMessage
+		if json.Unmarshal([]byte(trimmed), &discard) == nil {
+			return trimmed
+		}
+	}
+
+	// Find the first '{' and then match the closing '}' by counting braces,
+	// respecting JSON string boundaries so that braces/backticks inside
+	// string values don't confuse the parser.
+	startIdx := strings.Index(content, "{")
+	if startIdx == -1 {
+		return content
+	}
+
+	depth := 0
+	inString := false
+	escape := false
+
+	for i := startIdx; i < len(content); i++ {
+		c := content[i]
+
+		if escape {
+			escape = false
+			continue
+		}
+
+		if c == '\\' && inString {
+			escape = true
+			continue
+		}
+
+		if c == '"' {
+			inString = !inString
+			continue
+		}
+
+		if inString {
+			continue
+		}
+
+		if c == '{' {
+			depth++
+		} else if c == '}' {
+			depth--
+			if depth == 0 {
+				return content[startIdx : i+1]
 			}
 		}
 	}
 
-	// No code blocks found, return original content
 	return content
 }

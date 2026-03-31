@@ -14,11 +14,11 @@ import (
 )
 
 type OAuthHandler struct {
-	oauthService      *services.OAuthService
-	userRepo          *repository.UserRepository
-	oauthAccountRepo  *repository.OAuthAccountRepository
-	jwtService        *crypto.JWTService
-	refreshTokenRepo  *repository.RefreshTokenRepository
+	oauthService     *services.OAuthService
+	userRepo         *repository.UserRepository
+	oauthAccountRepo *repository.OAuthAccountRepository
+	jwtService       *crypto.JWTService
+	refreshTokenRepo *repository.RefreshTokenRepository
 }
 
 func NewOAuthHandler(oauthService *services.OAuthService, jwtService *crypto.JWTService) *OAuthHandler {
@@ -153,6 +153,7 @@ func (h *OAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
+	// 虽然 model 里定义了 AccessToken、RefreshToken、TokenExpiresAt 字段（oauth_account.go:12-14），但 handler 在创建记录时没有把 token 写进去。原因是当前 OAuth 的设计是 "一次性换 token 换用户信息" 的模式——拿到 access token 后立刻用来获取用户信息（oauth.go:203-214），之后就不需要这个 token 了。这个项目不需要在后台持续调用 Google/GitHub API，所以没存 token。
 	newOAuthAccount := &models.OAuthAccount{
 		UserID:         newUser.ID,
 		Provider:       provider,

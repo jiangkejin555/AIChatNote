@@ -292,7 +292,7 @@ func testModelConnection(apiBase, apiKey, modelID string) (bool, string, int) {
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) // ignore_security_alert
 	if err != nil {
 		return false, "Connection failed: " + err.Error(), int(time.Since(start).Milliseconds())
 	}

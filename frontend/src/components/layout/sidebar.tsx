@@ -507,8 +507,11 @@ export function Sidebar() {
 
   // Handle new conversation creation - just set pending state, don't call backend
   const handleNewConversation = async () => {
-    // If already in pending state, ignore click (reuse current start page)
+    // If already in pending state, navigate to chat page if not there
     if (isPendingNewChat) {
+      if (pathname !== '/') {
+        router.push('/')
+      }
       return
     }
 

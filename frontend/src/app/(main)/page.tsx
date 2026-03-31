@@ -15,7 +15,7 @@ import { MessageList, MessageInput, ModelSelector, SaveNoteDialog, SaveNoteButto
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from '@/i18n'
-import type { Message, ProviderModel } from '@/types'
+import type { Message, ProviderModel, Conversation } from '@/types'
 
 export default function ChatPage() {
   const t = useTranslations()
@@ -248,6 +248,11 @@ export default function ChatPage() {
           // Create new conversation first
           const conv = await createConversation.mutateAsync({ provider_model_id: selectedModelId })
           setCurrentConversation(conv.id)
+
+          // Optimistically add to conversations cache to prevent useEffect from resetting state
+          queryClient.setQueryData<Conversation[]>(['conversations'], (old) => {
+            return old ? [...old, conv] : [conv]
+          })
 
           // Clear pending state
           setIsPendingNewChat(false)
