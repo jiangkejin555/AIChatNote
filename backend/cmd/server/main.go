@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/chat-note/backend/internal/config"
@@ -23,13 +23,14 @@ import (
 func main() {
 	// Load .env file if exists (optional, for env var overrides)
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using config.yaml")
+		slog.Info("No .env file found, using config.yaml")
 	}
 
 	// Load config from config.yaml (required)
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		slog.Error("Failed to load config", "error", err)
+		os.Exit(1)
 	}
 
 	// Set Gin mode
@@ -39,26 +40,29 @@ func main() {
 
 	// Connect to database
 	if err := database.Connect(cfg); err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("Failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
 	// Run database migrations
 	if err := database.Migrate(); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
+		slog.Error("Failed to migrate database", "error", err)
+		os.Exit(1)
 	}
 
 	// Initialize services
 	jwtService := crypto.NewJWTService(cfg)
 	aesCrypto, err := crypto.NewAESCrypto(cfg.Encryption.Key)
 	if err != nil {
-		log.Fatalf("Failed to initialize crypto: %v", err)
+		slog.Error("Failed to initialize crypto", "error", err)
+		os.Exit(1)
 	}
 
 	// Initialize AI service
 	aiService := services.NewAIService(cfg.Mock.Enabled)
 	aiService.SetCrypto(aesCrypto)
 	if cfg.Mock.Enabled {
-		log.Println("⚠️  AI service running in MOCK mode - no real API calls will be made")
+		slog.Info("AI service running in MOCK mode - no real API calls will be made")
 	}
 
 	// Initialize context config service
@@ -98,7 +102,8 @@ func main() {
 	notionHttpClient := &http.Client{Timeout: 10 * time.Second}
 	notionService, err := services.NewNotionService(&cfg.Notion, cfg.Encryption.Key, integrationRepo, notionHttpClient)
 	if err != nil {
-		log.Fatalf("Failed to initialize NotionService: %v", err)
+		slog.Error("Failed to initialize NotionService", "error", err)
+		os.Exit(1)
 	}
 	integrationHandler := handlers.NewIntegrationHandler(integrationRepo, notionService)
 	noteHandler := handlers.NewNoteHandler(aiService, notionService)
@@ -306,8 +311,9 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Server starting on port %s", port)
+	slog.Info("Server starting", "port", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		slog.Error("Failed to start server", "error", err)
+		os.Exit(1)
 	}
 }

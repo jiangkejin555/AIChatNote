@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/chat-note/backend/internal/config"
@@ -57,7 +57,7 @@ func Connect(cfg *config.Config) error {
 		sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifetime) * time.Second)
 	}
 
-	log.Println("Connected to PostgreSQL database")
+	slog.Info("Connected to PostgreSQL database", "dsn", dsn)
 	return nil
 }
 
@@ -95,7 +95,7 @@ func Migrate() error {
 		return fmt.Errorf("failed to update note conversation foreign key: %w", err)
 	}
 
-	log.Println("Database migration completed")
+	slog.Info("Database migration completed")
 	return nil
 }
 
