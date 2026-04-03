@@ -345,7 +345,10 @@ export default function SettingsPage() {
                               <Sparkles className="h-5 w-5 text-primary" />
                               {t('settings.contextModeInfoTitle')}
                             </DialogTitle>
-                            <DialogDescription className="pt-4 text-left block space-y-4">
+                            <DialogDescription className="sr-only">
+                              {t('settings.contextModeInfoTitle')}
+                            </DialogDescription>
+                            <div className="pt-4 text-left space-y-4">
                               <div className="p-4 rounded-xl bg-muted/50 space-y-2">
                                 <div className="flex items-center gap-2">
                                   <span className="font-semibold text-foreground">{t('settings.summaryMode')}</span>
@@ -358,7 +361,7 @@ export default function SettingsPage() {
                                 </div>
                                 <span className="text-muted-foreground text-sm leading-relaxed block">{t('settings.simpleModeDesc')}</span>
                               </div>
-                            </DialogDescription>
+                            </div>
                           </DialogHeader>
                         </DialogContent>
                       </Dialog>

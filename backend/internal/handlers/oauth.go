@@ -19,6 +19,7 @@ type OAuthHandler struct {
 	oauthAccountRepo *repository.OAuthAccountRepository
 	jwtService       *crypto.JWTService
 	refreshTokenRepo *repository.RefreshTokenRepository
+	notificationRepo *repository.NotificationRepository
 }
 
 func NewOAuthHandler(oauthService *services.OAuthService, jwtService *crypto.JWTService) *OAuthHandler {
@@ -28,6 +29,7 @@ func NewOAuthHandler(oauthService *services.OAuthService, jwtService *crypto.JWT
 		oauthAccountRepo: repository.NewOAuthAccountRepository(),
 		jwtService:       jwtService,
 		refreshTokenRepo: repository.NewRefreshTokenRepository(),
+		notificationRepo: repository.NewNotificationRepository(),
 	}
 }
 
@@ -165,6 +167,9 @@ func (h *OAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
+	// Send welcome notification for new OAuth users
+	h.sendWelcomeNotification(newUser)
+
 	authResponse, err := h.generateAuthResponse(newUser)
 	if err != nil {
 		utils.LogOperationError("OAuthHandler", "HandleCallback", err, "provider", provider, "step", "generate_token")
@@ -291,4 +296,31 @@ func (h *OAuthHandler) generateAuthResponse(user *models.User) (*AuthResponse, e
 		RefreshToken: refreshToken,
 		User:         user,
 	}, nil
+}
+
+// sendWelcomeNotification sends a welcome notification to a newly registered OAuth user
+func (h *OAuthHandler) sendWelcomeNotification(user *models.User) {
+	userCount, err := h.userRepo.Count()
+	if err != nil {
+		utils.LogOperationError("OAuthHandler", "sendWelcomeNotification", err, "userID", user.ID, "step", "get_user_count")
+		userCount = 1
+	}
+
+	username := user.Email
+	for i, c := range user.Email {
+		if c == '@' {
+			username = user.Email[:i]
+			break
+		}
+	}
+
+	vars := map[string]string{
+		"username":   username,
+		"user_count": fmt.Sprintf("%d", userCount),
+	}
+
+	_, err = h.notificationRepo.CreateFromTemplate(user.ID, "welcome", vars, models.NotificationPayload{})
+	if err != nil {
+		utils.LogOperationError("OAuthHandler", "sendWelcomeNotification", err, "userID", user.ID, "step", "create_notification")
+	}
 }

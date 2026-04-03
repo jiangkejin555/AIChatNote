@@ -163,7 +163,6 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 	// Parse JSON response
 	content := resp.Choices[0].Message.Content
 	note, err := parseAIResponse(content)
-	utils.LogWarn("AIService-TEST====", "content", content)
 	if err != nil {
 		// Fallback: return raw content as note
 		// Log preview of raw content for debugging parse failures
