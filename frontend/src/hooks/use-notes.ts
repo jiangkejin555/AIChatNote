@@ -132,8 +132,25 @@ export function useAsyncNoteGeneration() {
             if (task.note_id) {
               try {
                 const note = await notesApi.getById(task.note_id)
-                const htmlContent = await markdownToHtml(note.content)
-                await notesApi.update(task.note_id, { content: htmlContent })
+                let markdownContent = note.content
+                let extraUpdates: Record<string, unknown> = {}
+                // If backend JSON parsing failed, content may be raw JSON string
+                // Try to extract the actual markdown content from it
+                const trimmed = markdownContent.trim()
+                if (trimmed.startsWith('{')) {
+                  try {
+                    const parsed = JSON.parse(trimmed)
+                    if (parsed.content && typeof parsed.content === 'string') {
+                      markdownContent = parsed.content
+                      if (parsed.title) extraUpdates.title = parsed.title
+                      if (Array.isArray(parsed.tags)) extraUpdates.tags = parsed.tags
+                    }
+                  } catch {
+                    // Not valid JSON, proceed as-is
+                  }
+                }
+                const htmlContent = await markdownToHtml(markdownContent)
+                await notesApi.update(task.note_id, { content: htmlContent, ...extraUpdates })
               } catch {
                 // Conversion failed — note keeps raw markdown, not critical
               }
@@ -171,7 +188,7 @@ export function useAsyncNoteGeneration() {
         activePollingTaskId = taskId
         pollTaskStatus(taskId).finally(() => {
           activePollingTaskId = null
-        }).catch(() => {})
+        }).catch(() => { })
       } catch {
         localStorage.removeItem('pendingNoteTask')
       }

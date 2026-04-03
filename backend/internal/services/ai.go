@@ -142,6 +142,9 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 			},
 		},
 		Temperature: 0.7,
+		ResponseFormat: &openai.ChatCompletionResponseFormat{
+			Type: openai.ChatCompletionResponseFormatTypeJSONObject,
+		},
 	})
 	apiLatency := time.Since(apiStart)
 
@@ -162,7 +165,12 @@ func (s *AIService) GenerateNoteFromConversation(ctx context.Context, convID, us
 	note, err := parseAIResponse(content)
 	if err != nil {
 		// Fallback: return raw content as note
-		utils.LogWarn("AIService", "GenerateNoteFromConversation", "convID", convID, "reason", "json_parse_failed", "usingFallback", true)
+		// Log preview of raw content for debugging parse failures
+		preview := content
+		if len(preview) > 500 {
+			preview = preview[:500] + "..."
+		}
+		utils.LogWarn("AIService", "GenerateNoteFromConversation", "convID", convID, "reason", "json_parse_failed", "usingFallback", true, "rawContent_preview", preview)
 		return &GeneratedNote{
 			Title:   conv.Title + " - Summary",
 			Content: content,
@@ -223,14 +231,99 @@ func buildSummaryPrompt(conversationTitle, conversationText string) string {
 }
 
 func parseAIResponse(content string) (*GeneratedNote, error) {
+	// Attempt 1: standard extraction
 	jsonContent := extractJSON(content)
 
 	var note GeneratedNote
-	if err := json.Unmarshal([]byte(jsonContent), &note); err != nil {
-		return nil, fmt.Errorf("failed to parse AI response: %w", err)
+	if err := json.Unmarshal([]byte(jsonContent), &note); err == nil {
+		return &note, nil
 	}
 
-	return &note, nil
+	// Attempt 2: fix common LLM JSON issues (literal newlines, etc.) and retry
+	fixed := fixCommonJSONIssues(extractJSON(content))
+	if err := json.Unmarshal([]byte(fixed), &note); err == nil {
+		return &note, nil
+	}
+
+	return nil, fmt.Errorf("failed to parse AI response after repair attempts")
+}
+
+// fixCommonJSONIssues attempts to repair JSON that LLMs commonly produce
+// incorrectly, such as unescaped quotes or literal newlines inside string values.
+func fixCommonJSONIssues(raw string) string {
+	// Strategy: find the outermost { ... } and within string values,
+	// escape any unescaped quotes and literal newlines.
+	// This is a best-effort repair for malformed LLM output.
+	startIdx := strings.Index(raw, "{")
+	if startIdx == -1 {
+		return raw
+	}
+
+	var buf strings.Builder
+	buf.WriteString(raw[:startIdx])
+
+	depth := 0
+	inString := false
+	escape := false
+
+	for i := startIdx; i < len(raw); i++ {
+		c := raw[i]
+
+		if escape {
+			buf.WriteByte(c)
+			escape = false
+			continue
+		}
+
+		if c == '\\' && inString {
+			buf.WriteByte(c)
+			escape = true
+			continue
+		}
+
+		if c == '"' {
+			inString = !inString
+			buf.WriteByte(c)
+			continue
+		}
+
+		if inString {
+			// Fix literal newlines inside strings → \n
+			if c == '\n' {
+				buf.WriteString("\\n")
+				continue
+			}
+			// Fix literal tabs inside strings → \t
+			if c == '\t' {
+				buf.WriteString("\\t")
+				continue
+			}
+			// Fix literal carriage returns
+			if c == '\r' {
+				buf.WriteString("\\r")
+				continue
+			}
+			buf.WriteByte(c)
+			continue
+		}
+
+		// Outside string: track braces
+		buf.WriteByte(c)
+		if c == '{' {
+			depth++
+		} else if c == '}' {
+			depth--
+			if depth == 0 {
+				// Write any remaining content after the JSON
+				if i+1 < len(raw) {
+					buf.WriteString(raw[i+1:])
+				}
+				break
+			}
+		}
+	}
+
+	return buf.String()
 }
 
 // extractJSON extracts a JSON object from the AI response.
